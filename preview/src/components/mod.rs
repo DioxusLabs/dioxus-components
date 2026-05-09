@@ -160,4 +160,5 @@ examples!(
     toggle,
     toolbar,
     tooltip,
+    table,
 );

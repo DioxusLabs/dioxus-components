@@ -29,7 +29,7 @@ Dioxus Components is a shadcn style component library for Dioxus built on top of
 
 ## Getting started
 
-First, explore the [component gallery](https://dioxuslabs.github.io/components/) to find the components you want to use.
+First, explore the [component gallery](https://dioxuslabs.github.io/dioxus-components/) to find the components you want to use.
 
 Once you find a component, you can add it to your project with the Dioxus CLI. If you don't already have `dx` installed, you can do so with:
 

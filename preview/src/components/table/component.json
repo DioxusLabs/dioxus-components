@@ -1,0 +1,7 @@
+{
+    "name": "table",
+    "description": "A data table component with filtering, sorting, column visibility, row selection, and pagination.",
+    "authors": ["Fakhir"],
+    "exclude": ["variants", "docs.md", "component.json"],
+    "styled": true
+}

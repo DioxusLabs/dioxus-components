@@ -28,7 +28,7 @@ serde_json = "1"
 dioxus-ssr = "0.7.0"
 
 [features]
-web = ["dioxus/web", "dioxus-primitives/web"]
+web = ["dioxus/web", "dioxus/devtools", "dioxus-primitives/web"]
 desktop = ["dioxus/desktop"]
 fullstack = ["dioxus/fullstack"]
 server = ["dioxus/server", "dioxus/fullstack"]

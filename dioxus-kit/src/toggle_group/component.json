@@ -1,0 +1,13 @@
+{
+  "name": "toggle_group",
+  "description": "A group of toggle buttons for selecting one or more options from a set.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-kit-core",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../assets/dx-components-theme.css"]
+}

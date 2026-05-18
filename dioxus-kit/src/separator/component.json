@@ -1,0 +1,13 @@
+{
+  "name": "separator",
+  "description": "A visual separator between different sections of the page.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-kit-core",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../assets/dx-components-theme.css"]
+}

@@ -8,8 +8,8 @@ on:
       - /**
       - preview/**/*.rs
       - preview/**/Cargo.toml
-      - primitives/**/*.rs
-      - primitives/**/Cargo.toml
+      - dioxus-kit-core/**/*.rs
+      - dioxus-kit-core/**/Cargo.toml
       - .github/**
       - Cargo.toml
 
@@ -21,8 +21,8 @@ on:
       - /**
       - preview/**/*.rs
       - preview/**/Cargo.toml
-      - primitives/**/*.rs
-      - primitives/**/Cargo.toml
+      - dioxus-kit-core/**/*.rs
+      - dioxus-kit-core/**/Cargo.toml
       - .github/**
       - Cargo.toml
 
@@ -61,8 +61,8 @@ jobs:
           dx components add dialog,input --path ..
           # Add all components
           dx components add --all --path .. --force
-          # Switch to the local version of dioxus-primitives
-          cargo add dioxus-primitives --path ../primitives
+          # Switch to the local version of dioxus-kit-core
+          cargo add dioxus-kit-core --path ../dioxus-kit-core
           # Make sure it still builds
           cargo check --all-features
   add-each-component:
@@ -109,8 +109,8 @@ jobs:
             fi
             # Add the component
             dx components add "$file" --path ..
-            # Switch to the local version of dioxus-primitives
-            cargo add dioxus-primitives --path ../primitives
+            # Switch to the local version of dioxus-kit-core
+            cargo add dioxus-kit-core --path ../dioxus-kit-core
             # Make sure it still builds
             cargo check --all-features
             # Undo changes

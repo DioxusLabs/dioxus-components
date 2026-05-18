@@ -1,0 +1,13 @@
+{
+  "name": "context_menu",
+  "description": "A context menu component for displaying a list of actions or option after right clicking an area.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-kit-core",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../assets/dx-components-theme.css"]
+}

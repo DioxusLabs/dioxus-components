@@ -1,10 +1,7 @@
 use crate::components::button::component::Button;
 
-use super::super::component::{Dialog, DialogDescription, DialogTitle};
+use super::super::component::{Dialog, DialogClose, DialogDescription, DialogTitle};
 use dioxus::prelude::*;
-
-#[css_module("/src/components/dialog/style.css")]
-struct Styles;
 
 #[component]
 pub fn Demo() -> Element {
@@ -18,10 +15,7 @@ pub fn Demo() -> Element {
             "Show Dialog"
         }
         Dialog { open: open(), on_open_change: move |v| open.set(v),
-            button {
-                class: Styles::dx_dialog_close,
-                r#type: "button",
-                aria_label: "Close",
+            DialogClose {
                 tabindex: if open() { "0" } else { "-1" },
                 onclick: move |_| open.set(false),
                 "×"

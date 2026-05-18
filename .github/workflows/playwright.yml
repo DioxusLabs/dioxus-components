@@ -10,8 +10,8 @@ on:
       - preview/**/*.css
       - preview/**/*.rs
       - preview/**/Cargo.toml
-      - primitives/**/*.rs
-      - primitives/**/Cargo.toml
+      - dioxus-kit-core/**/*.rs
+      - dioxus-kit-core/**/Cargo.toml
       - .github/**
       - Cargo.toml
 
@@ -25,8 +25,8 @@ on:
       - preview/**/*.css
       - preview/**/*.rs
       - preview/**/Cargo.toml
-      - primitives/**/*.rs
-      - primitives/**/Cargo.toml
+      - dioxus-kit-core/**/*.rs
+      - dioxus-kit-core/**/Cargo.toml
       - .github/**
       - Cargo.toml
 

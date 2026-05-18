@@ -4,9 +4,6 @@ use super::super::component::{
 use dioxus::prelude::*;
 use strum::IntoEnumIterator;
 
-#[css_module("/src/components/dropdown_menu/style.css")]
-struct Styles;
-
 #[derive(Clone, Copy, strum::Display, strum::EnumIter, PartialEq)]
 enum Operation {
     Edit,
@@ -22,7 +19,6 @@ pub fn Demo() -> Element {
     let operations = Operation::iter().enumerate().map(|(i, o)| {
         rsx! {
             DropdownMenuItem::<Operation> {
-                class: Styles::dx_dropdown_menu_item,
                 value: o,
                 index: i,
                 disabled: matches!(o, Operation::Undo),
@@ -35,9 +31,9 @@ pub fn Demo() -> Element {
     });
 
     rsx! {
-        DropdownMenu { class: Styles::dx_dropdown_menu, default_open: false,
-            DropdownMenuTrigger { class: Styles::dx_dropdown_menu_trigger, "Open Menu" }
-            DropdownMenuContent { class: Styles::dx_dropdown_menu_content, {operations} }
+        DropdownMenu { default_open: false,
+            DropdownMenuTrigger { "Open Menu" }
+            DropdownMenuContent { {operations} }
         }
         if let Some(op) = selected_operation() {
             "Selected: {op}"

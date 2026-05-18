@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use super::super::component::*;
-use dioxus_primitives::color_picker::Color;
+use dioxus_kit_core::color_picker::Color;
 use palette::{encoding, Hsv, IntoColor};
 
 #[component]

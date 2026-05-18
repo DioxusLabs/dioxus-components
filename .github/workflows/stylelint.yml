@@ -8,9 +8,13 @@ on:
       - /**
       - preview/**/*.css
       - preview/**/*.rs
+      - preview/**/*.css
       - preview/**/Cargo.toml
-      - primitives/**/*.rs
-      - primitives/**/Cargo.toml
+      - dioxus-kit/**/*.rs
+      - dioxus-kit/**/*.css
+      - dioxus-kit/**/Cargo.toml
+      - dioxus-kit-core/**/*.rs
+      - dioxus-kit-core/**/Cargo.toml
       - .github/**
       - Cargo.toml
 
@@ -22,9 +26,13 @@ on:
       - /**
       - preview/**/*.css
       - preview/**/*.rs
+      - preview/**/*.css
       - preview/**/Cargo.toml
-      - primitives/**/*.rs
-      - primitives/**/Cargo.toml
+      - dioxus-kit/**/*.rs
+      - dioxus-kit/**/*.css
+      - dioxus-kit/**/Cargo.toml
+      - dioxus-kit-core/**/*.rs
+      - dioxus-kit-core/**/Cargo.toml
       - .github/**
       - Cargo.toml
 
@@ -48,4 +56,4 @@ jobs:
           npm install --save-dev stylelint-config-idiomatic-order
           npm install -g stylelint stylelint-config-standard
       - name: Stylelint
-        run: cd ./preview && npx stylelint "**/*.css" --max-warnings=0
+        run: cd ./preview && npx stylelint "**/*.css" "../dioxus-kit/**/*.css" --max-warnings=0

@@ -4,6 +4,20 @@ fn main() {
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let out_dir = std::path::PathBuf::from(out_dir);
     println!("cargo:rerun-if-changed=src/components");
+    println!("cargo:rerun-if-changed=../dioxus-kit/src");
+
+    // Component docs live in preview, while component metadata lives with the
+    // styled component crate so it can be packaged by the CLI.
+    for folder in std::fs::read_dir("../dioxus-kit/src").unwrap().flatten() {
+        if !folder.file_type().unwrap().is_dir() {
+            continue;
+        }
+        let component_json = folder.path().join("component.json");
+        if component_json.exists() {
+            write_component_description(&component_json, &out_dir).unwrap();
+        }
+    }
+
     // Process all markdown files in each component folder.
     for folder in std::fs::read_dir("src/components").unwrap().flatten() {
         if !folder.file_type().unwrap().is_dir() {
@@ -33,13 +47,26 @@ fn walk_markdown_dir(dir: &std::path::Path, out_dir: &std::path::Path) -> std::i
             std::fs::write(out_file_path, markdown).unwrap();
             continue;
         }
-        if file.file_name() == "component.json" {
-            let description = read_component_description(&file.path());
-            let out_file_path = out_folder.join("description.txt");
-            std::fs::write(out_file_path, description).unwrap();
-        }
     }
     Ok(())
+}
+
+fn write_component_description(
+    component_json_path: &std::path::Path,
+    out_dir: &std::path::Path,
+) -> std::io::Result<()> {
+    println!("cargo:rerun-if-changed={}", component_json_path.display());
+    let component_name = component_json_path
+        .parent()
+        .and_then(std::path::Path::file_name)
+        .expect("component metadata must be in a component directory");
+    let out_folder = out_dir.join(component_name);
+    std::fs::create_dir_all(&out_folder)?;
+    let out_file_path = out_folder.join("description.txt");
+    std::fs::write(
+        out_file_path,
+        read_component_description(component_json_path),
+    )
 }
 
 fn process_markdown_to_html(markdown_path: &std::path::Path) -> String {

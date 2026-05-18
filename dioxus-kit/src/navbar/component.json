@@ -1,0 +1,17 @@
+{
+  "name": "navbar",
+  "description": "A navbar component for navigation between pages.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-kit-core",
+      "git": "https://github.com/DioxusLabs/components",
+      "features": ["router"]
+    },
+    {
+      "name": "dioxus-icons",
+      "version": "0.1.0"
+    }
+  ]
+}

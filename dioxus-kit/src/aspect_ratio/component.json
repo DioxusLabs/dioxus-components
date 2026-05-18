@@ -1,0 +1,13 @@
+{
+  "name": "aspect_ratio",
+  "description": "An aspect ratio component for maintaining a consistent width-to-height ratio of an element.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-kit-core",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../assets/dx-components-theme.css"]
+}

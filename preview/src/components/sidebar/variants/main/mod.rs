@@ -19,8 +19,6 @@ use dioxus::prelude::*;
 #[css_module("/src/components/sidebar/variants/demo.css")]
 struct DemoStyles;
 
-#[css_module("/src/components/sidebar/style.css")]
-struct Styles;
 
 #[derive(Clone, PartialEq)]
 struct Team {
@@ -211,8 +209,8 @@ fn TeamSwitcher(teams: &'static [Team]) -> Element {
     rsx! {
         SidebarMenu {
             SidebarMenuItem {
-                DropdownMenu { class: Styles::dx_sidebar_dropdown_menu,
-                    DropdownMenuTrigger { class: Styles::dx_sidebar_dropdown_menu_trigger,
+                DropdownMenu { class: "dx-sidebar-dropdown-menu",
+                    DropdownMenuTrigger { class: "dx-sidebar-dropdown-menu-trigger",
                         as: move |attributes: Vec<Attribute>| rsx! {
                             SidebarMenuButton { class: DemoStyles::dx_sidebar_menu_disclosure_button, size: SidebarMenuButtonSize::Lg, attributes,
                                 div { style: "display:flex; flex-shrink:0; align-items:center; justify-content:center; width:2rem; height:2rem; aspect-ratio:1; border-radius:0.5rem; background:var(--dx-sidebar-accent); color:var(--dx-sidebar-accent-foreground);",
@@ -226,7 +224,7 @@ fn TeamSwitcher(teams: &'static [Team]) -> Element {
                             }
                         },
                     }
-                    DropdownMenuContent { class: Styles::dx_sidebar_dropdown_menu_content,
+                    DropdownMenuContent { class: "dx-sidebar-dropdown-menu-content",
                         div { style: "padding:0.5rem; font-size:0.75rem; opacity:0.7;",
                             "Teams"
                         }
@@ -242,7 +240,7 @@ fn TeamSwitcher(teams: &'static [Team]) -> Element {
                                 }
                             }
                         }
-                        Separator { class: Styles::dx_sidebar_dropdown_separator, decorative: true }
+                        Separator { class: "dx-sidebar-dropdown-separator", decorative: true }
                         DropdownMenuItem {
                             index: teams.len(),
                             value: 999usize,
@@ -268,7 +266,7 @@ fn NavMain(items: &'static [NavMainItem]) -> Element {
                         default_open: item.is_active,
                         as: move |attributes: Vec<Attribute>| rsx! {
                             SidebarMenuItem { key: "{item.title}", attributes,
-                                CollapsibleTrigger { class: Styles::dx_sidebar_collapsible_trigger,
+                                CollapsibleTrigger { class: "dx-sidebar-collapsible-trigger",
                                     as: move |attributes: Vec<Attribute>| rsx! {
                                         SidebarMenuButton {
                                             class: DemoStyles::dx_sidebar_menu_disclosure_button,
@@ -322,16 +320,16 @@ fn NavProjects(projects: &'static [Project]) -> Element {
                                 }
                             },
                         }
-                        DropdownMenu { class: Styles::dx_sidebar_dropdown_menu,
-                            DropdownMenuTrigger { class: Styles::dx_sidebar_dropdown_menu_trigger,
+                        DropdownMenu { class: "dx-sidebar-dropdown-menu",
+                            DropdownMenuTrigger { class: "dx-sidebar-dropdown-menu-trigger",
                                 as: move |attributes: Vec<Attribute>| rsx! {
                                     SidebarMenuAction { show_on_hover: true, attributes,
                                         DemoIcon {}
-                                        span { class: Styles::dx_sr_only, "More" }
+                                        span { class: "dx-sr-only", "More" }
                                     }
                                 },
                             }
-                            DropdownMenuContent { class: Styles::dx_sidebar_dropdown_menu_content,
+                            DropdownMenuContent { class: "dx-sidebar-dropdown-menu-content",
                                 DropdownMenuItem {
                                     index: 0usize,
                                     value: "view".to_string(),
@@ -346,7 +344,7 @@ fn NavProjects(projects: &'static [Project]) -> Element {
                                     DemoIcon {}
                                     span { "Share Project" }
                                 }
-                                Separator { class: Styles::dx_sidebar_dropdown_separator, decorative: true }
+                                Separator { class: "dx-sidebar-dropdown-separator", decorative: true }
                                 DropdownMenuItem {
                                     index: 2usize,
                                     value: "delete".to_string(),
@@ -375,8 +373,8 @@ fn NavUser() -> Element {
     rsx! {
         SidebarMenu {
             SidebarMenuItem {
-                DropdownMenu { class: Styles::dx_sidebar_dropdown_menu,
-                    DropdownMenuTrigger { class: Styles::dx_sidebar_dropdown_menu_trigger,
+                DropdownMenu { class: "dx-sidebar-dropdown-menu",
+                    DropdownMenuTrigger { class: "dx-sidebar-dropdown-menu-trigger",
                         as: move |attributes: Vec<Attribute>| rsx! {
                             SidebarMenuButton { class: DemoStyles::dx_sidebar_menu_disclosure_button, size: SidebarMenuButtonSize::Lg, attributes,
                                 ImageAvatar {
@@ -394,7 +392,7 @@ fn NavUser() -> Element {
                             }
                         },
                     }
-                    DropdownMenuContent { class: Styles::dx_sidebar_dropdown_menu_content,
+                    DropdownMenuContent { class: "dx-sidebar-dropdown-menu-content",
                         div { style: "display:flex; align-items:center; gap:0.5rem; padding:0.375rem 0.25rem; text-align:left; font-size:0.875rem;",
                             ImageAvatar {
                                 size: AvatarImageSize::Small,
@@ -408,7 +406,7 @@ fn NavUser() -> Element {
                                 span { class: DemoStyles::dx_sidebar_info_subtitle, "m@example.com" }
                             }
                         }
-                        Separator { class: Styles::dx_sidebar_dropdown_separator, decorative: true }
+                        Separator { class: "dx-sidebar-dropdown-separator", decorative: true }
                         DropdownMenuItem {
                             index: 0usize,
                             value: "upgrade".to_string(),
@@ -416,7 +414,7 @@ fn NavUser() -> Element {
                             DemoIcon {}
                             "Upgrade to Pro"
                         }
-                        Separator { class: Styles::dx_sidebar_dropdown_separator, decorative: true }
+                        Separator { class: "dx-sidebar-dropdown-separator", decorative: true }
                         DropdownMenuItem {
                             index: 1usize,
                             value: "account".to_string(),
@@ -438,7 +436,7 @@ fn NavUser() -> Element {
                             DemoIcon {}
                             "Notifications"
                         }
-                        Separator { class: Styles::dx_sidebar_dropdown_separator, decorative: true }
+                        Separator { class: "dx-sidebar-dropdown-separator", decorative: true }
                         DropdownMenuItem {
                             index: 4usize,
                             value: "logout".to_string(),

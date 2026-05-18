@@ -1,7 +1,7 @@
 use super::super::component::*;
 use dioxus::prelude::*;
 
-#[css_module("/src/components/switch/style.css")]
+#[css_module("/src/components/switch/variants/main/demo.css")]
 struct Styles;
 
 #[component]

@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use super::super::component::*;
 
-#[css_module("/src/components/badge/style.css")]
+#[css_module("/src/components/badge/variants/main/demo.css")]
 struct Styles;
 
 #[component]

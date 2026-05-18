@@ -1,0 +1,21 @@
+{
+  "name": "textarea",
+  "description": "a textarea component used to allow users to enter multi-line text input",
+  "authors": [
+    "zhiyanzhaijie"
+  ],
+  "exclude": [
+    "variants",
+    "docs.md",
+    "component.json"
+  ],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-kit-core",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": [
+    "../../assets/dx-components-theme.css"
+  ]
+}

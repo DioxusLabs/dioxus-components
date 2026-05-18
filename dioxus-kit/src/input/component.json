@@ -1,0 +1,13 @@
+{
+  "name": "input",
+  "description": "An input field component for user text entry.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-kit-core",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../assets/dx-components-theme.css"]
+}

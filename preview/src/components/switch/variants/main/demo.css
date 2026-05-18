@@ -1,0 +1,6 @@
+.dx-switch-example {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  gap: 15px;
+}

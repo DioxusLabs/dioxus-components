@@ -1,7 +1,7 @@
 use super::super::component::*;
 use dioxus::prelude::*;
 
-use dioxus_primitives::calendar::DateRange;
+use dioxus_kit_core::calendar::DateRange;
 
 #[component]
 pub fn Demo() -> Element {

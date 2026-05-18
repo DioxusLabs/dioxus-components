@@ -1,9 +1,12 @@
 [workspace]
 resolver = "3"
-members = ["primitives", "preview", "test-harness", "dioxus-attributes"]
+members = ["dioxus-kit-core", "dioxus-kit", "preview", "dioxus-attributes"]
+exclude = ["test-harness"]
 
 [workspace.dependencies]
-dioxus-primitives = { path = "primitives" }
+dioxus-kit-core = { path = "dioxus-kit-core" }
+dioxus-kit = { path = "dioxus-kit" }
+
 tracing = { version = "0.1", features = ["std"] }
 
 dioxus = "0.7.8"

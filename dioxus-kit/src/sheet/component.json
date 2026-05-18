@@ -1,0 +1,25 @@
+{
+  "name": "sheet",
+  "description": "A sheet component as an edge panel that complements the main content",
+  "authors": [
+    "zhiyanzhaijie"
+  ],
+  "exclude": [
+    "variants",
+    "docs.md",
+    "component.json"
+  ],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-kit-core",
+      "git": "https://github.com/DioxusLabs/components"
+    },
+    {
+      "name": "dioxus-icons",
+      "version": "0.1.0"
+    }
+  ],
+  "globalAssets": [
+    "../../assets/dx-components-theme.css"
+  ]
+}

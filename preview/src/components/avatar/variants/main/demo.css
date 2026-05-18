@@ -1,0 +1,12 @@
+.dx-avatar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dx-avatar-label {
+    margin: 0;
+    color: var(--secondary-color-4);
+    font-size: 0.875rem;
+}

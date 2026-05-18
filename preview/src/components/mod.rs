@@ -54,9 +54,10 @@ macro_rules! examples {
     ($($name:ident $(($kind:ident))? $([$($variant:ident),*])?),* $(,)?) => {
         $(
             pub(crate) mod $name {
-                pub(crate) mod component;
                 #[allow(unused)]
-                pub use component::*;
+                pub use ::dioxus_kit::$name as component;
+                #[allow(unused)]
+                pub use ::dioxus_kit::$name::*;
                 pub(crate) mod variants {
                     pub(crate) mod main;
                     $(
@@ -91,10 +92,10 @@ macro_rules! examples {
             )),
             docs: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/docs.html")),
             component: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/component.rs")),
+                source: dioxus_code::code!(concat!(env!("CARGO_MANIFEST_DIR"), "/../dioxus-kit/src/", stringify!($name), "/component.rs")),
             },
             style: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/style.css")),
+                source: dioxus_code::code!(concat!(env!("CARGO_MANIFEST_DIR"), "/../dioxus-kit/src/", stringify!($name), "/style.css")),
             },
             variants: &[
                 ComponentVariantDemoData {
@@ -134,10 +135,10 @@ macro_rules! examples {
             )),
             docs: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/docs.html")),
             component: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/component.rs")),
+                source: dioxus_code::code!(concat!(env!("CARGO_MANIFEST_DIR"), "/../dioxus-kit/src/", stringify!($name), "/component.rs")),
             },
             style: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/style.css")),
+                source: dioxus_code::code!(concat!(env!("CARGO_MANIFEST_DIR"), "/../dioxus-kit/src/", stringify!($name), "/style.css")),
             },
             variants: &[
                 ComponentVariantDemoData {

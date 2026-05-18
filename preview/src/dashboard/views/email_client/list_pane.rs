@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_icons::lucide::{Check, ChevronDown};
-use dioxus_primitives::select as primitive_select;
+use dioxus_kit_core::select as primitive_select;
 
 use crate::components::avatar::{AvatarImageSize, AvatarShape, ImageAvatar};
 use crate::components::button::{Button, ButtonVariant};
@@ -16,9 +16,6 @@ use crate::dashboard::common::{
 
 use super::avatars::avatar_profile_for_key;
 use super::state::{EmailClientState, EmailClientStateStoreExt, EmailClientStateStoreImplExt};
-
-#[css_module("/src/components/select/style.css")]
-struct SelectStyles;
 
 #[derive(Clone, PartialEq)]
 pub(super) enum ListRow {
@@ -84,14 +81,14 @@ pub(super) fn ListPane(
                     }
                 }
                 primitive_select::SelectMulti::<MessageTag> {
-                    class: SelectStyles::dx_select,
+                    class: "dx-select",
                     values: Some(tags.clone()),
                     default_values: vec![],
                     on_values_change: move |values| {
                         state.set_selected_tags(values);
                     },
                     primitive_select::SelectTrigger {
-                        class: format!("{} ec-filter-trigger", SelectStyles::dx_select_trigger),
+                        class: "dx-select-trigger ec-filter-trigger",
                         aria_label: "Filter by tag",
                         LucideIcon { kind: IconKind::Filter }
                         if !tags.is_empty() {
@@ -104,13 +101,13 @@ pub(super) fn ListPane(
                         }
                     }
                     primitive_select::SelectList {
-                        class: format!("{} ec-filter-list", SelectStyles::dx_select_list),
+                        class: "dx-select-list ec-filter-list",
                         aria_label: "Filter by tag",
                         primitive_select::SelectGroup {
-                            primitive_select::SelectGroupLabel { class: SelectStyles::dx_select_group_label, "Tags" }
+                            primitive_select::SelectGroupLabel { class: "dx-select-group-label", "Tags" }
                             for (index, tag) in MessageTag::ALL.iter().enumerate() {
                                 primitive_select::SelectOption::<MessageTag> {
-                                    class: SelectStyles::dx_select_option,
+                                    class: "dx-select-option",
                                     key: "{tag.label()}",
                                     index,
                                     value: *tag,

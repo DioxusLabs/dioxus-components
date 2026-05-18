@@ -1,0 +1,33 @@
+[package]
+name = "dioxus-kit-core"
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.80.0"
+readme = "../README.md"
+keywords = ["gui", "dioxus", "components", "primitives"]
+categories = ["gui", "wasm"]
+authors = ["Dioxus Labs", "DogeDark"]
+license = "MIT OR Apache-2.0"
+homepage = "https://dioxuslabs.com"
+repository = "https://github.com/DioxusLabs/components"
+
+[dependencies]
+dioxus.workspace = true
+dioxus-attributes = { path = "../dioxus-attributes" }
+dioxus-sdk-time = "0.7.0"
+time = { version = "0.3.44", features = ["std", "macros", "parsing", "local-offset"] }
+num-integer = "0.1.46"
+tracing.workspace = true
+serde = { version = "1.0", features = ["derive"] }
+palette = "0.7.6"
+
+[build-dependencies]
+lazy-js-bundle = "0.7.9"
+
+[dev-dependencies]
+dioxus-ssr = "0.7.0"
+
+[features]
+default = ["router"]
+router = ["dioxus/router"]
+web = ["time/wasm-bindgen"]

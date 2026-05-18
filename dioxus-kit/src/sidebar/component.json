@@ -1,0 +1,32 @@
+{
+  "name": "sidebar",
+  "description": "A sidebar component as a vertical interface panel fixed to the screen edge, enable quick access to different sections of an application",
+  "authors": [
+    "zhiyanzhaijie"
+  ],
+  "exclude": [
+    "variants",
+    "docs.md",
+    "component.json"
+  ],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-kit-core",
+      "git": "https://github.com/DioxusLabs/components"
+    },
+    {
+      "name": "dioxus-icons",
+      "version": "0.1.0"
+    }
+  ],
+  "componentDependencies": [
+    "button",
+    "separator",
+    "sheet",
+    "skeleton",
+    "tooltip"
+  ],
+  "globalAssets": [
+    "../../assets/dx-components-theme.css"
+  ]
+}

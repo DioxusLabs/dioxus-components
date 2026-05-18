@@ -1,6 +1,6 @@
 use super::super::component::*;
 use dioxus::prelude::*;
-use dioxus_primitives::ContentSide;
+use dioxus_kit_core::ContentSide;
 
 #[component]
 pub fn Demo() -> Element {

@@ -8,7 +8,7 @@ edition = "2021"
 
 [dependencies]
 dioxus = { version = "0.7.9", features = [] }
-dioxus-primitives = { path = "../primitives/", version = "0.0.1", default-features = false, features = ["router"] }
+dioxus-kit-core = { path = "../dioxus-kit-core/", version = "0.0.1", default-features = false, features = ["router"] }
 
 [features]
 default = ["web"]

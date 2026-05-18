@@ -1,3 +1,5 @@
+#![allow(unpredictable_function_pointer_comparisons)]
+
 use crate::components::{
     avatar::{AvatarImageSize, ImageAvatar},
     badge::{Badge, BadgeVariant, VerifiedIcon},
@@ -257,7 +259,7 @@ fn NavigationLayout() -> Element {
         document::Link { rel: "stylesheet", href: asset!("/assets/main.css") }
         document::Link {
             rel: "stylesheet",
-            href: asset!("/assets/dx-components-theme.css"),
+            href: dioxus_kit::THEME_CSS,
         }
         document::Link { rel: "stylesheet", href: asset!("/assets/hero.css") }
         Navbar {}
@@ -1099,7 +1101,7 @@ fn BlockComponentVariantHighlight(
 fn EmailClientDashboard(dark_mode: Option<bool>) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("/assets/main.css") }
-        document::Link { rel: "stylesheet", href: asset!("/assets/dx-components-theme.css") }
+        document::Link { rel: "stylesheet", href: dioxus_kit::THEME_CSS }
         dashboard::views::email_client::EmailClient {}
     }
 }
@@ -1133,7 +1135,7 @@ fn ComponentBlockDemo(name: String, variant: Option<String>, dark_mode: Option<b
         document::Link { rel: "stylesheet", href: asset!("/assets/main.css") }
         document::Link {
             rel: "stylesheet",
-            href: asset!("/assets/dx-components-theme.css"),
+            href: dioxus_kit::THEME_CSS,
         }
         div { style: "min-height: 100vh;", Comp {} }
     }
@@ -1581,7 +1583,7 @@ fn BlockFilters() -> Element {
                             Checkbox {
                                 id: tag.0,
                                 name: tag.0,
-                                default_checked: if tag.2 { dioxus_primitives::checkbox::CheckboxState::Checked } else { dioxus_primitives::checkbox::CheckboxState::Unchecked },
+                                default_checked: if tag.2 { dioxus_kit_core::checkbox::CheckboxState::Checked } else { dioxus_kit_core::checkbox::CheckboxState::Unchecked },
                                 aria_label: tag.1,
                             }
                             Label { html_for: tag.0, "{tag.1}" }
@@ -1596,7 +1598,7 @@ fn BlockFilters() -> Element {
 
 #[component]
 fn BlockColorPalette() -> Element {
-    use dioxus_primitives::color_picker::Color;
+    use dioxus_kit_core::color_picker::Color;
     use palette::{encoding, Hsv, IntoColor};
 
     let mut color = use_signal(|| -> Hsv<encoding::Srgb, f64> {
@@ -1982,5 +1984,8 @@ fn GotoIcon(mut props: LinkProps) -> Element {
 }
 
 const THEME_CSS: HighlightedCode = HighlightedCode {
-    source: dioxus_code::code!("/assets/dx-components-theme.css"),
+    source: dioxus_code::code!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../dioxus-kit/assets/dx-components-theme.css"
+    )),
 };

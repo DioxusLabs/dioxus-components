@@ -1,0 +1,21 @@
+{
+  "name": "skeleton",
+  "description": "A placeholder component for all loading elements.",
+  "authors": [
+    "zhiyanzhaijie"
+  ],
+  "exclude": [
+    "variants",
+    "docs.md",
+    "component.json"
+  ],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-kit-core",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": [
+    "../../assets/dx-components-theme.css"
+  ]
+}

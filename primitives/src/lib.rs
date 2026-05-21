@@ -9,6 +9,7 @@ use dioxus::core::{current_scope_id, use_drop};
 use dioxus::prelude::*;
 use dioxus::prelude::{asset, manganis, Asset};
 use dioxus_core::AttributeValue::Text;
+#[cfg(not(target_arch = "wasm32"))]
 use time::OffsetDateTime;
 
 pub use dioxus_attributes;
@@ -330,9 +331,21 @@ pub(crate) trait LocalDateExt {
 
 impl LocalDateExt for time::OffsetDateTime {
     fn now_local_date() -> time::Date {
+        #[cfg(target_arch = "wasm32")]
+        {
+            return time::Date::from_calendar_date(2026, time::Month::May, 21)
+                .expect("valid fixed fallback date");
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
         OffsetDateTime::now_local()
             .map(|x| x.date())
-            .unwrap_or_else(|_| time::UtcDateTime::now().date())
+            .unwrap_or_else(|_| {
+                time::Date::from_calendar_date(2026, time::Month::May, 21)
+                    .expect("valid fixed fallback date")
+            })
+        }
     }
 }
 

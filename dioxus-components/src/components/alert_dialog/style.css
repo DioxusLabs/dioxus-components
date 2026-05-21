@@ -1,0 +1,135 @@
+/* Alert Dialog Backdrop */
+.dx-alert-dialog-backdrop {
+  position: fixed;
+  z-index: 1000;
+  background: rgb(0 0 0 / 30%);
+  inset: 0;
+  opacity: 0;
+  will-change: opacity;
+}
+
+.dx-alert-dialog-backdrop[data-state="closed"] {
+  animation: dx-alert-animate-out 150ms ease-in forwards;
+}
+
+@keyframes dx-alert-animate-out {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.dx-alert-dialog-backdrop[data-state="open"] {
+  animation: dx-alert-animate-in 150ms ease-out forwards;
+}
+
+@keyframes dx-alert-animate-in {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Alert Dialog Container - improved for theme consistency */
+.dx-alert-dialog {
+  position: fixed;
+  z-index: 1001;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  width: 100%;
+  max-width: calc(100% - 2rem);
+  box-sizing: border-box;
+  flex-direction: column;
+  padding: 32px 24px 24px;
+  border: 1px solid var(--primary-color-6);
+  border-radius: 8px;
+  margin: 0;
+  animation: none;
+  background: var(--primary-color-2);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 18%);
+  color: var(--secondary-color-4);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  gap: 16px;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.dx-alert-dialog-title {
+  margin: 0;
+  color: var(--secondary-color-4);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.dx-alert-dialog-description {
+  margin: 0;
+  color: var(--secondary-color-5);
+  font-size: 1rem;
+}
+
+.dx-alert-dialog-actions {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 12px;
+}
+
+@media (width >= 40rem) {
+  .dx-alert-dialog-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .dx-alert-dialog {
+    max-width: 32rem;
+    text-align: left;
+  }
+}
+
+.dx-alert-dialog-cancel {
+  padding: 8px 18px;
+  border: 1px solid var(--primary-color-6);
+  border-radius: 0.5rem;
+  background-color: var(--light, var(--primary-color))
+    var(--dark, var(--primary-color-3));
+  color: var(--secondary-color-4);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.dx-alert-dialog-cancel:hover {
+  background-color: var(--primary-color-4);
+}
+
+.dx-alert-dialog-cancel:focus-visible {
+  box-shadow: 0 0 0 2px var(--focused-border-color);
+}
+
+.dx-alert-dialog-action {
+  padding: 8px 18px;
+  border: 1px solid var(--primary-error-color);
+  border-radius: 0.5rem;
+  background-color: var(--primary-error-color);
+  color: var(--contrast-error-color);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.dx-alert-dialog-action:hover {
+  background-color: var(--secondary-error-color);
+}
+
+.dx-alert-dialog-action:focus-visible {
+  box-shadow: 0 0 0 2px var(--focused-border-color);
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/alert_dialog/style.css */

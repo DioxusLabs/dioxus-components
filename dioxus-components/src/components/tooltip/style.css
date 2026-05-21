@@ -1,0 +1,152 @@
+/* Tooltip Styles */
+.dx-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.dx-tooltip-trigger {
+  display: inline-block;
+}
+
+.dx-tooltip-content {
+  position: absolute;
+  z-index: 1000;
+  max-width: 250px;
+  padding: 8px 12px;
+  border-radius: 0.5rem;
+  animation: dx-tooltip-fade-in 0.2s ease-in-out;
+  background-color: var(--secondary-color-4);
+  color: var(--primary-color);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.dx-tooltip-content::after {
+  position: absolute;
+  border-width: 0.25rem;
+  border-style: solid;
+  margin-left: -0.25rem;
+  content: " ";
+  rotate: 45deg;
+}
+
+/* Positioning based on side */
+.dx-tooltip-content[data-side="top"] {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 8px;
+  transform: translateX(-50%);
+}
+
+.dx-tooltip-content[data-side="top"]::after {
+  top: calc(100% - 0.25rem);
+  left: 50%;
+  border-color: var(--secondary-color-4);
+  border-radius: 0 0 0.1rem;
+}
+
+.dx-tooltip-content[data-side="right"] {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-left: 8px;
+  transform: translateY(-50%);
+}
+
+.dx-tooltip-content[data-side="right"]::after {
+  top: calc(50% - 0.25rem);
+  left: 0;
+  border-color: var(--secondary-color-4);
+  border-radius: 0 0 0 0.1rem;
+}
+
+.dx-tooltip-content[data-side="bottom"] {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 8px;
+  transform: translateX(-50%);
+}
+
+.dx-tooltip-content[data-side="bottom"]::after {
+  bottom: calc(100% - 0.25rem);
+  left: 50%;
+  border-color: var(--secondary-color-4);
+  border-radius: 0.1rem 0 0;
+}
+
+.dx-tooltip-content[data-side="left"] {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-right: 8px;
+  transform: translateY(-50%);
+}
+
+.dx-tooltip-content[data-side="left"]::after {
+  top: calc(50% - 0.25rem);
+  right: -0.25rem;
+  border-color: var(--secondary-color-4);
+  border-radius: 0 0.1rem 0 0;
+}
+
+/* Alignment styles for top and bottom */
+.dx-tooltip-content[data-side="top"][data-align="start"],
+.dx-tooltip-content[data-side="bottom"][data-align="start"] {
+  left: 0;
+  transform: none;
+}
+
+.dx-tooltip-content[data-side="top"][data-align="end"],
+.dx-tooltip-content[data-side="bottom"][data-align="end"] {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+/* Alignment styles for left and right */
+.dx-tooltip-content[data-side="left"][data-align="start"],
+.dx-tooltip-content[data-side="right"][data-align="start"] {
+  top: 0;
+  transform: none;
+}
+
+.dx-tooltip-content[data-side="left"][data-align="center"],
+.dx-tooltip-content[data-side="right"][data-align="center"] {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dx-tooltip-content[data-side="left"][data-align="end"],
+.dx-tooltip-content[data-side="right"][data-align="end"] {
+  top: auto;
+  bottom: 0;
+  transform: none;
+}
+
+/* Animation */
+@keyframes dx-tooltip-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* State styles */
+.dx-tooltip[data-disabled="true"] .dx-tooltip-trigger {
+  cursor: default;
+}
+
+.dx-tooltip-content[data-state="closed"] {
+  display: none;
+}
+
+.dx-tooltip-content[data-state="open"] {
+  display: block;
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/tooltip/style.css */

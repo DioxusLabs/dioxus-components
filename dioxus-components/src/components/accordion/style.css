@@ -1,0 +1,98 @@
+.dx-accordion-trigger {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border: none;
+  background-color: transparent;
+  color: var(--secondary-color-4);
+  outline: none;
+  text-align: left;
+}
+
+.dx-accordion-trigger:focus-visible {
+  border: none;
+  box-shadow: inset 0 0 0 2px var(--focused-border-color);
+}
+
+.dx-accordion-trigger:hover:not(:disabled) {
+  cursor: pointer;
+  text-decoration-line: underline;
+}
+
+.dx-accordion-trigger:disabled {
+  color: var(--secondary-color-5);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dx-accordion-content {
+  display: grid;
+}
+
+.dx-accordion-content > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.dx-accordion-content[data-open="false"] {
+	animation: dx-accordion-slide-down 300ms cubic-bezier(0.87, 0, 0.13, 1) forwards;
+}
+
+.dx-accordion-content[data-open="true"] {
+  animation: dx-accordion-slide-up 300ms cubic-bezier(0.87, 0, 0.13, 1) forwards;
+}
+
+@keyframes dx-accordion-slide-down {
+	from {
+    height: var(--collapsible-content-width);
+	}
+
+  to {
+    grid-template-rows: 0fr;
+  }
+}
+
+@keyframes dx-accordion-slide-up {
+	from {
+    height: 0;
+	}
+
+  to {
+    grid-template-rows: 1fr;
+  }
+}
+
+.dx-accordion {
+  contain: inline-size;
+}
+
+.dx-accordion-item {
+  overflow: hidden;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--primary-color-6);
+  margin-top: 1px;
+}
+
+.dx-accordion-item:first-child {
+  margin-top: 0;
+}
+
+.dx-accordion-item:last-child {
+  border-bottom: none;
+}
+
+.dx-accordion-expand-icon {
+  transition: rotate 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dx-accordion-item[data-open="true"] .dx-accordion-expand-icon {
+  rotate: 180deg;
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/accordion/style.css */

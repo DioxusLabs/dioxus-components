@@ -1,0 +1,125 @@
+.dx-menubar {
+  display: flex;
+  box-sizing: border-box;
+  padding: 0.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--primary-color-2);
+  box-shadow: inset 0 0 0 1px var(--primary-color-6);
+  gap: 0.25rem;
+}
+
+.dx-menubar-menu {
+  position: relative;
+}
+
+.dx-menubar-trigger {
+  padding: 8px 12px;
+  border: none;
+  border-radius: calc(0.5rem - 0.25rem);
+  background: none;
+  color: var(--secondary-color-4);
+  cursor: pointer;
+  transition: background-color 100ms ease-out;
+}
+
+.dx-menubar-menu[data-state="open"] .dx-menubar-trigger {
+  background-color: var(--light, var(--primary-color-4))
+    var(--dark, var(--primary-color-7));
+  color: var(--secondary-color-1);
+}
+
+.dx-menubar-trigger[data-disabled="true"] {
+  color: var(--secondary-color-5);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dx-menubar-trigger:hover:not([data-disabled="true"]),
+.dx-menubar-trigger:focus-visible {
+  background: var(--light, var(--primary-color-4))
+    var(--dark, var(--primary-color-7));
+  color: var(--secondary-color-1);
+  outline: none;
+}
+
+.dx-menubar-content {
+  position: absolute;
+  z-index: 1000;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+  background: var(--light, var(--primary-color))
+    var(--dark, var(--primary-color-5));
+  box-shadow: inset 0 0 0 1px var(--light, var(--primary-color-6))
+    var(--dark, var(--primary-color-7));
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: top;
+  will-change: transform, opacity;
+}
+
+.dx-menubar-menu:first-child .dx-menubar-content {
+  margin-left: -0.25rem;
+}
+
+.dx-menubar-content[data-state="closed"] {
+  animation: dx-menubar-content-animate-out 150ms ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes dx-menubar-content-animate-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-2px);
+  }
+}
+
+.dx-menubar-content[data-state="open"] {
+  animation: dx-menubar-content-animate-in 150ms ease-out forwards;
+  pointer-events: auto;
+}
+
+@keyframes dx-menubar-content-animate-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.dx-menubar-item {
+  display: block;
+  padding: 8px 12px;
+  border-radius: calc(0.5rem - 0.25rem);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dx-menubar-item[data-disabled="true"] {
+  color: var(--secondary-color-5);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dx-menubar-item:hover:not([data-disabled="true"]),
+.dx-menubar-item:focus-visible {
+  background: var(--light, var(--primary-color-4))
+    var(--dark, var(--primary-color-7));
+  color: var(--secondary-color-1);
+  outline: none;
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/menubar/style.css */

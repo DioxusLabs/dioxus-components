@@ -1,0 +1,54 @@
+use dioxus::prelude::*;
+use dioxus_primitives::slider::{self, RangeSliderProps, SliderProps};
+
+#[css_module("/src/components/slider/style.css")]
+struct Styles;
+
+#[component]
+pub fn Slider(props: SliderProps) -> Element {
+    rsx! {
+        slider::Slider {
+            class: Styles::dx_slider.to_string(),
+            value: props.value,
+            default_value: props.default_value,
+            min: props.min,
+            max: props.max,
+            step: props.step,
+            disabled: props.disabled,
+            horizontal: props.horizontal,
+            inverted: props.inverted,
+            on_value_change: props.on_value_change,
+            label: props.label,
+            attributes: props.attributes,
+            slider::SliderTrack { class: Styles::dx_slider_track.to_string(),
+                slider::SliderRange { class: Styles::dx_slider_range.to_string() }
+                slider::SliderThumb { class: Styles::dx_slider_thumb.to_string() }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn RangeSlider(props: RangeSliderProps) -> Element {
+    rsx! {
+        slider::RangeSlider {
+            class: Styles::dx_slider.to_string(),
+            value: props.value,
+            default_value: props.default_value,
+            min: props.min,
+            max: props.max,
+            step: props.step,
+            disabled: props.disabled,
+            horizontal: props.horizontal,
+            inverted: props.inverted,
+            on_value_change: props.on_value_change,
+            label: props.label,
+            attributes: props.attributes,
+            slider::SliderTrack { class: Styles::dx_slider_track.to_string(),
+                slider::SliderRange { class: Styles::dx_slider_range.to_string() }
+                slider::SliderThumb { class: Styles::dx_slider_thumb.to_string(), index: 0usize }
+                slider::SliderThumb { class: Styles::dx_slider_thumb.to_string(), index: 1usize }
+            }
+        }
+    }
+}

@@ -1,0 +1,55 @@
+.dx-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.dx-radio-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  color: var(--secondary-color-4);
+  font-size: 14px;
+  gap: .75rem;
+}
+
+.dx-radio-item::before {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  box-sizing: border-box;
+  border-radius: 1.5rem;
+  background: var(--light, var(--primary-color)) var(--dark, var(--primary-color-3));
+  box-shadow: 0 0 0 1px var(--light, var(--primary-color-6))
+    var(--dark, var(--primary-color-7));
+  content: "";
+  cursor: pointer;
+}
+
+.dx-radio-item:focus-visible {
+  outline: none;
+}
+
+.dx-radio-item:focus-visible::before {
+  box-shadow: 0 0 0 2px var(--focused-border-color);
+}
+
+.dx-radio-item[data-state="checked"]::before {
+  border: 0.25rem solid var(--light, var(--primary-color)) var(--dark, var(--primary-color-3));
+  background: var(--secondary-color-4);
+}
+
+.dx-radio-item:disabled {
+  color: var(--secondary-color-5);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dx-radio-item:disabled::before {
+  cursor: not-allowed;
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/radio_group/style.css */

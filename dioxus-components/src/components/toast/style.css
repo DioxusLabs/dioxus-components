@@ -1,0 +1,187 @@
+.dx-toast-container {
+  position: fixed;
+  z-index: 9999;
+  right: 20px;
+  bottom: 20px;
+  max-width: 350px;
+}
+
+.dx-toast-container ol {
+  display: flex;
+  flex-direction: column-reverse;
+  padding: 0;
+  margin: 0;
+  gap: 0.75rem;
+}
+
+.dx-toast-container li {
+  display: flex;
+}
+
+.dx-toast {
+  z-index: calc(var(--toast-count) - var(--toast-index));
+  display: flex;
+  overflow: hidden;
+  width: 18rem;
+  height: 4rem;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid var(--light, var(--primary-color-6))
+    var(--dark, var(--primary-color-7));
+  border-radius: 0.5rem;
+  margin-top: -4rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+  filter: var(--light, none)
+    var(
+      --dark,
+      brightness(calc(0.5 + 0.5 * (1 - ((var(--toast-index) + 1) / 4))))
+    );
+  opacity: calc(1 - var(--toast-hidden));
+  transform: scale(
+    calc(100% - var(--toast-index) * 5%),
+    calc(100% - var(--toast-index) * 2%)
+  );
+  transition: transform 0.2s ease, margin-top 0.2s ease, opacity 0.2s ease;
+
+  --toast-hidden: calc(min(max(0, var(--toast-index) - 2), 1));
+}
+
+.dx-toast-container:not(:hover, :focus-within)
+  .dx-toast[data-toast-even]:not([data-top]) {
+  animation: dx-slide-up-even 0.2s ease-out;
+}
+
+.dx-toast-container:not(:hover, :focus-within)
+  .dx-toast[data-toast-odd]:not([data-top]) {
+  animation: dx-slide-up-odd 0.2s ease-out;
+}
+
+@keyframes dx-slide-up-even {
+  from {
+    transform: translateY(0.5rem)
+      scale(
+        calc(100% - var(--toast-index) * 5%),
+        calc(100% - var(--toast-index) * 2%)
+      );
+  }
+
+  to {
+    transform: translateY(0)
+      scale(
+        calc(100% - var(--toast-index) * 5%),
+        calc(100% - var(--toast-index) * 2%)
+      );
+  }
+}
+
+@keyframes dx-slide-up-odd {
+  from {
+    transform: translateY(0.5rem)
+      scale(
+        calc(100% - var(--toast-index) * 5%),
+        calc(100% - var(--toast-index) * 2%)
+      );
+  }
+
+  to {
+    transform: translateY(0)
+      scale(
+        calc(100% - var(--toast-index) * 5%),
+        calc(100% - var(--toast-index) * 2%)
+      );
+  }
+}
+
+.dx-toast[data-top] {
+  animation: dx-toast-slide-in 0.2s ease-out;
+}
+
+.dx-toast-container:hover .dx-toast[data-top],
+.dx-toast-container:focus-within .dx-toast[data-top] {
+  animation: dx-toast-slide-in 0 ease-out;
+}
+
+@keyframes dx-toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%)
+      scale(
+        calc(110% - var(--toast-index) * 5%),
+        calc(110% - var(--toast-index) * 2%)
+      );
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0)
+      scale(
+        calc(100% - var(--toast-index) * 5%),
+        calc(100% - var(--toast-index) * 2%)
+      );
+  }
+}
+
+.dx-toast-container:hover .dx-toast,
+.dx-toast-container:focus-within .dx-toast {
+  margin-top: var(--toast-padding);
+  filter: brightness(1);
+  opacity: 1;
+  transform: scale(calc(100%));
+}
+
+.dx-toast[data-type="success"] {
+  background-color: var(--primary-success-color);
+  color: var(--secondary-success-color);
+}
+
+.dx-toast[data-type="error"] {
+  background-color: var(--primary-error-color);
+  color: var(--contrast-error-color);
+}
+
+.dx-toast[data-type="warning"] {
+  background-color: var(--primary-warning-color);
+  color: var(--secondary-warning-color);
+}
+
+.dx-toast[data-type="info"] {
+  background-color: var(--primary-info-color);
+  color: var(--secondary-info-color);
+}
+
+.dx-toast-content {
+  flex: 1;
+  margin-right: 8px;
+  transition: filter 0.2s ease;
+}
+
+.dx-toast-title {
+  margin-bottom: 4px;
+  color: var(--secondary-color-4);
+  font-weight: 600;
+}
+
+.dx-toast-description {
+  color: var(--secondary-color-3);
+  font-size: 0.875rem;
+}
+
+.dx-toast-close {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  margin: 0;
+  background: none;
+  color: var(--secondary-color-3);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.dx-toast-close:hover {
+  color: var(--secondary-color-1);
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/toast/style.css */

@@ -1,0 +1,68 @@
+.dx-toggle-group {
+  width: fit-content;
+}
+
+.dx-toggle-item {
+  min-width: 35px;
+  padding: 10px;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--secondary-color-4);
+  font-size: 14px;
+  outline: none;
+  transition: background-color 200ms ease, border 200ms ease, outline-color 150ms;
+}
+
+.dx-toggle-group[data-allow-multiple-pressed="true"]
+  .dx-toggle-item {
+  border-top: 1px solid var(--primary-color-6);
+  border-right: 1px solid var(--primary-color-6);
+  border-bottom: 1px solid var(--primary-color-6);
+}
+
+.dx-toggle-item:hover,
+.dx-toggle-item:focus-visible {
+  background-color: var(--primary-color-4);
+  cursor: pointer;
+}
+
+.dx-toggle-item[data-state="on"] {
+  background-color: var(--primary-color-7);
+  color: var(--secondary-color-1);
+}
+
+.dx-toggle-item:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--focused-border-color);
+  outline-offset: 2px;
+}
+
+.dx-toggle-group[data-allow-multiple-pressed="true"]
+  .dx-toggle-item[data-state="on"] {
+  border-top: 1px solid var(--secondary-color-6);
+  border-right: 1px solid var(--secondary-color-6);
+  border-bottom: 1px solid var(--secondary-color-6);
+}
+
+.dx-toggle-group[data-allow-multiple-pressed="true"]
+  .dx-toggle-item:first-child[data-state="on"] {
+  border: 1px solid var(--secondary-color-6);
+}
+
+.dx-toggle-item:first-child {
+  border-bottom-left-radius: 0.5rem;
+  border-top-left-radius: 0.5rem;
+}
+
+.dx-toggle-group[data-allow-multiple-pressed="true"] .dx-toggle-item:first-child {
+  border: 1px solid var(--primary-color-6);
+}
+
+.dx-toggle-item:last-child {
+  border-bottom-right-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/toggle_group/style.css */

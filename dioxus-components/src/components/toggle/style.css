@@ -1,0 +1,34 @@
+.dx-toggle {
+  display: inline-flex;
+  width: fit-content;
+  min-width: 2rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: transparent;
+  color: var(--secondary-color-4);
+  font-size: 14px;
+  outline: none;
+  transition: background-color 150ms, color 150ms, outline-color 150ms;
+}
+
+.dx-toggle:hover, .dx-toggle:focus-visible {
+  background-color: var(--primary-color-4);
+  cursor: pointer;
+}
+
+.dx-toggle:focus-visible {
+  outline: 2px solid var(--focused-border-color);
+  outline-offset: 2px;
+}
+
+.dx-toggle[data-state="on"] {
+  background-color: var(--primary-color-7);
+  color: var(--secondary-color-1);
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/toggle/style.css */

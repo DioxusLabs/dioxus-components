@@ -1,0 +1,18 @@
+.dx-skeleton {
+  border-radius: 0.375rem;
+  animation: dx-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background-color: var(--primary-color-5);
+}
+
+@keyframes dx-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  61.8% {
+    opacity: 0.5;
+  }
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/skeleton/style.css */

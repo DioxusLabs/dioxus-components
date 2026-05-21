@@ -1,0 +1,30 @@
+[package]
+name = "dioxus-components"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88.0"
+readme = "../README.md"
+keywords = ["gui", "dioxus", "components"]
+categories = ["gui", "wasm"]
+authors = ["Dioxus Labs", "DogeDark"]
+license = "MIT OR Apache-2.0"
+homepage = "https://dioxuslabs.com"
+repository = "https://github.com/DioxusLabs/components"
+
+[dependencies]
+dioxus = { workspace = true, features = ["router"] }
+dioxus-icons = "0.1.0"
+dioxus-primitives.workspace = true
+palette = "0.7.6"
+time = { version = "0.3.44", features = ["std", "macros"] }
+
+[dev-dependencies]
+dioxus-ssr = "0.7.0"
+
+[features]
+default = []
+web = ["dioxus/web", "dioxus-primitives/web"]
+desktop = ["dioxus/desktop"]
+fullstack = ["dioxus/fullstack"]
+server = ["dioxus/server", "dioxus/fullstack"]
+native = ["dioxus/native"]

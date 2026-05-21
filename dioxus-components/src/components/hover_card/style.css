@@ -1,0 +1,120 @@
+/* Hover Card Styles */
+.dx-hover-card {
+  position: relative;
+  display: inline-block;
+}
+
+.dx-hover-card-trigger {
+  display: inline-block;
+}
+
+.dx-hover-card-content {
+  position: absolute;
+  z-index: 1000;
+  min-width: 200px;
+  padding: 5px;
+  border: 1px solid var(--light, var(--primary-color-6))
+    var(--dark, var(--primary-color-7));
+  border-radius: 0.5rem;
+  animation: dx-hover-card-fade-in 0.1s ease-out;
+  background: var(--light, var(--primary-color))
+    var(--dark, var(--primary-color-5));
+
+  /* Semi transparent shadow effect in light mode */
+  box-shadow: var(--light, 0 2px 10px #0000001a) var(--dark, none);
+}
+
+/* Positioning based on side */
+.dx-hover-card-content[data-side="top"] {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 10px;
+  transform: translateX(-50%);
+}
+
+.dx-hover-card-content[data-side="right"] {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-left: 10px;
+  transform: translateY(-50%);
+}
+
+.dx-hover-card-content[data-side="bottom"] {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 10px;
+  transform: translateX(-50%);
+}
+
+.dx-hover-card-content[data-side="left"] {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-right: 10px;
+  transform: translateY(-50%);
+}
+
+/* Alignment styles for top and bottom */
+.dx-hover-card-content[data-side="top"][data-align="start"],
+.dx-hover-card-content[data-side="bottom"][data-align="start"] {
+  left: 0;
+  transform: none;
+}
+
+.dx-hover-card-content[data-side="top"][data-align="center"],
+.dx-hover-card-content[data-side="bottom"][data-align="center"] {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dx-hover-card-content[data-side="top"][data-align="end"],
+.dx-hover-card-content[data-side="bottom"][data-align="end"] {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+/* Alignment styles for left and right */
+.dx-hover-card-content[data-side="left"][data-align="start"],
+.dx-hover-card-content[data-side="right"][data-align="start"] {
+  top: 0;
+  transform: none;
+}
+
+.dx-hover-card-content[data-side="left"][data-align="center"],
+.dx-hover-card-content[data-side="right"][data-align="center"] {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dx-hover-card-content[data-side="left"][data-align="end"],
+.dx-hover-card-content[data-side="right"][data-align="end"] {
+  top: auto;
+  bottom: 0;
+  transform: none;
+}
+
+/* Animation */
+@keyframes dx-hover-card-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* State styles */
+.dx-hover-card[data-disabled="true"] .dx-hover-card-trigger {
+  color: var(--secondary-color-5);
+}
+
+.dx-hover-card-content[data-state="closed"] {
+  display: none;
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/hover_card/style.css */

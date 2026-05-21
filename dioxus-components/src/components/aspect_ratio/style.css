@@ -1,0 +1,12 @@
+.dx-aspect-ratio-container {
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 1rem;
+  border-radius: .5rem;
+}
+
+.dx-aspect-ratio-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

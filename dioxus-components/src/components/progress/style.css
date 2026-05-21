@@ -1,0 +1,33 @@
+.dx-progress {
+    position: relative;
+    overflow: hidden;
+    min-width: 200px;
+    height: .5rem;
+    box-sizing: border-box;
+    border-radius: 9999px;
+    background: var(--primary-color-5);
+}
+
+.dx-progress[data-state='indeterminate'] .dx-progress-indicator {
+    width: 50%;
+    animation: dx-indeterminate 1s infinite linear;
+}
+
+.dx-progress-indicator {
+    width: var(--progress-value, 0%);
+    height: 100%;
+    background-color: var(--secondary-color-1);
+    transition: width 250ms ease;
+}
+
+@keyframes dx-indeterminate {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(200%);
+    }
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/progress/style.css */

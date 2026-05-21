@@ -1,0 +1,282 @@
+/* Calendar Container */
+.dx-calendar {
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-direction: row;
+    border: 1px solid var(--primary-color-6);
+    border-radius: 8px;
+    background-color: var(--primary-color-2);
+    box-shadow: 0 2px 10px rgb(0 0 0 / 10%);
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+        sans-serif;
+}
+
+/* Calendar Navigation */
+.dx-calendar-navigation {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    padding: 0.75rem calc(0.75rem + 1.75rem + 0.5rem) 0.25rem;
+    gap: 0.5rem;
+}
+
+.dx-calendar-nav-title {
+    color: var(--secondary-color-4);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.dx-calendar-nav-prev,
+.dx-calendar-nav-next {
+    position: absolute;
+    display: flex;
+    width: 1.75rem;
+    height: 1.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--primary-color-6);
+    border-radius: 0.5rem;
+    background-color: var(--light, transparent)
+        var(--dark, var(--primary-color-3));
+    color: var(--secondary-color-5);
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.dx-calendar-nav-prev {
+    left: 0.75rem;
+}
+
+.dx-calendar-nav-next {
+    right: 0.75rem;
+}
+
+.dx-calendar-nav-prev:hover,
+.dx-calendar-nav-next:hover {
+    border-color: var(--primary-color-7);
+    background-color: var(--primary-color-4);
+    color: var(--secondary-color-4);
+}
+
+.dx-calendar-nav-prev:focus-visible,
+.dx-calendar-nav-next:focus-visible {
+    box-shadow: 0 0 0 2px var(--focused-border-color);
+}
+
+.dx-calendar-nav-prev:disabled,
+.dx-calendar-nav-next:disabled {
+    border-color: var(--primary-color-5);
+    background-color: var(--primary-color-2);
+    color: var(--secondary-color-3);
+    cursor: not-allowed;
+}
+
+.dx-calendar-month-title {
+    display: flex;
+    width: 100%;
+    height: 1.75rem;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Calendar Grid */
+.dx-calendar-view {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+}
+
+.dx-calendar-grid {
+    width: 100%;
+    padding: 0.5rem;
+}
+
+.dx-calendar-grid-header {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 8px;
+}
+
+.dx-calendar-grid-day-header {
+    flex: 1;
+    color: var(--secondary-color-5);
+    font-size: 12px;
+    font-weight: 300;
+    text-align: center;
+}
+
+.dx-calendar-grid-body {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.dx-calendar-grid-cell {
+    width: 2rem;
+    border: none;
+    border-radius: 0.5rem;
+    aspect-ratio: 1;
+    background: none;
+    color: var(--secondary-color-4);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dx-calendar-grid-cell[data-month="current"]:not([data-disabled="true"]):hover {
+    background-color: var(--primary-color-4);
+}
+
+.dx-calendar-grid-cell[data-month="current"]:focus-visible {
+    outline: 2px solid var(--focused-border-color);
+    outline-offset: 2px;
+}
+
+.dx-calendar-grid-cell[data-month="last"],
+.dx-calendar-grid-cell[data-month="next"],
+.dx-calendar-grid-cell[data-disabled="true"] {
+    color: var(--secondary-color-5);
+    cursor: not-allowed;
+}
+
+.dx-calendar-grid-cell[data-month="last"][data-selected="true"],
+.dx-calendar-grid-cell[data-month="next"][data-selected="true"] {
+    background-color: var(--secondary-color-6);
+}
+
+.dx-calendar-grid-cell[data-month="current"][data-selected="true"] {
+    background-color: var(--secondary-color-2);
+    color: var(--primary-color);
+}
+
+.dx-calendar-grid-cell[data-month="current"][data-unavailable="true"] {
+    color: var(--secondary-color-6);
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+.dx-calendar-grid-week td {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.dx-calendar-grid-week td:first-child .dx-calendar-grid-cell {
+    border-bottom-left-radius: 0.5rem;
+    border-top-left-radius: 0.5rem;
+}
+
+.dx-calendar-grid-week td:last-child .dx-calendar-grid-cell {
+    border-bottom-right-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+
+.dx-calendar-grid-cell[data-month="last"][data-selection-between="true"],
+.dx-calendar-grid-cell[data-month="next"][data-selection-between="true"] {
+    border-radius: 0;
+    background-color: var(--primary-color-5);
+    color: var(--secondary-color-5);
+}
+
+.dx-calendar-grid-cell[data-month="current"][data-selection-between="true"] {
+    border-radius: 0;
+    background-color: var(--primary-color-5);
+    color: var(--secondary-color-4);
+}
+
+td:has(.dx-calendar-grid-cell[data-selection-start="true"]) {
+    padding: 0;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    background-color: var(--primary-color-5);
+    border-bottom-left-radius: 0.5rem;
+    border-top-left-radius: 0.5rem;
+}
+
+td:has(.dx-calendar-grid-cell[data-selection-end="true"]) {
+    padding: 0;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    background-color: var(--primary-color-5);
+    border-bottom-right-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+
+.dx-calendar-grid-cell[data-month="current"][data-selected="true"]:hover {
+    background-color: var(--light, var(--secondary-color-2))
+        var(--dark, var(--primary-color-5));
+    color: var(--light, var(--primary-color))
+        var(--dark, var(--secondary-color-1));
+    font-weight: var(--light, 550) var(--dark, inherit);
+}
+
+.dx-calendar-grid-cell[data-month="current"][data-today="true"]:not(
+        [data-selected="true"]
+    ) {
+    background-color: var(--primary-color-5);
+}
+
+.dx-calendar-grid-weeknum {
+    border-radius: 0.5rem;
+    background-color: var(--primary-color);
+    color: var(--secondary-color-5);
+    font-size: 12px;
+}
+
+/* Calendar with week numbers */
+.dx-calendar-grid-week {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+/* Calendar states */
+.dx-calendar[data-disabled="true"] {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.dx-calendar-month-select-container,
+.dx-calendar-year-select-container {
+    position: relative;
+}
+
+.dx-calendar-month-select-container:has(:focus-visible),
+.dx-calendar-year-select-container:has(:focus-visible) {
+    border-radius: 0.5rem;
+    outline: 2px solid var(--focused-border-color);
+}
+
+.dx-calendar-month-select,
+.dx-calendar-year-select {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 0.25rem;
+    margin: 0;
+    inset: 0;
+    opacity: 0;
+}
+
+.dx-calendar-month-select-value,
+.dx-calendar-year-select-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border: none;
+    background-color: transparent;
+    color: var(--secondary-color-4);
+    cursor: pointer;
+    font-size: 1rem;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+/* dioxus-components-css-module-source: /Users/jd/Projects/dioxus-components/dioxus-components/src/components/calendar/style.css */

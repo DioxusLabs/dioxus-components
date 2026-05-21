@@ -51,6 +51,7 @@ This will create a `components` folder in your project (if it doesn't already ex
 
 This repository contains two main crates:
 - `dioxus-primitives`: The core unstyled component library.
+- `dioxus-components`: A reusable library crate generated from the styled component registry source.
 - `preview`: A Dioxus application that showcases the components from `dioxus-primitives` with shadcn-styled versions.
 
 ### Adding new components
@@ -60,7 +61,16 @@ If you want to add a new component, you should:
     - It adheres to the [WAI-ARIA Authoring Practices for accessibility](https://www.w3.org/WAI/standards-guidelines/aria/).
     - All styling can be modified via props. Every element should spread attributes and children from the props
 2. In the `preview` crate, create a styled version of the component using shadcn styles. This will serve as an example of how to use the unstyled component and serve as the styled version `dx components` will add to projects.
-3. Add tests in `playwright` to ensure the component behaves as expected.
+3. Regenerate the reusable `dioxus-components` crate:
+
+```sh
+node scripts/sync-components-library.mjs
+cargo check -p dioxus-components
+```
+
+The `preview/src/components` tree remains the source of truth for the component registry. The sync script updates the library crate from that registry source so downstream apps can depend on this repository as a normal Git dependency instead of copying component files manually.
+
+4. Add tests in `playwright` to ensure the component behaves as expected.
 
 ### Testing changes
 

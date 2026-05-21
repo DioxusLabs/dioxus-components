@@ -1,0 +1,21 @@
+.dx-tos-check {
+    width: 50px;
+    height: 50px;
+    border: 1px solid var(--primary-color-6);
+    border-radius: 4px;
+    margin: 8px 16px;
+    background-color: var(--primary-color-1);
+    color: var(--secondary-color-4);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dx-form-example button {
+    padding: 8px 16px;
+    border: 1px solid var(--primary-color-6);
+    border-radius: 4px;
+    background-color: var(--primary-color-1);
+    color: var(--secondary-color-4);
+    cursor: pointer;
+    font-size: 14px;
+}

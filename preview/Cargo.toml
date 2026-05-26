@@ -2,7 +2,7 @@
 name = "preview"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88.0"
+rust-version = "1.92.0"
 
 [dependencies]
 dioxus = { workspace = true, features = ["router"] }

@@ -9,7 +9,7 @@ dioxus = { workspace = true, features = ["router"] }
 dioxus-code = { git = "https://github.com/dioxuslabs/dioxus-code", branch = "0.8", default-features = false, features = ["macro", "lang-css"] }
 dioxus-icons = { git = "https://github.com/dioxuslabs/dioxus-icons", branch = "0.8" }
 dioxus-primitives.workspace = true
-dioxus-i18n = { git = "https://github.com/ealmloff/dioxus-i18n", branch = "bump-dioxus" }
+dioxus-i18n = { git = "https://github.com/ealmloff/dioxus-i18n", branch = "0.8" }
 palette = "0.7.6"
 unic-langid = { version = "0.9", features = ["macros"] }
 strum = { version = "0.27.2", features = ["derive"] }
@@ -20,7 +20,7 @@ time = { version = "0.3.44", features = ["std", "macros"] }
 [build-dependencies]
 dioxus = { workspace = true }
 dioxus-code = { git = "https://github.com/dioxuslabs/dioxus-code", branch = "0.8", default-features = false, features = ["runtime", "lang-css"] }
-dioxus-ssr = "0.7.0"
+dioxus-ssr = "=0.8.0-alpha.0"
 pulldown-cmark = "0.13.0"
 serde_json = "1"
 

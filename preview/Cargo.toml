@@ -6,8 +6,8 @@ rust-version = "1.88.0"
 
 [dependencies]
 dioxus = { workspace = true, features = ["router"] }
-dioxus-code = { version = "0.1.0", default-features = false, features = ["macro", "lang-css"] }
-dioxus-icons = "0.1.0"
+dioxus-code = { git = "https://github.com/dioxuslabs/dioxus-code", branch = "0.8", default-features = false, features = ["macro", "lang-css"] }
+dioxus-icons = { git = "https://github.com/dioxuslabs/dioxus-icons", branch = "0.8" }
 dioxus-primitives.workspace = true
 dioxus-i18n = { git = "https://github.com/ealmloff/dioxus-i18n", branch = "bump-dioxus" }
 palette = "0.7.6"
@@ -19,7 +19,7 @@ time = { version = "0.3.44", features = ["std", "macros"] }
 
 [build-dependencies]
 dioxus = { workspace = true }
-dioxus-code = { version = "0.1.0", default-features = false, features = ["runtime", "lang-css"] }
+dioxus-code = { git = "https://github.com/dioxuslabs/dioxus-code", branch = "0.8", default-features = false, features = ["runtime", "lang-css"] }
 dioxus-ssr = "0.7.0"
 pulldown-cmark = "0.13.0"
 serde_json = "1"

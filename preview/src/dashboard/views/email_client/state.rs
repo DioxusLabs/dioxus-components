@@ -97,7 +97,11 @@ impl<Lens> Store<EmailClientState, Lens> {
         visible_ids.first().cloned()
     }
 
-    pub fn selected_message_index(&self, selected_uid: Option<&str>, visible_ids: &[String]) -> usize {
+    pub fn selected_message_index(
+        &self,
+        selected_uid: Option<&str>,
+        visible_ids: &[String],
+    ) -> usize {
         selected_uid
             .and_then(|selected_uid| {
                 visible_ids
@@ -118,7 +122,12 @@ impl<Lens> Store<EmailClientState, Lens> {
         count
     }
 
-    pub fn tab_count(&self, tab_id: TabId, visible_query: &str, selected_tags: &[MessageTag]) -> u32 {
+    pub fn tab_count(
+        &self,
+        tab_id: TabId,
+        visible_query: &str,
+        selected_tags: &[MessageTag],
+    ) -> u32 {
         let active_folder = self.active_folder().cloned();
         let messages_store = self.messages();
         let count = messages_store

@@ -52,7 +52,7 @@ jobs:
           node-version: lts/*
       - uses: DioxusLabs/dioxus-ci/actions/setup-dioxus@v0.1.0
         with:
-          toolchain: 1.88.0
+          toolchain: 1.92.0
           targets: x86_64-unknown-linux-gnu,wasm32-unknown-unknown
           cache-on-failure: "true"
       - uses: DioxusLabs/dioxus-ci/actions/install-dioxus-cli@v0.1.0

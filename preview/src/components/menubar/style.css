@@ -1,4 +1,4 @@
-.menubar {
+.dx-menubar {
   display: flex;
   box-sizing: border-box;
   padding: 0.25rem;
@@ -9,11 +9,11 @@
   gap: 0.25rem;
 }
 
-.menubar-menu {
+.dx-menubar-menu {
   position: relative;
 }
 
-.menubar-trigger {
+.dx-menubar-trigger {
   padding: 8px 12px;
   border: none;
   border-radius: calc(0.5rem - 0.25rem);
@@ -23,26 +23,27 @@
   transition: background-color 100ms ease-out;
 }
 
-.menubar-menu[data-state="open"] .menubar-trigger {
+.dx-menubar-menu[data-state="open"] .dx-menubar-trigger {
   background-color: var(--light, var(--primary-color-4))
     var(--dark, var(--primary-color-7));
   color: var(--secondary-color-1);
 }
 
-.menubar-trigger[data-disabled="true"] {
+.dx-menubar-trigger[data-disabled="true"] {
   color: var(--secondary-color-5);
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
-.menubar-trigger:hover:not([data-disabled="true"]),
-.menubar-trigger:focus-visible {
+.dx-menubar-trigger:hover:not([data-disabled="true"]),
+.dx-menubar-trigger:focus-visible {
   background: var(--light, var(--primary-color-4))
     var(--dark, var(--primary-color-7));
   color: var(--secondary-color-1);
   outline: none;
 }
 
-.menubar-content {
+.dx-menubar-content {
   position: absolute;
   z-index: 1000;
   top: 100%;
@@ -61,16 +62,16 @@
   will-change: transform, opacity;
 }
 
-.menubar-menu:first-child .menubar-content {
+.dx-menubar-menu:first-child .dx-menubar-content {
   margin-left: -0.25rem;
 }
 
-.menubar-content[data-state="closed"] {
-  animation: menubar-content-animate-out 150ms ease-in forwards;
+.dx-menubar-content[data-state="closed"] {
+  animation: dx-menubar-content-animate-out 150ms ease-in forwards;
   pointer-events: none;
 }
 
-@keyframes menubar-content-animate-out {
+@keyframes dx-menubar-content-animate-out {
   0% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -82,12 +83,12 @@
   }
 }
 
-.menubar-content[data-state="open"] {
-  animation: menubar-content-animate-in 150ms ease-out forwards;
+.dx-menubar-content[data-state="open"] {
+  animation: dx-menubar-content-animate-in 150ms ease-out forwards;
   pointer-events: auto;
 }
 
-@keyframes menubar-content-animate-in {
+@keyframes dx-menubar-content-animate-in {
   0% {
     opacity: 0;
     transform: scale(0.95) translateY(-2px);
@@ -99,7 +100,7 @@
   }
 }
 
-.menubar-item {
+.dx-menubar-item {
   display: block;
   padding: 8px 12px;
   border-radius: calc(0.5rem - 0.25rem);
@@ -107,20 +108,16 @@
   font-size: 14px;
 }
 
-.menubar-item[data-disabled="true"] {
+.dx-menubar-item[data-disabled="true"] {
   color: var(--secondary-color-5);
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
-.menubar-item:hover:not([data-disabled="true"]),
-.menubar-item:focus-visible {
+.dx-menubar-item:hover:not([data-disabled="true"]),
+.dx-menubar-item:focus-visible {
   background: var(--light, var(--primary-color-4))
     var(--dark, var(--primary-color-7));
   color: var(--secondary-color-1);
   outline: none;
-}
-
-[data-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.5;
 }

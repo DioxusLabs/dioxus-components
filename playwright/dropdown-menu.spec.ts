@@ -11,8 +11,7 @@ test('test', async ({ page }) => {
   // Pressing down should focus the first item
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('option', { name: 'Edit' })).toBeFocused();
-  await page.keyboard.press('ArrowDown');
-  await expect(page.getByRole('option', { name: 'Undo' })).toBeFocused();
+  await expect(page.getByRole('option', { name: 'Undo' })).toHaveAttribute('data-disabled', 'true');
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('option', { name: 'Duplicate' })).toBeFocused();
   // The menu should close after selecting an item

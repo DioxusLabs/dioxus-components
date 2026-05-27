@@ -2,19 +2,17 @@ import { test, expect } from "@playwright/test";
 
 test("pointer navigation", async ({ page }) => {
   await page.goto("http://127.0.0.1:8080/component/?name=menubar&", { timeout: 20 * 60 * 1000 }); // Increase timeout to 20 minutes
-  const fileMenu = page.locator(".menubar-menu").first();
-  const fileMenuButton = fileMenu.getByRole("menuitem", { name: "File" });
+  const fileMenuButton = page.getByRole("menuitem", { name: "File" });
   await fileMenuButton.click();
   // Assert the menu is open
-  const fileMenuContent = fileMenu.getByRole("menu");
+  const fileMenuContent = page.getByRole("menu").filter({ has: page.getByRole("menuitem", { name: "New" }) }).last();
   await expect(fileMenuContent).toHaveAttribute("data-state", "open");
 
   // After the menu is open, hover over the Edit menu item
-  const editMenu = page.locator(".menubar-menu").nth(1);
-  const editMenuButton = editMenu.getByRole("menuitem", { name: "Edit" });
+  const editMenuButton = page.getByRole("menuitem", { name: "Edit" });
   await editMenuButton.hover();
   // Assert the Edit menu content is open
-  const editMenuContent = editMenu.getByRole("menu");
+  const editMenuContent = page.getByRole("menu").filter({ has: page.getByRole("menuitem", { name: "Cut" }) }).last();
   await expect(editMenuContent).toHaveAttribute("data-state", "open");
   // Assert the File menu content is closed
   await expect(fileMenuContent).toHaveCount(0);
@@ -28,14 +26,12 @@ test("pointer navigation", async ({ page }) => {
 
 test("keyboard navigation", async ({ page }) => {
   await page.goto("http://127.0.0.1:8080/component/?name=menubar&", { timeout: 20 * 60 * 1000 }); // Increase timeout to 20 minutes
-  await page.locator(".menubar").focus();
-  const fileMenu = page.locator(".menubar-menu").first();
-  const fileMenuButton = fileMenu.getByRole("menuitem", { name: "File" });
+  await page.getByRole("menubar").focus();
+  const fileMenuButton = page.getByRole("menuitem", { name: "File" });
   // Go right with the keyboard
   await page.keyboard.press("ArrowRight");
   // Assert the focus is on the Edit menu item
-  const editMenu = page.locator(".menubar-menu").nth(1);
-  const editMenuButton = editMenu.getByRole("menuitem", { name: "Edit" });
+  const editMenuButton = page.getByRole("menuitem", { name: "Edit" });
   await expect(editMenuButton).toBeFocused();
   // Go left with the keyboard
   await page.keyboard.press("ArrowLeft");
@@ -44,13 +40,16 @@ test("keyboard navigation", async ({ page }) => {
   // Open the File menu
   await page.keyboard.press("ArrowDown");
   // Assert the File menu content is open
-  const fileMenuContent = fileMenu.getByRole("menu");
+  const fileMenuContent = page.getByRole("menu").filter({ has: page.getByRole("menuitem", { name: "New" }) }).last();
   await expect(fileMenuContent).toHaveAttribute("data-state", "open");
 
   // assert the new item is focused
   const newItem = fileMenuContent.getByRole("menuitem", { name: "New" });
   await expect(newItem).toBeFocused();
-  // Click the focused New menu item
+  await expect(fileMenuContent.getByRole("menuitem", { name: "Open" })).toHaveAttribute("data-disabled", "true");
+  await page.keyboard.press("ArrowDown");
+  await expect(fileMenuContent.getByRole("menuitem", { name: "Save" })).toBeFocused();
+  // Click the focused Save menu item
   await page.keyboard.press("Enter");
   // Assert the menu is closed after clicking a menu item
   await expect(fileMenuContent).toHaveCount(0);

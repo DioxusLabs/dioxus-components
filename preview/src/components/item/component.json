@@ -1,0 +1,14 @@
+{
+  "name": "item",
+  "description": "A component for displaying content.",
+  "authors": ["oscar370"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-primitives",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "componentDependencies": ["separator"],
+  "globalAssets": ["../../../assets/dx-components-theme.css"]
+}

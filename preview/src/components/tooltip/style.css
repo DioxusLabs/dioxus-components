@@ -1,27 +1,27 @@
 /* Tooltip Styles */
-.tooltip {
+.dx-tooltip {
   position: relative;
   display: inline-block;
 }
 
-.tooltip-trigger {
+.dx-tooltip-trigger {
   display: inline-block;
 }
 
-.tooltip-content {
+.dx-tooltip-content {
   position: absolute;
   z-index: 1000;
   max-width: 250px;
   padding: 8px 12px;
   border-radius: 0.5rem;
-  animation: tooltip-fade-in 0.2s ease-in-out;
+  animation: dx-tooltip-fade-in 0.2s ease-in-out;
   background-color: var(--secondary-color-4);
   color: var(--primary-color);
   font-size: 14px;
   line-height: 1.4;
 }
 
-.tooltip-content::after {
+.dx-tooltip-content::after {
   position: absolute;
   border-width: 0.25rem;
   border-style: solid;
@@ -31,7 +31,7 @@
 }
 
 /* Positioning based on side */
-.tooltip-content[data-side="top"] {
+.dx-tooltip-content[data-side="top"] {
   position: absolute;
   bottom: 100%;
   left: 50%;
@@ -39,14 +39,14 @@
   transform: translateX(-50%);
 }
 
-.tooltip-content[data-side="top"]::after {
+.dx-tooltip-content[data-side="top"]::after {
   top: calc(100% - 0.25rem);
   left: 50%;
   border-color: var(--secondary-color-4);
   border-radius: 0 0 0.1rem;
 }
 
-.tooltip-content[data-side="right"] {
+.dx-tooltip-content[data-side="right"] {
   position: absolute;
   top: 50%;
   left: 100%;
@@ -54,14 +54,14 @@
   transform: translateY(-50%);
 }
 
-.tooltip-content[data-side="right"]::after {
+.dx-tooltip-content[data-side="right"]::after {
   top: calc(50% - 0.25rem);
   left: 0;
   border-color: var(--secondary-color-4);
   border-radius: 0 0 0 0.1rem;
 }
 
-.tooltip-content[data-side="bottom"] {
+.dx-tooltip-content[data-side="bottom"] {
   position: absolute;
   top: 100%;
   left: 50%;
@@ -69,14 +69,14 @@
   transform: translateX(-50%);
 }
 
-.tooltip-content[data-side="bottom"]::after {
+.dx-tooltip-content[data-side="bottom"]::after {
   bottom: calc(100% - 0.25rem);
   left: 50%;
   border-color: var(--secondary-color-4);
   border-radius: 0.1rem 0 0;
 }
 
-.tooltip-content[data-side="left"] {
+.dx-tooltip-content[data-side="left"] {
   position: absolute;
   top: 50%;
   right: 100%;
@@ -84,7 +84,7 @@
   transform: translateY(-50%);
 }
 
-.tooltip-content[data-side="left"]::after {
+.dx-tooltip-content[data-side="left"]::after {
   top: calc(50% - 0.25rem);
   right: -0.25rem;
   border-color: var(--secondary-color-4);
@@ -92,41 +92,41 @@
 }
 
 /* Alignment styles for top and bottom */
-.tooltip-content[data-side="top"][data-align="start"],
-.tooltip-content[data-side="bottom"][data-align="start"] {
+.dx-tooltip-content[data-side="top"][data-align="start"],
+.dx-tooltip-content[data-side="bottom"][data-align="start"] {
   left: 0;
   transform: none;
 }
 
-.tooltip-content[data-side="top"][data-align="end"],
-.tooltip-content[data-side="bottom"][data-align="end"] {
+.dx-tooltip-content[data-side="top"][data-align="end"],
+.dx-tooltip-content[data-side="bottom"][data-align="end"] {
   right: 0;
   left: auto;
   transform: none;
 }
 
 /* Alignment styles for left and right */
-.tooltip-content[data-side="left"][data-align="start"],
-.tooltip-content[data-side="right"][data-align="start"] {
+.dx-tooltip-content[data-side="left"][data-align="start"],
+.dx-tooltip-content[data-side="right"][data-align="start"] {
   top: 0;
   transform: none;
 }
 
-.tooltip-content[data-side="left"][data-align="center"],
-.tooltip-content[data-side="right"][data-align="center"] {
+.dx-tooltip-content[data-side="left"][data-align="center"],
+.dx-tooltip-content[data-side="right"][data-align="center"] {
   top: 50%;
   transform: translateY(-50%);
 }
 
-.tooltip-content[data-side="left"][data-align="end"],
-.tooltip-content[data-side="right"][data-align="end"] {
+.dx-tooltip-content[data-side="left"][data-align="end"],
+.dx-tooltip-content[data-side="right"][data-align="end"] {
   top: auto;
   bottom: 0;
   transform: none;
 }
 
 /* Animation */
-@keyframes tooltip-fade-in {
+@keyframes dx-tooltip-fade-in {
   from {
     opacity: 0;
   }
@@ -137,14 +137,14 @@
 }
 
 /* State styles */
-.tooltip[data-disabled="true"] .tooltip-trigger {
+.dx-tooltip[data-disabled="true"] .dx-tooltip-trigger {
   cursor: default;
 }
 
-.tooltip-content[data-state="closed"] {
+.dx-tooltip-content[data-state="closed"] {
   display: none;
 }
 
-.tooltip-content[data-state="open"] {
+.dx-tooltip-content[data-state="open"] {
   display: block;
 }

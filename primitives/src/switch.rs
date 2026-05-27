@@ -2,6 +2,7 @@
 
 use crate::use_controlled;
 use dioxus::prelude::*;
+use std::rc::Rc;
 
 /// The props for the [`Switch`] component.
 #[derive(Props, Clone, PartialEq)]
@@ -76,6 +77,12 @@ pub fn Switch(props: SwitchProps) -> Element {
         props.on_checked_change,
     );
 
+    // Safari and Firefox on macOS do not focus <button> on click by default
+    // (matches the macOS "Press Tab to highlight items" preference). Capture
+    // a mounted ref so we can explicitly focus on click, matching what
+    // Radix UI / Headless UI / Material UI do for the same reason.
+    let mut button_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
+
     rsx! {
         button {
             type: "button",
@@ -88,9 +95,15 @@ pub fn Switch(props: SwitchProps) -> Element {
             // Only add data-disabled when actually disabled
             "data-disabled": if (props.disabled)() { "true" } else { "false" },
 
+            onmounted: move |evt| button_ref.set(Some(evt.data())),
             onclick: move |_| {
                 let new_checked = !checked();
                 set_checked.call(new_checked);
+                if let Some(node) = button_ref() {
+                    spawn(async move {
+                        let _ = node.set_focus(true).await;
+                    });
+                }
             },
 
             // Switches should only toggle on Space, not Enter

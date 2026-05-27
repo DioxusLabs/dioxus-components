@@ -2,15 +2,18 @@
 name = "preview"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.80.0"
+rust-version = "1.88.0"
 
 [dependencies]
 dioxus = { workspace = true, features = ["router"] }
+dioxus-code = { version = "0.1.0", default-features = false, features = ["macro", "lang-css"] }
+dioxus-icons = "0.1.0"
 dioxus-primitives.workspace = true
 dioxus-i18n = { git = "https://github.com/ealmloff/dioxus-i18n", branch = "bump-dioxus" }
+palette = "0.7.6"
 unic-langid = { version = "0.9", features = ["macros"] }
 strum = { version = "0.27.2", features = ["derive"] }
-tracing.workspace = true
+tracing = { workspace = true }
 time = { version = "0.3.44", features = ["std", "macros"] }
 wasm-bindgen = "0.2"
 js-sys = "0.3"
@@ -23,13 +26,20 @@ web-sys = { version = "0.3", features = [
     "HtmlElement",
 ] }
 
+
 [build-dependencies]
-syntect = "5.2"
+dioxus = { workspace = true }
+dioxus-code = { version = "0.1.0", default-features = false, features = ["runtime", "lang-css"] }
+dioxus-ssr = "0.7.0"
 pulldown-cmark = "0.13.0"
+serde_json = "1"
+
+[dev-dependencies]
+dioxus-ssr = "0.7.0"
 
 [features]
 web = ["dioxus/web", "dioxus-primitives/web"]
 desktop = ["dioxus/desktop"]
 fullstack = ["dioxus/fullstack"]
-server = ["dioxus/server"]
+server = ["dioxus/server", "dioxus/fullstack"]
 native = ["dioxus/native"]

@@ -1,7 +1,7 @@
 //! Defines the [`ToggleGroup`] component and its sub-components, which manage a group of toggle buttons with single or multiple selection.
 
 use crate::{
-    focus::{use_focus_controlled_item, use_focus_provider, FocusState},
+    focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
     toggle::Toggle,
     use_controlled,
 };
@@ -245,8 +245,8 @@ pub fn ToggleItem(props: ToggleItemProps) -> Element {
         }
     });
 
-    // Handle settings focus
-    let onmounted = use_focus_controlled_item(props.index);
+    let disabled = move || (ctx.disabled)() || (props.disabled)();
+    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
 
     rsx! {
         Toggle {
@@ -273,7 +273,7 @@ pub fn ToggleItem(props: ToggleItemProps) -> Element {
             },
 
             tabindex: tab_index,
-            disabled: (ctx.disabled)() || (props.disabled)(),
+            disabled: disabled(),
             "data-orientation": ctx.orientation(),
 
             pressed: pressed(),

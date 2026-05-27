@@ -1,4 +1,4 @@
-.context-menu-content {
+.dx-context-menu-content {
   z-index: 1000;
   min-width: 220px;
   padding: 0.25rem;
@@ -12,11 +12,11 @@
   will-change: transform, opacity;
 }
 
-.context-menu-content[data-state="closed"] {
-  animation: context-menu-animate-out 150ms ease-in forwards;
+.dx-context-menu-content[data-state="closed"] {
+  animation: dx-context-menu-animate-out 150ms ease-in forwards;
 }
 
-@keyframes context-menu-animate-out {
+@keyframes dx-context-menu-animate-out {
   0% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -28,11 +28,11 @@
   }
 }
 
-.context-menu-content[data-state="open"] {
-  animation: context-menu-animate-in 150ms ease-out forwards;
+.dx-context-menu-content[data-state="open"] {
+  animation: dx-context-menu-animate-in 150ms ease-out forwards;
 }
 
-@keyframes context-menu-animate-in {
+@keyframes dx-context-menu-animate-in {
   0% {
     opacity: 0;
     transform: scale(0.95) translateY(-2px);
@@ -44,7 +44,7 @@
   }
 }
 
-.context-menu-item {
+.dx-context-menu-item {
   display: flex;
   align-items: center;
   padding: 8px 12px;
@@ -57,13 +57,13 @@
   user-select: none;
 }
 
-.context-menu-item[data-disabled="true"] {
+.dx-context-menu-item[data-disabled="true"] {
   color: var(--secondary-color-5);
   cursor: not-allowed;
 }
 
-.context-menu-item:hover:not([data-disabled="true"]),
-.context-menu-item:focus-visible {
+.dx-context-menu-item:hover:not([data-disabled="true"]),
+.dx-context-menu-item:focus-visible {
   background: var(--light, var(--primary-color-4))
     var(--dark, var(--primary-color-7));
   color: var(--light, var(--secondary-color-1))

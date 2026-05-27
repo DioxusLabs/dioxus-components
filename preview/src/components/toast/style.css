@@ -1,4 +1,4 @@
-.toast-container {
+.dx-toast-container {
   position: fixed;
   z-index: 9999;
   right: 20px;
@@ -6,7 +6,7 @@
   max-width: 350px;
 }
 
-.toast-list {
+.dx-toast-container ol {
   display: flex;
   flex-direction: column-reverse;
   padding: 0;
@@ -14,11 +14,11 @@
   gap: 0.75rem;
 }
 
-.toast-item {
+.dx-toast-container li {
   display: flex;
 }
 
-.toast {
+.dx-toast {
   z-index: calc(var(--toast-count) - var(--toast-index));
   display: flex;
   overflow: hidden;
@@ -48,17 +48,17 @@
   --toast-hidden: calc(min(max(0, var(--toast-index) - 2), 1));
 }
 
-.toast-container:not(:hover, :focus-within)
-  .toast[data-toast-even]:not([data-top]) {
-  animation: slide-up-even 0.2s ease-out;
+.dx-toast-container:not(:hover, :focus-within)
+  .dx-toast[data-toast-even]:not([data-top]) {
+  animation: dx-slide-up-even 0.2s ease-out;
 }
 
-.toast-container:not(:hover, :focus-within)
-  .toast[data-toast-odd]:not([data-top]) {
-  animation: slide-up-odd 0.2s ease-out;
+.dx-toast-container:not(:hover, :focus-within)
+  .dx-toast[data-toast-odd]:not([data-top]) {
+  animation: dx-slide-up-odd 0.2s ease-out;
 }
 
-@keyframes slide-up-even {
+@keyframes dx-slide-up-even {
   from {
     transform: translateY(0.5rem)
       scale(
@@ -76,7 +76,7 @@
   }
 }
 
-@keyframes slide-up-odd {
+@keyframes dx-slide-up-odd {
   from {
     transform: translateY(0.5rem)
       scale(
@@ -94,16 +94,16 @@
   }
 }
 
-.toast[data-top] {
-  animation: slide-in 0.2s ease-out;
+.dx-toast[data-top] {
+  animation: dx-toast-slide-in 0.2s ease-out;
 }
 
-.toast-container:hover .toast[data-top],
-.toast-container:focus-within .toast[data-top] {
-  animation: slide-in 0 ease-out;
+.dx-toast-container:hover .dx-toast[data-top],
+.dx-toast-container:focus-within .dx-toast[data-top] {
+  animation: dx-toast-slide-in 0 ease-out;
 }
 
-@keyframes slide-in {
+@keyframes dx-toast-slide-in {
   from {
     opacity: 0;
     transform: translateY(100%)
@@ -123,52 +123,52 @@
   }
 }
 
-.toast-container:hover .toast,
-.toast-container:focus-within .toast {
+.dx-toast-container:hover .dx-toast,
+.dx-toast-container:focus-within .dx-toast {
   margin-top: var(--toast-padding);
   filter: brightness(1);
   opacity: 1;
   transform: scale(calc(100%));
 }
 
-.toast[data-type="success"] {
+.dx-toast[data-type="success"] {
   background-color: var(--primary-success-color);
   color: var(--secondary-success-color);
 }
 
-.toast[data-type="error"] {
+.dx-toast[data-type="error"] {
   background-color: var(--primary-error-color);
   color: var(--contrast-error-color);
 }
 
-.toast[data-type="warning"] {
+.dx-toast[data-type="warning"] {
   background-color: var(--primary-warning-color);
   color: var(--secondary-warning-color);
 }
 
-.toast[data-type="info"] {
+.dx-toast[data-type="info"] {
   background-color: var(--primary-info-color);
   color: var(--secondary-info-color);
 }
 
-.toast-content {
+.dx-toast-content {
   flex: 1;
   margin-right: 8px;
   transition: filter 0.2s ease;
 }
 
-.toast-title {
+.dx-toast-title {
   margin-bottom: 4px;
   color: var(--secondary-color-4);
   font-weight: 600;
 }
 
-.toast-description {
+.dx-toast-description {
   color: var(--secondary-color-3);
   font-size: 0.875rem;
 }
 
-.toast-close {
+.dx-toast-close {
   align-self: flex-start;
   padding: 0;
   border: none;
@@ -180,6 +180,6 @@
   line-height: 1;
 }
 
-.toast-close:hover {
+.dx-toast-close:hover {
   color: var(--secondary-color-1);
 }

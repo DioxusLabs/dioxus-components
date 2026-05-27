@@ -7,7 +7,7 @@ test('sheet basic interactions', async ({ page }) => {
   await page.getByRole('button', { name: 'Right' }).click();
 
   // Assert the sheet is open
-  const sheet = page.locator('.sheet-root');
+  const sheet = page.locator('[data-slot="sheet-root"]');
   await expect(sheet).toHaveAttribute('data-state', 'open');
 
   // Assert the first input is focused (focus trap)
@@ -29,7 +29,7 @@ test('sheet basic interactions', async ({ page }) => {
   await expect(cancelButton).toBeFocused();
 
   await page.keyboard.press('Tab');
-  const closeButton = sheet.locator('.sheet-close');
+  const closeButton = sheet.getByRole('button').last();
   await expect(closeButton).toBeFocused();
 
   // Tab again should cycle back to first input
@@ -52,7 +52,7 @@ test('sheet basic interactions', async ({ page }) => {
 test('sheet opens from different sides', async ({ page }) => {
   await page.goto('http://127.0.0.1:8080/component/?name=sheet&', { timeout: 20 * 60 * 1000 });
 
-  const sheet = page.locator('.sheet-root');
+  const sheet = page.locator('[data-slot="sheet-root"]');
   const sheetContent = page.locator('[data-slot="sheet-content"]');
 
   // Test Top

@@ -8,9 +8,13 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use dioxus::core::{current_scope_id, use_drop};
 use dioxus::prelude::*;
 use dioxus::prelude::{asset, manganis, Asset};
+use dioxus_core::AttributeValue::Text;
 use gloo_events::EventListener;
+use time::OffsetDateTime;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
+
+pub use dioxus_attributes;
 
 pub mod accordion;
 pub mod alert_dialog;
@@ -19,23 +23,31 @@ pub mod avatar;
 pub mod calendar;
 pub mod checkbox;
 pub mod collapsible;
+pub mod color_picker;
+pub mod combobox;
 pub mod context_menu;
 pub mod date_picker;
 pub mod dialog;
+pub mod drag_and_drop_list;
 pub mod dropdown_menu;
 mod focus;
 pub(crate) mod focus_trap;
 pub mod hover_card;
 pub mod label;
+mod listbox;
 pub mod menubar;
+mod move_interaction;
 #[cfg(feature = "router")]
 pub mod navbar;
+mod pointer;
 pub mod popover;
 mod portal;
 pub mod progress;
 pub mod radio_group;
 pub mod scroll_area;
 pub mod select;
+mod selectable;
+mod selection;
 pub mod separator;
 pub mod slider;
 pub mod switch;
@@ -45,6 +57,8 @@ pub mod toggle;
 pub mod toggle_group;
 pub mod toolbar;
 pub mod tooltip;
+pub(crate) mod r#virtual;
+pub mod virtual_list;
 
 pub(crate) const FOCUS_TRAP_JS: Asset = asset!("/src/js/focus-trap.js");
 
@@ -93,8 +107,19 @@ fn use_id_or<T: Clone + PartialEq + 'static>(
     })
 }
 
+/// A controlled-or-uncontrolled prop trio: external value signal,
+/// fallback default signal, and change callback. Bundles the three
+/// pieces that always travel together when forwarding props into
+/// internal hooks like [`use_controlled`].
+#[derive(Clone, Copy)]
+pub(crate) struct Controlled<T: Clone + PartialEq + 'static> {
+    pub(crate) value: ReadSignal<Option<T>>,
+    pub(crate) default: ReadSignal<T>,
+    pub(crate) on_change: Callback<T>,
+}
+
 /// Allows some state to be either controlled or uncontrolled.
-fn use_controlled<T: Clone + PartialEq + 'static>(
+pub fn use_controlled<T: Clone + PartialEq + 'static>(
     prop: ReadSignal<Option<T>>,
     default: T,
     on_change: Callback<T>,
@@ -244,6 +269,38 @@ async fn wait_for_animations(element_id: &str) {
     let _ = JsFuture::from(all_promise).await;
 }
 
+/// Light-dismiss when pointerdown/focusin lands outside the element with the given `id`.
+/// `id` should be the id of the popover/dialog root that contains every "inside" element.
+fn use_outside_dismiss(
+    id: impl Readable<Target = String> + Copy + 'static,
+    on_dismiss: impl FnMut() + Clone + 'static,
+) {
+    use_effect_with_cleanup(move || {
+        let mut eval = document::eval(
+            "const id = await dioxus.recv();
+            const f = e => {
+                const root = document.getElementById(id);
+                if (root && !root.contains(e.target)) dioxus.send(true);
+            };
+            document.addEventListener('pointerdown', f, true);
+            document.addEventListener('focusin', f, true);
+            await dioxus.recv();
+            document.removeEventListener('pointerdown', f, true);
+            document.removeEventListener('focusin', f, true);",
+        );
+        let _ = eval.send(id.cloned());
+        let mut on_dismiss = on_dismiss.clone();
+        spawn(async move {
+            while let Ok(true) = eval.recv().await {
+                on_dismiss();
+            }
+        });
+        move || {
+            let _ = eval.send(true);
+        }
+    });
+}
+
 fn use_animated_open(
     id: impl Readable<Target = String> + Copy + 'static,
     open: impl Readable<Target = bool> + Copy + 'static,
@@ -312,5 +369,209 @@ impl ContentAlign {
             Self::Center => "center",
             Self::End => "end",
         }
+    }
+}
+
+pub(crate) trait LocalDateExt {
+    /// A small extension method function to get the local date with a fallback to UTC date if this fails
+    fn now_local_date() -> time::Date;
+}
+
+impl LocalDateExt for time::OffsetDateTime {
+    fn now_local_date() -> time::Date {
+        OffsetDateTime::now_local()
+            .map(|x| x.date())
+            .unwrap_or_else(|_| time::UtcDateTime::now().date())
+    }
+}
+
+/// Merge multiple attribute vectors.
+///
+/// Rules:
+/// - Later lists win for the same (name, namespace) pair.
+/// - `class` is concatenated with a single space separator (trimmed); last wins for volatility flag.
+/// - Other attributes are overwritten by the last occurrence.
+///
+/// TODO: event handler attributes are not merged/combined yet.
+pub fn merge_attributes(mut lists: Vec<Vec<Attribute>>) -> Vec<Attribute> {
+    let mut merged = Vec::new();
+    // The inputs are usually sorted by name, so we can do a k-way merge cheaply
+    for list in &mut lists {
+        list.sort_by_key(|a| a.name);
+    }
+    let mut iters: Vec<_> = lists
+        .into_iter()
+        .map(|l| l.into_iter().peekable())
+        .collect();
+
+    loop {
+        // Find the minimum name among all current heads
+        let min_name = iters
+            .iter_mut()
+            .filter_map(|it| it.peek().map(|a| a.name))
+            .min();
+
+        let Some(min_name) = min_name else {
+            break;
+        };
+
+        // Collect all attributes with this name, grouped by namespace
+        let mut by_namespace: Vec<Attribute> = Vec::new();
+
+        for iter in &mut iters {
+            while iter.peek().map(|a| a.name) == Some(min_name) {
+                let attr = iter.next().unwrap();
+                if let Some(existing) = by_namespace
+                    .iter_mut()
+                    .find(|a| a.namespace == attr.namespace)
+                {
+                    if attr.name == "class" {
+                        let was_volatile = existing.volatile;
+                        *existing = match (&existing.value, &attr.value) {
+                            (Text(a), Text(b)) => Attribute {
+                                name: attr.name,
+                                namespace: attr.namespace,
+                                volatile: was_volatile || attr.volatile,
+                                value: Text(join_class(a, b)),
+                            },
+                            _ => attr,
+                        };
+                    } else {
+                        *existing = attr;
+                    }
+                } else {
+                    by_namespace.push(attr);
+                }
+            }
+        }
+
+        merged.extend(by_namespace);
+    }
+
+    merged
+}
+
+fn join_class(a: &str, b: &str) -> String {
+    let (a, b) = (a.trim(), b.trim());
+    if !a.is_empty() && !b.is_empty() {
+        format!("{a} {b}")
+    } else {
+        format!("{a}{b}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn attr(name: &'static str, value: &str) -> Attribute {
+        Attribute {
+            name,
+            namespace: None,
+            volatile: false,
+            value: Text(value.to_string()),
+        }
+    }
+
+    fn get_value(attr: &Attribute) -> &str {
+        match &attr.value {
+            Text(s) => s,
+            _ => panic!("expected Text"),
+        }
+    }
+
+    #[test]
+    fn merge_empty_lists() {
+        let result = merge_attributes(vec![]);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn merge_single_list() {
+        let result = merge_attributes(vec![vec![attr("a", "1"), attr("b", "2")]]);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].name, "a");
+        assert_eq!(result[1].name, "b");
+    }
+
+    #[test]
+    fn merge_preserves_sorted_order() {
+        let result = merge_attributes(vec![
+            vec![attr("a", "1"), attr("c", "3")],
+            vec![attr("b", "2"), attr("d", "4")],
+        ]);
+        assert_eq!(result.len(), 4);
+        assert_eq!(result[0].name, "a");
+        assert_eq!(result[1].name, "b");
+        assert_eq!(result[2].name, "c");
+        assert_eq!(result[3].name, "d");
+    }
+
+    #[test]
+    fn later_list_overwrites() {
+        let result = merge_attributes(vec![vec![attr("a", "first")], vec![attr("a", "second")]]);
+        assert_eq!(result.len(), 1);
+        assert_eq!(get_value(&result[0]), "second");
+    }
+
+    #[test]
+    fn class_attributes_are_merged() {
+        let result = merge_attributes(vec![vec![attr("class", "foo")], vec![attr("class", "bar")]]);
+        assert_eq!(result.len(), 1);
+        assert_eq!(get_value(&result[0]), "foo bar");
+    }
+
+    #[test]
+    fn class_merge_trims_whitespace() {
+        let result = merge_attributes(vec![
+            vec![attr("class", "  foo  ")],
+            vec![attr("class", "  bar  ")],
+        ]);
+        assert_eq!(get_value(&result[0]), "foo bar");
+    }
+
+    #[test]
+    fn class_merge_handles_empty() {
+        let result = merge_attributes(vec![vec![attr("class", "")], vec![attr("class", "bar")]]);
+        assert_eq!(get_value(&result[0]), "bar");
+    }
+
+    #[test]
+    fn mixed_attributes() {
+        let result = merge_attributes(vec![
+            vec![attr("class", "a"), attr("id", "x")],
+            vec![attr("class", "b"), attr("id", "y")],
+        ]);
+        assert_eq!(result.len(), 2);
+        // Should be sorted by name
+        assert_eq!(result[0].name, "class");
+        assert_eq!(result[1].name, "id");
+        // class merged, id overwritten
+        assert_eq!(get_value(&result[0]), "a b");
+        assert_eq!(get_value(&result[1]), "y");
+    }
+
+    #[test]
+    fn unsorted_input_still_works() {
+        // Even if inputs aren't sorted, the function should handle it
+        let result = merge_attributes(vec![
+            vec![attr("z", "1"), attr("a", "2")],
+            vec![attr("m", "3")],
+        ]);
+        assert_eq!(result.len(), 3);
+        // Output should be sorted
+        assert_eq!(result[0].name, "a");
+        assert_eq!(result[1].name, "m");
+        assert_eq!(result[2].name, "z");
+    }
+
+    #[test]
+    fn volatile_flag_preserved_on_class_merge() {
+        let mut a1 = attr("class", "foo");
+        a1.volatile = true;
+        let a2 = attr("class", "bar");
+
+        let result = merge_attributes(vec![vec![a1], vec![a2]]);
+        assert!(result[0].volatile);
     }
 }

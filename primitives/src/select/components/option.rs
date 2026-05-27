@@ -1,14 +1,16 @@
 //! SelectOption and SelectItemIndicator component implementations.
 
 use crate::{
-    focus::use_focus_controlled_item,
-    select::context::{RcPartialEqValue, SelectListContext},
-    use_effect, use_effect_cleanup, use_id_or, use_unique_id,
+    focus::use_focus_control_disabled,
+    listbox::{ListboxContext, ListboxItemIndicator},
+    selectable::{
+        pointer_select_cancel, pointer_select_commit, pointer_select_start, use_selectable_option,
+        RcPartialEqValue, SelectableOptionConfig,
+    },
 };
-use dioxus::html::input_data::MouseButton;
 use dioxus::prelude::*;
 
-use super::super::context::{OptionState, SelectContext, SelectOptionContext};
+use super::super::context::SelectContext;
 
 /// The props for the [`SelectOption`] component
 #[derive(Props, Clone, PartialEq)]
@@ -71,11 +73,10 @@ pub struct SelectOptionProps<T: Clone + PartialEq + 'static> {
 /// fn Demo() -> Element {
 ///     rsx! {
 ///         Select::<String> {
-///             placeholder: "Select a fruit...",
 ///             SelectTrigger {
 ///                 aria_label: "Select Trigger",
 ///                 width: "12rem",
-///                 SelectValue {}
+///                 SelectValue { placeholder: "Select a fruit..." }
 ///             }
 ///             SelectList {
 ///                 aria_label: "Select Demo",
@@ -101,87 +102,57 @@ pub struct SelectOptionProps<T: Clone + PartialEq + 'static> {
 /// ```
 #[component]
 pub fn SelectOption<T: PartialEq + Clone + 'static>(props: SelectOptionProps<T>) -> Element {
-    // Generate a unique ID for this option for accessibility
-    let option_id = use_unique_id();
-
-    // Use use_id_or to handle the ID
-    let id = use_id_or(option_id, props.id);
-
     let index = props.index;
-    let value = props.value;
-    let text_value = use_memo(move || match (props.text_value)() {
-        Some(text) => text,
-        None => {
-            let value = value.read();
-            let as_any: &dyn std::any::Any = &*value;
-            as_any
-                .downcast_ref::<String>()
-                .cloned()
-                .or_else(|| as_any.downcast_ref::<&str>().map(|s| s.to_string()))
-                .unwrap_or_else(|| {
-                    tracing::warn!(
-                        "SelectOption with non-string types requires text_value to be set"
-                    );
-                    String::new()
-                })
-        }
-    });
 
-    // Push this option to the context
     let mut ctx: SelectContext = use_context();
-    use_effect(move || {
-        let option_state = OptionState {
-            tab_index: index(),
-            value: RcPartialEqValue::new(value.cloned()),
-            text_value: text_value.cloned(),
-            id: id(),
-        };
+    let option = use_selectable_option(
+        ctx.selectable,
+        SelectableOptionConfig {
+            id: props.id,
+            index,
+            value: props.value,
+            text_value: props.text_value,
+            option_disabled: props.disabled,
+            component_name: "SelectOption",
+        },
+    );
 
-        // Add the option to the context's options
-        ctx.options.write().push(option_state);
-    });
+    let onmounted =
+        use_focus_control_disabled(ctx.selectable.focus_state, props.index, move || {
+            option.disabled.cloned()
+        });
 
-    use_effect_cleanup(move || {
-        ctx.options.write().retain(|opt| opt.id != *id.read());
-    });
-
-    let onmounted = use_focus_controlled_item(props.index);
-    let focused = move || ctx.focus_state.is_focused(index());
-    let disabled = ctx.disabled.cloned() || props.disabled.cloned();
-    let selected = use_memo(move || {
-        ctx.value.read().as_ref().and_then(|v| v.as_ref::<T>()) == Some(&props.value.read())
-    });
-
-    use_context_provider(|| SelectOptionContext {
-        selected: selected.into(),
-    });
-
-    let render = use_context::<SelectListContext>().render;
+    let render = use_context::<ListboxContext>().render;
 
     rsx! {
         if render() {
             div {
                 role: "option",
-                id,
-                tabindex: if focused() { "0" } else { "-1" },
+                id: option.id,
+                tabindex: if (option.focused)() { "0" } else { "-1" },
                 onmounted,
 
-                // ARIA attributes
-                aria_selected: selected(),
-                aria_disabled: disabled,
+                aria_selected: (option.selected)(),
+                aria_disabled: (option.disabled)(),
                 aria_label: props.aria_label.clone(),
                 aria_roledescription: props.aria_roledescription.clone(),
+                "data-disabled": (option.disabled)(),
 
                 onpointerdown: move |event| {
-                    if !disabled && event.trigger_button() == Some(MouseButton::Primary) {
-                        ctx.set_value.call(Some(RcPartialEqValue::new(props.value.cloned())));
-                        ctx.open.set(false);
+                    pointer_select_start(&event, (option.disabled)(), option.down_pos);
+                },
+                onpointerup: move |event| {
+                    if pointer_select_commit(&event, (option.disabled)(), option.down_pos) {
+                        ctx.selectable.select_value(RcPartialEqValue::new(option.value.cloned()));
                     }
                 },
+                onpointercancel: move |_| {
+                    pointer_select_cancel(option.down_pos);
+                },
                 onblur: move |_| {
-                    if focused() {
-                        ctx.focus_state.blur();
-                        ctx.open.set(false);
+                    if (option.focused)() {
+                        ctx.selectable.focus_state.blur();
+                        ctx.set_open(false);
                     }
                 },
 
@@ -218,11 +189,10 @@ pub struct SelectItemIndicatorProps {
 /// fn Demo() -> Element {
 ///     rsx! {
 ///         Select::<String> {
-///             placeholder: "Select a fruit...",
 ///             SelectTrigger {
 ///                 aria_label: "Select Trigger",
 ///                 width: "12rem",
-///                 SelectValue {}
+///                 SelectValue { placeholder: "Select a fruit..." }
 ///             }
 ///             SelectList {
 ///                 aria_label: "Select Demo",
@@ -248,11 +218,9 @@ pub struct SelectItemIndicatorProps {
 /// ```
 #[component]
 pub fn SelectItemIndicator(props: SelectItemIndicatorProps) -> Element {
-    let ctx: SelectOptionContext = use_context();
-    if !(ctx.selected)() {
-        return rsx! {};
-    }
     rsx! {
-        {props.children}
+        ListboxItemIndicator {
+            {props.children}
+        }
     }
 }

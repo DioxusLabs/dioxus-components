@@ -1,9 +1,9 @@
-.popover {
+.dx-popover {
   position: relative;
   display: inline-block;
 }
 
-.popover-content {
+.dx-popover-content {
   position: fixed;
   z-index: 1000;
   display: flex;
@@ -14,7 +14,7 @@
   padding: .25rem;
   border-radius: .5rem;
   margin-top: .5rem;
-  background: var(--light, var(--primary-color)) 
+  background: var(--light, var(--primary-color))
       var(--dark, var(--primary-color-5));
   box-shadow: inset 0 0 0 1px var(--light, var(--primary-color-6)) var(--dark, var(--primary-color-7));
   text-align: center;
@@ -23,16 +23,16 @@
   will-change: transform, opacity;
 }
 
-.popover-content[data-state="closed"] {
-  display: none;
+.dx-popover-content[data-state="open"] {
+  animation: dx-popover-fade-in .2s ease-in-out;
 }
 
-.popover-content[data-state="open"] {
-  display: flex;
-  animation: popover-fade-in .2s ease-in-out;
+.dx-popover-content[data-state="closed"] {
+  animation: dx-popover-fade-out .2s ease-in-out forwards;
+  pointer-events: none;
 }
 
-@keyframes popover-fade-in {
+@keyframes dx-popover-fade-in {
   from {
     opacity: 0;
   }
@@ -42,8 +42,18 @@
   }
 }
 
+@keyframes dx-popover-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
 /* Positioning based on side */
-.popover-content[data-side="top"] {
+.dx-popover-content[data-side="top"] {
   position: absolute;
   bottom: 100%;
   left: 50%;
@@ -51,14 +61,14 @@
   transform: translateX(-50%);
 }
 
-.popover-content[data-side="top"]::after {
+.dx-popover-content[data-side="top"]::after {
   top: calc(100% - 0.25rem);
   left: 50%;
   border-color: var(--secondary-color-4);
   border-radius: 0 0 0.1rem;
 }
 
-.popover-content[data-side="right"] {
+.dx-popover-content[data-side="right"] {
   position: absolute;
   top: 50%;
   left: 100%;
@@ -66,14 +76,14 @@
   transform: translateY(-50%);
 }
 
-.popover-content[data-side="right"]::after {
+.dx-popover-content[data-side="right"]::after {
   top: calc(50% - 0.25rem);
   left: 0;
   border-color: var(--secondary-color-4);
   border-radius: 0 0 0 0.1rem;
 }
 
-.popover-content[data-side="bottom"] {
+.dx-popover-content[data-side="bottom"] {
   position: absolute;
   top: 100%;
   left: 50%;
@@ -81,14 +91,14 @@
   transform: translateX(-50%);
 }
 
-.popover-content[data-side="bottom"]::after {
+.dx-popover-content[data-side="bottom"]::after {
   bottom: calc(100% - 0.25rem);
   left: 50%;
   border-color: var(--secondary-color-4);
   border-radius: 0.1rem 0 0;
 }
 
-.popover-content[data-side="left"] {
+.dx-popover-content[data-side="left"] {
   position: absolute;
   top: 50%;
   right: 100%;
@@ -96,7 +106,7 @@
   transform: translateY(-50%);
 }
 
-.popover-content[data-side="left"]::after {
+.dx-popover-content[data-side="left"]::after {
   top: calc(50% - 0.25rem);
   right: -0.25rem;
   border-color: var(--secondary-color-4);
@@ -104,71 +114,71 @@
 }
 
 /* Alignment styles for top and bottom */
-.popover-content[data-side="top"][data-align="start"],
-.popover-content[data-side="bottom"][data-align="start"] {
+.dx-popover-content[data-side="top"][data-align="start"],
+.dx-popover-content[data-side="bottom"][data-align="start"] {
   left: 0;
   transform: none;
 }
 
-.popover-content[data-side="top"][data-align="end"],
-.popover-content[data-side="bottom"][data-align="end"] {
+.dx-popover-content[data-side="top"][data-align="end"],
+.dx-popover-content[data-side="bottom"][data-align="end"] {
   right: 0;
   left: auto;
   transform: none;
 }
 
 /* Alignment styles for left and right */
-.popover-content[data-side="left"][data-align="start"],
-.popover-content[data-side="right"][data-align="start"] {
+.dx-popover-content[data-side="left"][data-align="start"],
+.dx-popover-content[data-side="right"][data-align="start"] {
   top: 0;
   transform: none;
 }
 
-.popover-content[data-side="left"][data-align="center"],
-.popover-content[data-side="right"][data-align="center"] {
+.dx-popover-content[data-side="left"][data-align="center"],
+.dx-popover-content[data-side="right"][data-align="center"] {
   top: 50%;
   transform: translateY(-50%);
 }
 
-.popover-content[data-side="left"][data-align="end"],
-.popover-content[data-side="right"][data-align="end"] {
+.dx-popover-content[data-side="left"][data-align="end"],
+.dx-popover-content[data-side="right"][data-align="end"] {
   top: auto;
   bottom: 0;
   transform: none;
 }
 
-.popover-content-title {
+.dx-popover-content-title {
   margin: 0;
   color: var(--secondary-color-4);
   font-size: 1.25rem;
   font-weight: 700;
 }
 
-.popover-content-description {
+.dx-popover-content-description {
   margin: 0;
   color: var(--secondary-color-5);
   font-size: 1rem;
 }
 
-.popover-content-actions {
+.dx-popover-content-actions {
   display: flex;
   flex-direction: column-reverse;
   gap: 12px;
 }
 
 @media (width >= 40rem) {
-  .popover-content-actions {
+  .dx-popover-content-actions {
     flex-direction: row;
     justify-content: flex-end;
   }
 
-  .popover-content {
+  .dx-popover-content {
     max-width: 32rem;
     text-align: left;
   }
 }
 
-.popover-content-cancel {
+.dx-popover-content-cancel {
   padding: 8px 18px;
   border: 1px solid var(--primary-color-6);
   border-radius: 0.5rem;
@@ -180,15 +190,15 @@
   transition: background-color 0.2s ease;
 }
 
-.popover-content-cancel:hover {
+.dx-popover-content-cancel:hover {
   background-color: var(--primary-color-4);
 }
 
-.popover-content-cancel:focus-visible {
+.dx-popover-content-cancel:focus-visible {
   box-shadow: 0 0 0 2px var(--focused-border-color);
 }
 
-.popover-content-action {
+.dx-popover-content-action {
   padding: 8px 18px;
   border: 1px solid var(--primary-error-color);
   border-radius: 0.5rem;
@@ -199,15 +209,15 @@
   transition: background-color 0.2s ease;
 }
 
-.popover-content-action:hover {
+.dx-popover-content-action:hover {
   background-color: var(--secondary-error-color);
 }
 
-.popover-content-action:focus-visible {
+.dx-popover-content-action:focus-visible {
   box-shadow: 0 0 0 2px var(--focused-border-color);
 }
 
-.popover-trigger {
+.dx-popover-trigger {
   padding: 8px 18px;
   border: 1px solid var(--primary-color-6);
   border-radius: 0.5rem;
@@ -219,10 +229,10 @@
   transition: background-color 0.2s ease;
 }
 
-.popover-trigger:hover {
+.dx-popover-trigger:hover {
   background-color: var(--primary-color-4);
 }
 
-.popover-trigger:focus-visible {
+.dx-popover-trigger:focus-visible {
   box-shadow: 0 0 0 2px var(--focused-border-color);
 }

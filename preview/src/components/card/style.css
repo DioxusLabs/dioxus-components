@@ -1,4 +1,4 @@
-.card {
+.dx-card {
   display: flex;
   flex-direction: column;
   padding: 1.5rem 0;
@@ -10,7 +10,7 @@
   gap: 1.5rem;
 }
 
-.card-header {
+.dx-card-header {
   display: grid;
   align-items: start;
   padding: 0 1.5rem;
@@ -19,33 +19,33 @@
   grid-template-rows: auto auto;
 }
 
-.card-header:has([data-slot="card-action"]) {
+.dx-card-header:has([data-slot="card-action"]) {
   grid-template-columns: 1fr auto;
 }
 
-.card-title {
+.dx-card-title {
   font-size: 1rem;
   font-weight: 600;
   line-height: 1;
 }
 
-.card-description {
+.dx-card-description {
   color: var(--secondary-color-5);
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
 
-.card-action {
+.dx-card-action {
   grid-column-start: 2;
   grid-row: 1 / span 2;
   place-self: start end;
 }
 
-.card-content {
+.dx-card-content {
   padding: 0 1.5rem;
 }
 
-.card-footer {
+.dx-card-footer {
   display: flex;
   align-items: center;
   padding: 0 1.5rem;

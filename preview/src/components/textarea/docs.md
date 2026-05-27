@@ -5,10 +5,9 @@ The textarea element is used to allow users to enter multi-line text input in a 
 ```rust
 textarea {
     // Global html attributes
-    class: "textarea",
+    class: "dx-textarea",
     "data-style": "default",
     // Children
     {children}
 }
 ```
-

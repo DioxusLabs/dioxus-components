@@ -19,6 +19,6 @@ pub fn Demo() -> Element {
     });
 
     rsx! {
-        Progress { aria_label: "Progressbar Demo", value: progress() as f64, ProgressIndicator {} }
+        Progress { aria_label: "Progressbar Demo", value: progress() as f64 }
     }
 }

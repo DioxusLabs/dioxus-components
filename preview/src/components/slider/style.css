@@ -1,19 +1,19 @@
-.slider {
+.dx-slider {
     position: relative;
     display: flex;
-    width: 200px;
+    min-width: 200px;
     align-items: center;
     padding: 0.5rem 0;
     touch-action: none;
 }
 
-.slider[data-orientation="vertical"] {
+.dx-slider[data-orientation="vertical"] {
     width: auto;
     height: 200px;
     flex-direction: column;
 }
 
-.slider-track {
+.dx-slider-track {
     position: relative;
     height: 0.5rem;
     box-sizing: border-box;
@@ -22,55 +22,58 @@
     background: var(--primary-color-5);
 }
 
-.slider[data-orientation="vertical"] .slider-track {
+.dx-slider[data-orientation="vertical"] .dx-slider-track {
     width: 4px;
     height: 100%;
 }
 
-.slider-range {
+.dx-slider-range {
     position: absolute;
     height: 100%;
     border-radius: 9999px;
     background-color: var(--secondary-color-2);
 }
 
-.slider[data-orientation="vertical"] .slider-range {
+.dx-slider[data-orientation="vertical"] .dx-slider-range {
     width: 100%;
 }
 
-.slider-thumb {
+.dx-slider-thumb {
     all: unset;
     position: absolute;
     top: 50%;
     display: block;
     width: 16px;
     height: 16px;
-    border: 1px solid var(--secondary-color-2);
+    box-sizing: border-box;
+    border: 0;
     border-radius: 50%;
     background-color: var(--primary-color-1);
+    box-shadow: inset 0 0 0 1px var(--secondary-color-2);
     cursor: pointer;
-    transform: translate(-50%, -50%);
-    transition: border-color 150ms;
+    transform: translate3d(-50%, -50%, 0);
+    transition: box-shadow 150ms;
+    will-change: left, bottom, transform;
 }
 
-.slider[data-orientation="vertical"] .slider-thumb {
+.dx-slider[data-orientation="vertical"] .dx-slider-thumb {
     left: 50%;
-    transform: translate(-50%, 50%);
+    transform: translate3d(-50%, 50%, 0);
 }
 
-.slider-thumb:focus-visible[data-dragging="true"],
-.slider-thumb:focus-visible,
-.slider-thumb:hover {
-    box-shadow: 0 0 0 4px
-        color-mix(in oklab, var(--primary-color-7) 50%, transparent);
+.dx-slider-thumb:focus-visible[data-dragging="true"],
+.dx-slider-thumb:focus-visible,
+.dx-slider-thumb:hover {
+    box-shadow: inset 0 0 0 1px var(--secondary-color-2),
+        0 0 0 4px color-mix(in oklab, var(--primary-color-7) 50%, transparent);
     transition: box-shadow 150ms;
 }
 
-.slider[data-disabled="true"] {
+.dx-slider[data-disabled="true"] {
     cursor: not-allowed;
     opacity: 0.5;
 }
 
-.slider[data-disabled="true"] .slider-thumb {
+.dx-slider[data-disabled="true"] .dx-slider-thumb {
     cursor: not-allowed;
 }

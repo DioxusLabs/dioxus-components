@@ -45,7 +45,7 @@ pub fn Demo() -> Element {
         }
 
         if let Some(item) = selected_item() {
-            "Selected: {item}"
+            span { margin_left: "10px", "Selected: {item}" }
         }
     }
 }

@@ -67,7 +67,7 @@ pub enum ScrollType {
 ///             height: "10em",
 ///             direction: ScrollDirection::Vertical,
 ///             tabindex: "0",
-///             div { class: "scroll-content",
+///             div { class: "dx-scroll-content",
 ///                 for i in 1..=20 {
 ///                     p {
 ///                         "Scrollable content item {i}"
@@ -109,9 +109,9 @@ pub fn ScrollArea(props: ScrollAreaProps) -> Element {
 
     let visibility_class = use_memo(move || {
         if always_show() {
-            "scroll-area-always-show"
+            "dx-scroll-area-always-show"
         } else {
-            "scroll-area-auto-hide"
+            "dx-scroll-area-auto-hide"
         }
     });
 

@@ -1,4 +1,4 @@
-.accordion-trigger {
+.dx-accordion-trigger {
   display: flex;
   width: 100%;
   box-sizing: border-box;
@@ -15,75 +15,82 @@
   text-align: left;
 }
 
-.accordion-trigger:focus-visible {
+.dx-accordion-trigger:focus-visible {
   border: none;
   box-shadow: inset 0 0 0 2px var(--focused-border-color);
 }
 
-.accordion-trigger:hover {
+.dx-accordion-trigger:hover:not(:disabled) {
   cursor: pointer;
   text-decoration-line: underline;
 }
 
-.accordion-content {
+.dx-accordion-trigger:disabled {
+  color: var(--secondary-color-5);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dx-accordion-content {
   display: grid;
-  height: 0;
 }
 
-.accordion-content[data-open="false"] {
-	animation: accordion-slide-down 300ms cubic-bezier(0.87, 0, 0.13, 1) forwards;
+.dx-accordion-content > * {
+  overflow: hidden;
+  min-height: 0;
 }
 
-.accordion-content[data-open="true"] {
-  animation: accordion-slide-up 300ms cubic-bezier(0.87, 0, 0.13, 1) forwards;
+.dx-accordion-content[data-open="false"] {
+	animation: dx-accordion-slide-down 300ms cubic-bezier(0.87, 0, 0.13, 1) forwards;
 }
 
-@keyframes accordion-slide-down {
+.dx-accordion-content[data-open="true"] {
+  animation: dx-accordion-slide-up 300ms cubic-bezier(0.87, 0, 0.13, 1) forwards;
+}
+
+@keyframes dx-accordion-slide-down {
 	from {
     height: var(--collapsible-content-width);
 	}
 
-	to {
-    height: 0;
-	}
+  to {
+    grid-template-rows: 0fr;
+  }
 }
 
-@keyframes accordion-slide-up {
+@keyframes dx-accordion-slide-up {
 	from {
     height: 0;
 	}
 
-	to {
-    height: var(--collapsible-content-width);
-	}
+  to {
+    grid-template-rows: 1fr;
+  }
 }
 
-.accordion-item {
+.dx-accordion {
+  contain: inline-size;
+}
+
+.dx-accordion-item {
   overflow: hidden;
   box-sizing: border-box;
   border-bottom: 1px solid var(--primary-color-6);
   margin-top: 1px;
 }
 
-.accordion-item:first-child {
+.dx-accordion-item:first-child {
   margin-top: 0;
 }
 
-.accordion-item:last-child {
+.dx-accordion-item:last-child {
   border-bottom: none;
 }
 
-.accordion-expand-icon {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: var(--secondary-color-4);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
-  transition: rotate 150ms cubic-bezier(0.4, 0, 0.2, 1);
+.dx-accordion-expand-icon {
+  transition: rotate 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.accordion-item[data-open="true"] .accordion-expand-icon {
+.dx-accordion-item[data-open="true"] .dx-accordion-expand-icon {
   rotate: 180deg;
 }

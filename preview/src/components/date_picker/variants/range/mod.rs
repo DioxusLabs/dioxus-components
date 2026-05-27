@@ -15,7 +15,6 @@ pub fn Demo() -> Element {
                     tracing::info!("Selected range: {:?}", range);
                     selected_range.set(range);
                 },
-                DateRangePickerInput {}
             }
         }
     }

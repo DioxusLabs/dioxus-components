@@ -4,17 +4,16 @@ test("test", async ({ page }) => {
   await page.goto("http://127.0.0.1:8080/component/?name=calendar&", {
     timeout: 20 * 60 * 1000,
   }); // Increase timeout to 20 minutes
-  // Find the calendar element
-  const calendar = page.locator(".calendar").nth(0);
-  // Find the calendar-nav-prev button
-  const prevButton = calendar.locator(".calendar-nav-prev");
-  // Find the calendar-nav-next button
-  const nextButton = calendar.locator(".calendar-nav-next");
+  await page.waitForLoadState('networkidle');
+
+  const calendar = page.locator("#component-preview-frame").first();
+  const prevButton = calendar.getByRole("button").first();
+  const nextButton = calendar.getByRole("button").nth(1);
 
   // Assert the calendar is displayed
   await expect(calendar).toBeVisible({ timeout: 30000 });
   // Assert the current month is displayed
-  const currentMonth = calendar.locator(".calendar-month-select");
+  const currentMonth = calendar.locator("select").first();
   let currentMonthText = await currentMonth.inputValue();
 
   // Click the previous button to go to the previous month
@@ -31,7 +30,7 @@ test("test", async ({ page }) => {
   // Move focus to the calendar with tab
   await page.keyboard.press("Tab");
   const focusedDay = calendar.locator(
-    '.calendar-grid-cell[data-month="current"]:focus'
+    '[data-month="current"]:focus'
   );
   // Assert a day is focused
   const firstDay = focusedDay.first();
@@ -43,10 +42,21 @@ test("test", async ({ page }) => {
   const nextDay = focusedDay.first();
   // Assert the next day is focused
   const nextDayNumber = parseInt((await nextDay.textContent()) || "", 10);
-  expect(nextDayNumber).toBe(dayNumber + 1);
-  // Pressing left arrow should move focus back to the first day
+  let current_date = new Date();
+  let daysInMonth = new Date(
+    current_date.getFullYear(),
+    current_date.getMonth() + 1,
+    0
+  ).getDate();
+  if (dayNumber + 1 > daysInMonth) {
+    // If the next day is in the next month, it should wrap around
+    expect(nextDayNumber).toBe(1);
+  } else {
+    expect(nextDayNumber).toBe(dayNumber + 1);
+  }
+  // Pressing left arrow should move focus back to the original day
   await page.keyboard.press("ArrowLeft");
-  await expect(firstDay).toContainText(day || "failure");
+  await expect(focusedDay.first()).toContainText(day || "failure");
   // Pressing down arrow should move focus to the next week
   await page.keyboard.press("ArrowDown");
   const nextWeekDay = focusedDay.first();
@@ -55,21 +65,15 @@ test("test", async ({ page }) => {
     (await nextWeekDay.textContent()) || "",
     10
   );
-  let current_date = new Date();
-  let daysInMonth = new Date(
-    current_date.getFullYear(),
-    current_date.getMonth() + 1,
-    0
-  ).getDate();
   if (dayNumber + 7 > daysInMonth) {
     // If the next week day is in the next month, it should wrap around
     expect(nextWeekDayNumber).toBe(dayNumber + 7 - daysInMonth);
   } else {
     expect(nextWeekDayNumber).toBe(dayNumber + 7);
   }
-  // Pressing up arrow should move focus back to the first day of the month
+  // Pressing up arrow should move focus back to the original day
   await page.keyboard.press("ArrowUp");
-  await expect(firstDay).toContainText(day || "failure");
+  await expect(focusedDay.first()).toContainText(day || "failure");
 });
 
 test("year navigation by moving 52 weeks with arrow keys", async ({ page }) => {
@@ -77,10 +81,9 @@ test("year navigation by moving 52 weeks with arrow keys", async ({ page }) => {
     timeout: 20 * 60 * 1000,
   });
 
-  // Find the calendar element
-  const calendar = page.locator(".calendar").nth(0);
-  const monthSelect = calendar.locator(".calendar-month-select");
-  const yearSelect = calendar.locator(".calendar-year-select");
+  const calendar = page.locator("#component-preview-frame").first();
+  const monthSelect = calendar.locator("select").first();
+  const yearSelect = calendar.locator("select").nth(1);
 
   // Assert the calendar is displayed
   await expect(calendar).toBeVisible({ timeout: 30000 });
@@ -105,7 +108,7 @@ test("year navigation by moving 52 weeks with arrow keys", async ({ page }) => {
 
   // Move focus to the calendar manually
   const firstDay = calendar
-    .locator('.calendar-grid-cell[data-month="current"]')
+    .locator('[data-month="current"]')
     .first();
   await firstDay.focus();
 
@@ -142,10 +145,9 @@ test("shift + arrow keys navigation", async ({ page }) => {
     timeout: 20 * 60 * 1000,
   });
 
-  // Find the calendar element
-  const calendar = page.locator(".calendar").nth(0);
-  const monthSelect = calendar.locator(".calendar-month-select");
-  const yearSelect = calendar.locator(".calendar-year-select");
+  const calendar = page.locator("#component-preview-frame").first();
+  const monthSelect = calendar.locator("select").first();
+  const yearSelect = calendar.locator("select").nth(1);
 
   // Assert the calendar is displayed
   await expect(calendar).toBeVisible({ timeout: 30000 });
@@ -158,7 +160,7 @@ test("shift + arrow keys navigation", async ({ page }) => {
 
   // Move focus to the calendar
   const firstDay = calendar
-    .locator('.calendar-grid-cell[data-month="current"]')
+    .locator('[data-month="current"]')
     .first();
   await firstDay.focus();
 
@@ -193,10 +195,9 @@ async function testArrowKeyNavigation(
     timeout: 20 * 60 * 1000,
   });
 
-  // Find the calendar element
-  const calendar = page.locator(".calendar").nth(0);
-  const monthSelect = calendar.locator(".calendar-month-select");
-  const yearSelect = calendar.locator(".calendar-year-select");
+  const calendar = page.locator("#component-preview-frame").first();
+  const monthSelect = calendar.locator("select").first();
+  const yearSelect = calendar.locator("select").nth(1);
 
   // Assert the calendar is displayed
   await expect(calendar).toBeVisible({ timeout: 30000 });
@@ -212,13 +213,13 @@ async function testArrowKeyNavigation(
 
   // Move focus to the starting day of the current month
   const startDay = calendar
-    .locator('.calendar-grid-cell[data-month="current"]')
+    .locator('[data-month="current"]')
     [startPosition]();
   await startDay.focus();
 
   // Get the focused day selector
   const focusedDay = calendar.locator(
-    '.calendar-grid-cell[data-month="current"]:focus'
+    '[data-month="current"]:focus'
   );
 
   // Array to track all days visited

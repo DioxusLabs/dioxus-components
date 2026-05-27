@@ -5,7 +5,6 @@ use dioxus_primitives::ContentSide;
 #[component]
 pub fn Demo() -> Element {
     rsx! {
-
         Tooltip {
             TooltipTrigger { "Rich content" }
             TooltipContent { side: ContentSide::Left, style: "width: 200px;",

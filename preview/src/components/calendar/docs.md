@@ -16,22 +16,9 @@ Calendar {
         // This callback is triggered when the view date changes.
         // The date parameter contains the new view date.
     },
-    // The calendar view will get rendered once for each month in the multi-month view.
-    CalendarView {
-        // The calendar header should contain the navigation controls and the title for the calendar.
-        CalendarHeader {
-            // The calendar navigation handles switching between months and years within the calendar view.
-            CalendarNavigation {
-                // The previous month button allows users to navigate to the previous month.
-                PreviousMonthButton {}
-                // The title displays the current month and year of the calendar view.
-                CalendarTitle {}
-                // The next month button allows users to navigate to the next month.
-                NextMonthButton {}
-            }
-        }
-        // The calendar grid displays the days of the month in a grid layout.
-        CalendarGrid {}
-    }
+    // Optional number of pre-composed month views to render.
+    month_count: 1,
 }
 ```
+
+The styled `Calendar` and `RangeCalendar` render a complete month view by default, including the header, navigation, month/year selectors, and date grid.

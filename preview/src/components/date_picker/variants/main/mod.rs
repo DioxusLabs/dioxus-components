@@ -15,7 +15,6 @@ pub fn Demo() -> Element {
                     tracing::info!("Selected date changed: {:?}", v);
                     selected_date.set(v);
                 },
-                DatePickerInput {}
             }
         }
     }

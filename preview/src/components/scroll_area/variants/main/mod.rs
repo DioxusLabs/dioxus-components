@@ -14,7 +14,7 @@ pub fn Demo() -> Element {
             padding: "0 1em 1em 1em",
             direction: ScrollDirection::Vertical,
             tabindex: "0",
-            div { class: "scroll-content",
+            div {
                 for i in 1..=20 {
                     p { "Scrollable content item {i}" }
                 }

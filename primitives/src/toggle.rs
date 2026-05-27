@@ -2,6 +2,7 @@
 
 use crate::use_controlled;
 use dioxus::prelude::*;
+use std::rc::Rc;
 
 /// The props for the [`Toggle`] component.
 #[derive(Props, Clone, PartialEq)]
@@ -73,9 +74,19 @@ pub fn Toggle(props: ToggleProps) -> Element {
         props.on_pressed_change,
     );
 
+    // Safari and Firefox on macOS do not focus <button> on click by default
+    // (matches the macOS "Press Tab to highlight items" preference). Capture
+    // a mounted ref so we can explicitly focus on click, matching what
+    // Radix UI / Headless UI / Material UI do for the same reason.
+    let mut button_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
+    let user_onmounted = props.onmounted;
+
     rsx! {
         button {
-            onmounted: props.onmounted,
+            onmounted: move |evt: Event<MountedData>| {
+                button_ref.set(Some(evt.data()));
+                user_onmounted.call(evt);
+            },
             onfocus: props.onfocus,
             onkeydown: props.onkeydown,
 
@@ -88,6 +99,11 @@ pub fn Toggle(props: ToggleProps) -> Element {
             onclick: move |_| {
                 let new_pressed = !pressed();
                 set_pressed.call(new_pressed);
+                if let Some(node) = button_ref() {
+                    spawn(async move {
+                        let _ = node.set_focus(true).await;
+                    });
+                }
             },
 
             ..props.attributes,

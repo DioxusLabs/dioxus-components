@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::{
     focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
-    use_controlled,
+    use_controlled, use_effect_with_cleanup,
 };
 use dioxus::prelude::*;
 
@@ -253,13 +253,18 @@ pub struct RadioItemProps {
 #[component]
 pub fn RadioItem(props: RadioItemProps) -> Element {
     let mut ctx: RadioGroupCtx = use_context();
+    let disabled = move || (ctx.disabled)() || (props.disabled)();
 
-    use_effect(move || {
-        if (props.disabled)() {
-            return;
+    use_effect_with_cleanup(move || {
+        let index = (props.index)();
+        if disabled() {
+            ctx.values.write().remove(&index);
+        } else {
+            ctx.values.write().insert(index, (props.value)());
         }
-        // Register on mount
-        ctx.values.write().insert((props.index)(), (props.value)());
+        move || {
+            ctx.values.write().remove(&index);
+        }
     });
 
     let value = (props.value)().clone();
@@ -286,7 +291,7 @@ pub fn RadioItem(props: RadioItemProps) -> Element {
         "-1"
     });
 
-    let onmounted = use_focus_controlled_item_disabled(props.index, props.disabled);
+    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
 
     rsx! {
         button {
@@ -298,8 +303,8 @@ pub fn RadioItem(props: RadioItemProps) -> Element {
 
             aria_checked: checked,
             "data-state": if checked() { "checked" } else { "unchecked" },
-            "data-disabled": (ctx.disabled)() || (props.disabled)(),
-            disabled: (ctx.disabled)() || (props.disabled)(),
+            "data-disabled": disabled(),
+            disabled: disabled(),
 
             onclick: move |_| {
                 let value = (props.value)().clone();

@@ -10,3 +10,7 @@ package-lock.json
 /playwright/test-results/
 /blob-report/
 /playwright/.cache/
+**/._*
+
+# macOS
+**/.DS_Store

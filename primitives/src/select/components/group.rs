@@ -1,6 +1,6 @@
 //! SelectGroup and SelectGroupLabel component implementations.
 
-use crate::{select::context::SelectListContext, use_effect, use_id_or, use_unique_id};
+use crate::{listbox::ListboxContext, use_effect, use_id_or, use_unique_id};
 use dioxus::prelude::*;
 
 use super::super::context::{SelectContext, SelectGroupContext};
@@ -42,11 +42,10 @@ pub struct SelectGroupProps {
 /// fn Demo() -> Element {
 ///     rsx! {
 ///         Select::<String> {
-///             placeholder: "Select a fruit...",
 ///             SelectTrigger {
 ///                 aria_label: "Select Trigger",
 ///                 width: "12rem",
-///                 SelectValue {}
+///                 SelectValue { placeholder: "Select a fruit..." }
 ///             }
 ///             SelectList {
 ///                 aria_label: "Select Demo",
@@ -73,12 +72,12 @@ pub struct SelectGroupProps {
 #[component]
 pub fn SelectGroup(props: SelectGroupProps) -> Element {
     let ctx = use_context::<SelectContext>();
-    let disabled = ctx.disabled.cloned() || props.disabled.cloned();
+    let disabled = ctx.selectable.disabled.cloned() || props.disabled.cloned();
 
     let labeled_by = use_signal(|| None);
 
     use_context_provider(|| SelectGroupContext { labeled_by });
-    let render = use_context::<SelectListContext>().render;
+    let render = use_context::<ListboxContext>().render;
 
     rsx! {
         if render() {
@@ -131,11 +130,10 @@ pub struct SelectGroupLabelProps {
 /// fn Demo() -> Element {
 ///     rsx! {
 ///         Select::<String> {
-///             placeholder: "Select a fruit...",
 ///             SelectTrigger {
 ///                 aria_label: "Select Trigger",
 ///                 width: "12rem",
-///                 SelectValue {}
+///                 SelectValue { placeholder: "Select a fruit..." }
 ///             }
 ///             SelectList {
 ///                 aria_label: "Select Demo",
@@ -170,7 +168,7 @@ pub fn SelectGroupLabel(props: SelectGroupLabelProps) -> Element {
         ctx.labeled_by.set(Some(id()));
     });
 
-    let render = use_context::<SelectListContext>().render;
+    let render = use_context::<ListboxContext>().render;
 
     rsx! {
         if render () {

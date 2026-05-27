@@ -27,7 +27,7 @@ test.describe("details", () => {
     await page.goto("http://127.0.0.1:8080/component/?name=calendar", { timeout: 20 * 60 * 1000 }); // Increase timeout to 20 minutes
 
     // Wait for the page to fully load
-    let componentSection = page.locator(".component-demo");
+    let componentSection = page.getByRole("heading", { name: "calendar" });
     await componentSection.waitFor({ state: "visible" });
 
     const accessibilityScanResults = await new AxeBuilder({ page })

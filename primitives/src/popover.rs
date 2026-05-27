@@ -4,10 +4,9 @@ use dioxus::document;
 use dioxus::prelude::*;
 
 use crate::focus_trap::{self, FocusTrap};
-use crate::use_global_escape_listener;
 use crate::{
-    use_animated_open, use_controlled, use_id_or, use_unique_id, ContentAlign, ContentSide,
-    FOCUS_TRAP_JS,
+    use_animated_open, use_controlled, use_global_escape_listener, use_id_or, use_outside_dismiss,
+    use_unique_id, ContentAlign, ContentSide, FOCUS_TRAP_JS,
 };
 
 #[derive(Clone, Copy)]
@@ -21,6 +20,7 @@ struct PopoverCtx {
     #[allow(unused)]
     is_modal: ReadSignal<bool>,
     labelledby: Signal<String>,
+    root_id: Memo<String>,
 }
 
 /// The props for the [`PopoverRoot`] component.
@@ -40,6 +40,9 @@ pub struct PopoverRootProps {
     /// Callback fired when the open state changes.
     #[props(default)]
     pub on_open_change: Callback<bool>,
+
+    /// The id of the popover root element.
+    pub id: ReadSignal<Option<String>>,
 
     /// Additional attributes to apply to the popover root element.
     #[props(extends = GlobalAttributes)]
@@ -101,6 +104,8 @@ pub struct PopoverRootProps {
 #[component]
 pub fn PopoverRoot(props: PopoverRootProps) -> Element {
     let labelledby = use_unique_id();
+    let gen_root_id = use_unique_id();
+    let root_id = use_id_or(gen_root_id, props.id);
 
     let (open, set_open) = use_controlled(props.open, props.default_open, props.on_open_change);
 
@@ -109,10 +114,12 @@ pub fn PopoverRoot(props: PopoverRootProps) -> Element {
         set_open,
         is_modal: props.is_modal,
         labelledby,
+        root_id,
     });
 
     rsx! {
         div {
+            id: root_id,
             "data-state": if open() { "open" } else { "closed" },
             ..props.attributes,
             {props.children}
@@ -260,19 +267,21 @@ pub fn PopoverContentRendered(
     let is_open = open();
     let set_open = ctx.set_open;
 
-    // Add a escape key listener to the document when the dialog is open. We can't
-    // just add this to the dialog itself because it might not be focused if the user
+    // Add a escape key listener to the document when the popover is open. We can't
+    // just add this to the popover itself because it might not be focused if the user
     // is highlighting text or interacting with another element.
     use_global_escape_listener(move || set_open.call(false));
+
+    use_outside_dismiss(ctx.root_id, move || set_open.call(false));
 
     rsx! {
         div {
             id,
             role: "dialog",
-            aria_modal: "true",
+            aria_modal: (ctx.is_modal)().then_some("true"),
             aria_labelledby: ctx.labelledby,
             aria_hidden: (!is_open).then_some("true"),
-            class: class.unwrap_or_else(|| "popover-content".to_string()),
+            class: class.unwrap_or_else(|| "dx-popover-content".to_string()),
             "data-state": if is_open { "open" } else { "closed" },
             "data-side": side.as_str(),
             "data-align": align.as_str(),
@@ -287,6 +296,7 @@ pub fn PopoverContentRendered(
 pub struct PopoverTriggerProps {
     /// Additional attributes to apply to the trigger element.
     #[props(extends = GlobalAttributes)]
+    #[props(extends = button)]
     pub attributes: Vec<Attribute>,
 
     /// The children of the trigger component.
@@ -363,7 +373,6 @@ pub fn PopoverTrigger(props: PopoverTriggerProps) -> Element {
             id,
             type: "button",
             onclick: move |e| {
-                // Prevent the click event from propagating to the overlay.
                 e.stop_propagation();
                 ctx.set_open.call(!(ctx.open)());
             },

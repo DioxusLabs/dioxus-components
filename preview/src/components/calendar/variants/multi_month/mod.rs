@@ -1,15 +1,15 @@
 use super::super::component::*;
 use dioxus::prelude::*;
-use time::{macros::date, Date, UtcDateTime};
+use time::{macros::date, Date};
 
 use dioxus_primitives::calendar::DateRange;
 
 #[component]
 pub fn Demo() -> Element {
     let mut selected_range = use_signal(|| None::<DateRange>);
-    let mut view_date = use_signal(|| UtcDateTime::now().date());
+    let mut view_date = use_signal(|| date!(2026 - 05 - 15));
     rsx! {
-        div { class: "calendar-example", style: "padding: 20px;",
+        div { style: "padding: 20px;",
             RangeCalendar {
                 selected_range: selected_range(),
                 on_range_change: move |range| {
@@ -24,16 +24,6 @@ pub fn Demo() -> Element {
                 min_date: date!(1995 - 07 - 21),
                 max_date: date!(2035 - 09 - 11),
                 month_count: 3,
-                CalendarView {
-                    CalendarHeader {
-                        CalendarNavigation {
-                            CalendarPreviousMonthButton {}
-                            CalendarMonthTitle {}
-                            CalendarNextMonthButton {}
-                        }
-                    }
-                    CalendarGrid {}
-                }
             }
         }
     }

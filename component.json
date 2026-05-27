@@ -24,6 +24,7 @@
     "preview/src/components/alert_dialog",
     "preview/src/components/popover",
     "preview/src/components/radio_group",
+    "preview/src/components/virtual_list",
     "preview/src/components/button",
     "preview/src/components/collapsible",
     "preview/src/components/avatar",
@@ -37,6 +38,13 @@
     "preview/src/components/textarea",
     "preview/src/components/skeleton",
     "preview/src/components/card",
-    "preview/src/components/sheet"
+    "preview/src/components/sheet",
+    "preview/src/components/pagination",
+    "preview/src/components/sidebar",
+    "preview/src/components/badge",
+    "preview/src/components/drag_and_drop_list",
+    "preview/src/components/color_picker",
+    "preview/src/components/combobox",
+    "preview/src/components/item"
   ]
 }

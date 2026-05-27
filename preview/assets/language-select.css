@@ -1,20 +1,20 @@
 /* Language */
-.language-container {
+.dx-language-container {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.language-select-container {
+.dx-language-select-container {
   position: relative;
 }
 
-.language-select-container:has(:focus-visible) {
+.dx-language-select-container:has(:focus-visible) {
   border-radius: 0.5rem;
   outline: 2px solid var(--focused-border-color);
 }
 
-.language-select {
+.dx-language-select {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -24,15 +24,16 @@
   opacity: 0;
 }
 
-.language-select-value {
+.dx-language-select-value {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: .25rem;
+  padding: 0;
   border: none;
   background-color: transparent;
   color: var(--secondary-color-4);
   cursor: pointer;
   font-size: 1.5rem;
+  gap: 2px;
   transition: background-color 0.2s ease, color 0.2s ease;
 }

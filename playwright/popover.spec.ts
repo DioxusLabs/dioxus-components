@@ -27,3 +27,14 @@ test("test", async ({ page }) => {
   // pressing escape should close the popover
   await page.keyboard.press("Escape");
 });
+
+test("popover dismisses when clicking outside", async ({ page }) => {
+  await page.goto("http://127.0.0.1:8080/component/?name=popover&");
+  const popoverButton = page.getByRole("button", { name: "Show Popover" });
+  await popoverButton.click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  // Click far outside the popover (corner of the document) — should dismiss.
+  await page.mouse.click(2, 2);
+  await expect(dialog).toHaveCount(0);
+});

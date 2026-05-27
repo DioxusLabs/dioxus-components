@@ -1,12 +1,13 @@
 use dioxus::prelude::*;
 use dioxus_primitives::label::{self, LabelProps};
+#[css_module("/src/components/label/style.css")]
+struct Styles;
 
 #[component]
 pub fn Label(props: LabelProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         label::Label {
-            class: "label",
+            class: Styles::dx_label,
             html_for: props.html_for,
             attributes: props.attributes,
             {props.children}

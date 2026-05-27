@@ -3,13 +3,14 @@ use dioxus_primitives::menubar::{
     self, MenubarContentProps, MenubarItemProps, MenubarMenuProps, MenubarProps,
     MenubarTriggerProps,
 };
+#[css_module("/src/components/menubar/style.css")]
+struct Styles;
 
 #[component]
 pub fn Menubar(props: MenubarProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         menubar::Menubar {
-            class: "menubar",
+            class: Styles::dx_menubar,
             disabled: props.disabled,
             roving_loop: props.roving_loop,
             attributes: props.attributes,
@@ -22,7 +23,7 @@ pub fn Menubar(props: MenubarProps) -> Element {
 pub fn MenubarMenu(props: MenubarMenuProps) -> Element {
     rsx! {
         menubar::MenubarMenu {
-            class: "menubar-menu",
+            class: Styles::dx_menubar_menu,
             index: props.index,
             disabled: props.disabled,
             attributes: props.attributes,
@@ -34,7 +35,7 @@ pub fn MenubarMenu(props: MenubarMenuProps) -> Element {
 #[component]
 pub fn MenubarTrigger(props: MenubarTriggerProps) -> Element {
     rsx! {
-        menubar::MenubarTrigger { class: "menubar-trigger", attributes: props.attributes, {props.children} }
+        menubar::MenubarTrigger { class: Styles::dx_menubar_trigger, attributes: props.attributes, {props.children} }
     }
 }
 
@@ -42,7 +43,7 @@ pub fn MenubarTrigger(props: MenubarTriggerProps) -> Element {
 pub fn MenubarContent(props: MenubarContentProps) -> Element {
     rsx! {
         menubar::MenubarContent {
-            class: "menubar-content",
+            class: Styles::dx_menubar_content,
             id: props.id,
             attributes: props.attributes,
             {props.children}
@@ -54,7 +55,7 @@ pub fn MenubarContent(props: MenubarContentProps) -> Element {
 pub fn MenubarItem(props: MenubarItemProps) -> Element {
     rsx! {
         menubar::MenubarItem {
-            class: "menubar-item",
+            class: Styles::dx_menubar_item,
             index: props.index,
             value: props.value,
             disabled: props.disabled,

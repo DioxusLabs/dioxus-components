@@ -2,8 +2,8 @@
 
 use crate::{
     focus::{
-        use_focus_control, use_focus_controlled_item, use_focus_entry, use_focus_provider,
-        FocusState,
+        use_deferred_focus, use_focus_control, use_focus_controlled_item_disabled,
+        use_focus_entry_disabled, use_focus_provider, FocusPlacement, FocusState,
     },
     use_animated_open, use_id_or, use_unique_id,
 };
@@ -169,6 +169,7 @@ struct NavbarNavContext {
     focus: FocusState,
     is_open: Memo<bool>,
     disabled: ReadSignal<bool>,
+    initial_focus: Signal<Option<FocusPlacement>>,
 }
 
 impl NavbarNavContext {
@@ -274,22 +275,24 @@ pub fn NavbarNav(props: NavbarNavProps) -> Element {
     let mut ctx: NavbarContext = use_context();
     let is_open = use_memo(move || (ctx.open_nav)() == Some(props.index.cloned()));
     let focus = use_focus_provider(ctx.focus.roving_loop);
+    let initial_focus = use_signal(|| None);
     let mut nav_ctx = use_context_provider(|| NavbarNavContext {
         index: props.index,
         focus,
         is_open,
         disabled: props.disabled,
+        initial_focus,
     });
 
     use_effect(move || {
         if !is_open() {
             nav_ctx.focus.blur();
+            nav_ctx.initial_focus.set(None);
         }
     });
 
-    use_focus_entry(ctx.focus, nav_ctx.index);
-
     let disabled = move || (ctx.disabled)() || (props.disabled)();
+    use_focus_entry_disabled(ctx.focus, nav_ctx.index, disabled);
 
     rsx! {
         div {
@@ -319,13 +322,18 @@ pub fn NavbarNav(props: NavbarNavProps) -> Element {
                     }
                     Key::ArrowDown if !disabled() => {
                         if !is_open() {
+                            nav_ctx.initial_focus.set(Some(FocusPlacement::First));
                             ctx.set_open_nav.call(Some(props.index.cloned()));
+                        } else {
+                            nav_ctx.focus_next();
                         }
-                        nav_ctx.focus_next();
                     },
                     Key::ArrowUp if !disabled() => {
                         if is_open() {
                             nav_ctx.focus_prev();
+                        } else {
+                            nav_ctx.initial_focus.set(Some(FocusPlacement::Last));
+                            ctx.set_open_nav.call(Some(props.index.cloned()));
                         }
                     },
                     _ => return,
@@ -428,8 +436,13 @@ pub fn NavbarTrigger(props: NavbarTriggerProps) -> Element {
     rsx! {
         button {
             onmounted,
-            onpointerdown: move |_| {
+            onpointerdown: move |event| {
                 if !disabled() {
+                    // Suppress the synthesized focus shift so that tapping a child
+                    // menuitem on mobile doesn't blur the trigger and trip onblur,
+                    // which would close the nav mid-tap and detach the menuitem
+                    // before Playwright (or a real user) can complete the tap.
+                    event.prevent_default();
                     let new_open = if is_open() { None } else { Some(nav_ctx.index.cloned()) };
                     ctx.set_open_nav.call(new_open);
                 }
@@ -549,6 +562,7 @@ pub fn NavbarContent(props: NavbarContentProps) -> Element {
     let id = use_id_or(unique_id, props.id);
 
     let render = use_animated_open(id, nav_ctx.is_open);
+    use_deferred_focus(nav_ctx.focus, nav_ctx.initial_focus, render);
 
     rsx! {
         if render() {
@@ -702,7 +716,13 @@ pub fn NavbarItem(mut props: NavbarItemProps) -> Element {
     let mut ctx: NavbarContext = use_context();
     let mut nav_ctx: Option<NavbarNavContext> = try_use_context();
 
-    let disabled = move || (ctx.disabled)() || (props.disabled)();
+    let disabled = move || {
+        (ctx.disabled)()
+            || nav_ctx
+                .map(|nav_ctx| (nav_ctx.disabled)())
+                .unwrap_or_default()
+            || (props.disabled)()
+    };
     let focused = move || {
         nav_ctx.map_or_else(
             || ctx.focus.is_focused(props.index.cloned()),
@@ -710,7 +730,7 @@ pub fn NavbarItem(mut props: NavbarItemProps) -> Element {
         )
     };
 
-    let mut onmounted = use_focus_controlled_item(props.index);
+    let mut onmounted = use_focus_controlled_item_disabled(props.index, disabled);
 
     props.attributes.push(onkeydown({
         let value = props.value.clone();
@@ -730,8 +750,10 @@ pub fn NavbarItem(mut props: NavbarItemProps) -> Element {
     }));
 
     props.attributes.push(onpointerdown(move |_| {
-        if let Some(mut nav_ctx) = nav_ctx {
-            nav_ctx.focus.set_focus(Some(props.index.cloned()));
+        if !disabled() {
+            if let Some(mut nav_ctx) = nav_ctx {
+                nav_ctx.focus.set_focus(Some(props.index.cloned()));
+            }
         }
     }));
 

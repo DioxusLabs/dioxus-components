@@ -8,6 +8,10 @@
       "name": "dioxus-primitives",
       "git": "https://github.com/DioxusLabs/components",
       "features": ["router"]
+    },
+    {
+      "name": "dioxus-icons",
+      "version": "0.1.0"
     }
   ]
 }

@@ -1,0 +1,18 @@
+{
+  "name": "color_picker",
+  "description": "Allows to select a color using a variety of input methods",
+  "authors": ["Evan Almloff"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-primitives",
+      "git": "https://github.com/DioxusLabs/components"
+    },
+    {
+      "name": "palette",
+      "version": "0.7.6"
+    }
+  ],
+  "componentDependencies": ["popover", "input"],
+  "globalAssets": ["../../../assets/dx-components-theme.css"]
+}

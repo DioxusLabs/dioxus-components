@@ -1,7 +1,7 @@
 //! Defines the [`Tabs`] component and its sub-components.
 
 use crate::{
-    focus::{use_focus_controlled_item, use_focus_provider, FocusState},
+    focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
     use_controlled, use_id_or, use_unique_id,
 };
 use dioxus::prelude::*;
@@ -299,7 +299,8 @@ pub fn TabTrigger(props: TabTriggerProps) -> Element {
         "-1"
     });
 
-    let onmounted = use_focus_controlled_item(props.index);
+    let disabled = move || (ctx.disabled)() || (props.disabled)();
+    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
 
     rsx! {
         button {
@@ -312,8 +313,8 @@ pub fn TabTrigger(props: TabTriggerProps) -> Element {
             aria_selected: selected,
             aria_controls: (ctx.tab_content_ids)().get((props.index)()).cloned(),
             "data-state": if selected() { "active" } else { "inactive" },
-            "data-disabled": (ctx.disabled)() || (props.disabled)(),
-            disabled: (ctx.disabled)() || (props.disabled)(),
+            "data-disabled": disabled(),
+            disabled: disabled(),
 
             onmounted,
             onclick: move |_| {
@@ -447,7 +448,9 @@ pub fn TabContent(props: TabContentProps) -> Element {
             hidden: !selected(),
             ..props.attributes,
 
-            {props.children}
+            if selected() {
+                {props.children}
+            }
         }
     }
 }

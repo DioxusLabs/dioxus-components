@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 #[component]
 pub fn Demo() -> Element {
     rsx! {
-        div { class: "menubar-example",
+        div {
             Menubar {
                 MenubarMenu { index: 0usize,
                     MenubarTrigger { "File" }
@@ -20,6 +20,7 @@ pub fn Demo() -> Element {
                         MenubarItem {
                             index: 1usize,
                             value: "open".to_string(),
+                            disabled: true,
                             on_select: move |value| {
                                 tracing::info!("Selected value: {}", value);
                             },

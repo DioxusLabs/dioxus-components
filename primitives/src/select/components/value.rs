@@ -7,6 +7,10 @@ use super::super::context::SelectContext;
 /// The props for the [`SelectValue`] component
 #[derive(Props, Clone, PartialEq)]
 pub struct SelectValueProps {
+    /// Optional placeholder text shown when no option is selected.
+    #[props(default = ReadSignal::new(Signal::new(String::from("Select an option"))))]
+    pub placeholder: ReadSignal<String>,
+
     /// Additional attributes for the value element
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
@@ -28,11 +32,10 @@ pub struct SelectValueProps {
 /// fn Demo() -> Element {
 ///     rsx! {
 ///         Select::<String> {
-///             placeholder: "Select a fruit...",
 ///             SelectTrigger {
 ///                 aria_label: "Select Trigger",
 ///                 width: "12rem",
-///                 SelectValue {}
+///                 SelectValue { placeholder: "Select a fruit..." }
 ///             }
 ///             SelectList {
 ///                 aria_label: "Select Demo",
@@ -65,23 +68,16 @@ pub struct SelectValueProps {
 pub fn SelectValue(props: SelectValueProps) -> Element {
     let ctx = use_context::<SelectContext>();
 
-    let selected_text_value = use_memo(move || {
-        let value = ctx.value.read();
-        value.as_ref().and_then(|v| {
-            ctx.options
-                .read()
-                .iter()
-                .find(|opt| opt.value == *v)
-                .map(|opt| opt.text_value.clone())
-        })
-    });
-
-    let display_value = selected_text_value().unwrap_or_else(|| ctx.placeholder.cloned());
+    let is_empty = move || ctx.selectable.is_empty();
+    let display_value = ctx
+        .selectable
+        .selected_text()
+        .unwrap_or_else(|| props.placeholder.cloned());
 
     rsx! {
         // Add placeholder option if needed
         span {
-            "data-placeholder": ctx.value.read().is_none(),
+            "data-placeholder": is_empty(),
             ..props.attributes,
             {display_value}
         }

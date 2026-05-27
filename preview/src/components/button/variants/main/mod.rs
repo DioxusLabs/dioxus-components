@@ -15,6 +15,8 @@ pub fn Demo() -> Element {
             Button { variant: ButtonVariant::Outline, "Outline" }
 
             Button { variant: ButtonVariant::Ghost, "Ghost" }
+
+            Button { variant: ButtonVariant::Link, "Link" }
         }
     }
 }

@@ -1,11 +1,11 @@
-.switch-example {
+.dx-switch-example {
   display: flex;
   align-items: center;
   padding: 20px;
   gap: 15px;
 }
 
-.switch {
+.dx-switch {
   all: unset;
   position: relative;
   width: 2rem;
@@ -13,14 +13,19 @@
   border-radius: 9999px;
   background-color: var(--primary-color-6);
   cursor: pointer;
-  transition: background-color 150ms;
+  transition: background-color 150ms, box-shadow 150ms;
 }
 
-.switch[data-state="checked"] {
+.dx-switch[data-state="checked"] {
   background-color: var(--secondary-color-2);
 }
 
-.switch-thumb {
+.dx-switch:focus-visible {
+  box-shadow: 0 0 0 3px
+    color-mix(in oklab, var(--focused-border-color) 50%, transparent);
+}
+
+.dx-switch-thumb {
   display: block;
   width: calc(1.15rem - 2px);
   height: calc(1.15rem - 2px);
@@ -31,13 +36,13 @@
   will-change: transform;
 }
 
-.switch[data-state="checked"] .switch-thumb {
+.dx-switch[data-state="checked"] .dx-switch-thumb {
   background-color: var(--light, var(--primary-color)) var(--dark, var(--primary-color-3));
   transform: translateX(calc(2rem - 1px - (1.15rem - 2px)));
 }
 
 /* Only apply disabled styles when data-disabled is "true" */
-.switch[data-disabled="true"] {
+.dx-switch[data-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.5;
 }

@@ -25,7 +25,6 @@ pub fn Demo() -> Element {
             }
             TabContent {
                 index: 1usize,
-                class: "tabs-content",
                 value: "tab2".to_string(),
                 div {
                     width: "100%",

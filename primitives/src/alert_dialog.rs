@@ -107,7 +107,6 @@ pub fn AlertDialogRoot(props: AlertDialogRootProps) -> Element {
         if render_element() {
             div {
                 id,
-                class: "alert-dialog-overlay",
                 "data-state": if open() { "open" } else { "closed" },
                 ..props.attributes,
                 {props.children}
@@ -203,7 +202,7 @@ pub fn AlertDialogContent(props: AlertDialogContentProps) -> Element {
             aria_modal: "true",
             aria_labelledby: ctx.labelledby.clone(),
             aria_describedby: ctx.describedby.clone(),
-            class: props.class.clone().unwrap_or_else(|| "alert-dialog".to_string()),
+            class: props.class.clone().unwrap_or_else(|| "dx-alert-dialog".to_string()),
             ..props.attributes,
             {props.children}
         }
@@ -263,7 +262,7 @@ pub struct AlertDialogTitleProps {
 pub fn AlertDialogTitle(props: AlertDialogTitleProps) -> Element {
     let ctx: AlertDialogCtx = use_context();
     rsx! {
-        h2 { id: ctx.labelledby.clone(), class: "alert-dialog-title", ..props.attributes, {props.children} }
+        h2 { id: ctx.labelledby.clone(), ..props.attributes, {props.children} }
     }
 }
 
@@ -320,7 +319,7 @@ pub struct AlertDialogDescriptionProps {
 pub fn AlertDialogDescription(props: AlertDialogDescriptionProps) -> Element {
     let ctx: AlertDialogCtx = use_context();
     rsx! {
-        p { id: ctx.describedby.clone(), class: "alert-dialog-description", ..props.attributes, {props.children} }
+        p { id: ctx.describedby.clone(), ..props.attributes, {props.children} }
     }
 }
 

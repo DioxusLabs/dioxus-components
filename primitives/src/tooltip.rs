@@ -1,9 +1,11 @@
 //! Defines the [`Tooltip`] component and its sub-components, which provide contextual information when hovering or focusing on elements.
 
 use crate::{
-    use_animated_open, use_controlled, use_id_or, use_unique_id, ContentAlign, ContentSide,
+    merge_attributes, use_animated_open, use_controlled, use_id_or, use_unique_id, ContentAlign,
+    ContentSide,
 };
 use dioxus::prelude::*;
+use dioxus_attributes::attributes;
 
 #[derive(Clone, Copy)]
 struct TooltipCtx {
@@ -106,6 +108,10 @@ pub struct TooltipTriggerProps {
     #[props(default)]
     pub id: Option<String>,
 
+    /// Render the trigger element as a custom component/element.
+    #[props(default)]
+    pub r#as: Option<Callback<Vec<Attribute>, Element>>,
+
     /// Additional attributes for the trigger element
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
@@ -181,22 +187,26 @@ pub fn TooltipTrigger(props: TooltipTriggerProps) -> Element {
         }
     };
 
-    rsx! {
-        div {
-            id: props.id.clone(),
-            tabindex: "0",
-            // Mouse events
-            onmouseenter: handle_mouse_enter,
-            onmouseleave: handle_mouse_leave,
-            // Focus events
-            onfocus: handle_focus,
-            onblur: handle_blur,
-            // Keyboard events
-            onkeydown: handle_keydown,
-            // ARIA attributes
-            aria_describedby: ctx.tooltip_id.cloned(),
-            ..props.attributes,
-            {props.children}
+    let base = attributes!(div {
+        id: props.id.clone(),
+        tabindex: "0",
+        "aria-describedby": ctx.tooltip_id.cloned(),
+        onmouseenter: handle_mouse_enter,
+        onmouseleave: handle_mouse_leave,
+        onfocus: handle_focus,
+        onblur: handle_blur,
+        onkeydown: handle_keydown,
+    });
+    let merged = merge_attributes(vec![base, props.attributes]);
+
+    if let Some(dynamic) = props.r#as {
+        dynamic.call(merged)
+    } else {
+        rsx! {
+            div {
+                ..merged,
+                {props.children}
+            }
         }
     }
 }

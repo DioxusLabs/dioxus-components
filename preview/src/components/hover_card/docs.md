@@ -5,18 +5,13 @@ The HoverCard component can be used to display additional information when a use
 ```rust
 // The HoverCard component wraps the trigger element and the content that will be displayed on hover.
 HoverCard {
-    // The HoverCardTrigger contains the elements that will trigger the hover card to display when hovered.
     HoverCardTrigger {
-        // The elements that will trigger the hover card when hovered over.
+        // Anything inside the trigger (icon, text, rich markup) acts as the hover target.
         {children}
     }
-    // The HoverCardContent contains the content that will be displayed when the user hovers over the trigger.
     HoverCardContent {
-        // The side of the HoverCardTrigger where the content will be displayed. Can be one Top, Right, Bottom, or Left.
         side: ContentSide::Bottom,
-        // The alignment of the HoverCardContent relative to the HoverCardTrigger. Can be one of Start, Center, or End.
         align: ContentAlign::Start,
-        // The content of the hover card, which can include text, images, or any other elements.
         {children}
     }
 }

@@ -3,8 +3,8 @@ use crate::components::{
     input::Input,
     label::Label,
     sheet::{
-        Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetSide,
-        SheetTitle,
+        Sheet, SheetClose, SheetContentClose, SheetDescription, SheetFooter, SheetHeader,
+        SheetSide, SheetTitle,
     },
 };
 use dioxus::prelude::*;
@@ -28,44 +28,43 @@ pub fn Demo() -> Element {
             Button { variant: ButtonVariant::Outline, onclick: open_sheet(SheetSide::Bottom), "Bottom" }
             Button { variant: ButtonVariant::Outline, onclick: open_sheet(SheetSide::Left), "Left" }
         }
-        Sheet { open: open(), on_open_change: move |v| open.set(v),
-            SheetContent { side: side(),
-                SheetHeader {
-                    SheetTitle { "Sheet Title" }
-                    SheetDescription { "Sheet description goes here." }
-                }
+        Sheet { open: open(), on_open_change: move |v| open.set(v), "data-side": side().as_str(),
+            SheetHeader {
+                SheetTitle { "Sheet Title" }
+                SheetDescription { "Sheet description goes here." }
+            }
 
-                div {
-                    display: "grid",
-                    flex: "1 1 0%",
-                    grid_auto_rows: "min-content",
-                    gap: "1.5rem",
-                    padding: "0 1rem",
-                    div { display: "grid", gap: "0.75rem",
-                        Label { html_for: "sheet-demo-name", "Name" }
-                        Input {
-                            id: "sheet-demo-name",
-                            initial_value: "Dioxus",
-                        }
-                    }
-                    div { display: "grid", gap: "0.75rem",
-                        Label { html_for: "sheet-demo-username", "Username" }
-                        Input {
-                            id: "sheet-demo-username",
-                            initial_value: "@dioxus",
-                        }
+            div {
+                display: "grid",
+                flex: "1 1 0%",
+                grid_auto_rows: "min-content",
+                gap: "1.5rem",
+                padding: "0 1rem",
+                div { display: "grid", gap: "0.75rem",
+                    Label { html_for: "sheet-demo-name", "Name" }
+                    Input {
+                        id: "sheet-demo-name",
+                        initial_value: "Dioxus",
                     }
                 }
-
-                SheetFooter {
-                    Button { "Save changes" }
-                    SheetClose {
-                        r#as: |attributes| rsx! {
-                            Button { variant: ButtonVariant::Outline, attributes, "Cancel" }
-                        },
+                div { display: "grid", gap: "0.75rem",
+                    Label { html_for: "sheet-demo-username", "Username" }
+                    Input {
+                        id: "sheet-demo-username",
+                        initial_value: "@dioxus",
                     }
                 }
             }
+
+            SheetFooter {
+                Button { "Save changes" }
+                SheetClose {
+                    as: |attributes| rsx! {
+                        Button { variant: ButtonVariant::Outline, attributes, "Cancel" }
+                    },
+                }
+            }
+            SheetContentClose {}
         }
     }
 }

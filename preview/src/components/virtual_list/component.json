@@ -1,0 +1,13 @@
+{
+  "name": "virtual_list",
+  "description": "A virtualized list component for large datasets.",
+  "authors": ["brian", "Evan Almloff"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-primitives",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../../assets/dx-components-theme.css"]
+}

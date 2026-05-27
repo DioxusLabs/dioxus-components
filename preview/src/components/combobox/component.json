@@ -1,0 +1,17 @@
+{
+  "name": "combobox",
+  "description": "An autocomplete input + popover for picking a value from a filterable list of options.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-primitives",
+      "git": "https://github.com/DioxusLabs/components"
+    },
+    {
+      "name": "dioxus-icons",
+      "version": "0.1.0"
+    }
+  ],
+  "globalAssets": ["../../../assets/dx-components-theme.css"]
+}

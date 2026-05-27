@@ -1,7 +1,8 @@
 //! Defines the [`Collapsible`] component and its sub-components.
 
-use crate::{use_controlled, use_id_or, use_unique_id};
+use crate::{merge_attributes, use_controlled, use_id_or, use_unique_id};
 use dioxus::prelude::*;
+use dioxus_attributes::attributes;
 
 // TODO: more docs
 
@@ -43,6 +44,10 @@ pub struct CollapsibleProps {
     /// The provided argument is a bool of whether the collapsible is open or closed.
     #[props(default)]
     pub on_open_change: Callback<bool>,
+
+    /// Render the root element as a custom component/element.
+    #[props(default)]
+    pub r#as: Option<Callback<Vec<Attribute>, Element>>,
 
     /// Additional attributes for the collapsible element.
     #[props(extends = GlobalAttributes)]
@@ -97,13 +102,20 @@ pub fn Collapsible(props: CollapsibleProps) -> Element {
         aria_controls_id,
     });
 
-    rsx! {
-        div {
-            "data-open": open,
-            "data-disabled": props.disabled,
-            ..props.attributes,
+    let base = attributes!(div {
+        "data-open": open,
+        "data-disabled": props.disabled,
+    });
+    let merged = merge_attributes(vec![base, props.attributes]);
 
-            {props.children}
+    if let Some(dynamic) = props.r#as {
+        dynamic.call(merged)
+    } else {
+        rsx! {
+            div {
+                ..merged,
+                {props.children}
+            }
         }
     }
 }
@@ -180,9 +192,14 @@ pub fn CollapsibleContent(props: CollapsibleContentProps) -> Element {
 /// The props for the [`CollapsibleTrigger`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct CollapsibleTriggerProps {
+    /// Render the trigger element as a custom component/element.
+    #[props(default)]
+    pub r#as: Option<Callback<Vec<Attribute>, Element>>,
+
     /// Additional attributes for the collapsible trigger element.
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
+
     /// The children of the collapsible trigger.
     pub children: Element,
 }
@@ -227,24 +244,28 @@ pub fn CollapsibleTrigger(props: CollapsibleTriggerProps) -> Element {
 
     let open = ctx.open;
 
-    rsx! {
+    let base = attributes!(button {
+        r#type: "button",
+        "data-open": open,
+        "data-disabled": ctx.disabled,
+        disabled: ctx.disabled,
+        "aria-controls": ctx.aria_controls_id,
+        "aria-expanded": open,
+        onclick: move |_| {
+            let new_open = !open();
+            ctx.set_open.call(new_open);
+        },
+    });
+    let merged = merge_attributes(vec![base, props.attributes]);
 
-        button {
-            type: "button",
-            "data-open": open,
-            "data-disabled": ctx.disabled,
-            disabled: ctx.disabled,
-
-            aria_controls: ctx.aria_controls_id,
-            aria_expanded: open,
-
-            onclick: move |_| {
-                let new_open = !open();
-                ctx.set_open.call(new_open);
-            },
-
-            ..props.attributes,
-            {props.children}
+    if let Some(dynamic) = props.r#as {
+        dynamic.call(merged)
+    } else {
+        rsx! {
+            button {
+                ..merged,
+                {props.children}
+            }
         }
     }
 }

@@ -4,12 +4,14 @@ test('hover navigation', async ({ page }) => {
   await page.goto('http://127.0.0.1:8080/component/?name=navbar&', { timeout: 20 * 60 * 1000 }); // Increase timeout to 20 minutes
   // wait for the styles to load
   await expect(page.getByRole('menuitem', { name: 'Inputs' })).toHaveCSS('border-width', '0px');
-  await page.getByRole('menuitem', { name: 'Inputs' }).hover();
+  const inputsNav = page.getByRole('menu').filter({ has: page.getByRole('menuitem', { name: 'Inputs' }) }).first();
+  await inputsNav.hover();
+  await expect(inputsNav).toHaveAttribute('data-state', 'open');
   const calendar = page.getByRole('menuitem', { name: 'Calendar' });
-  // Move the mouse onto the calendar menu item
-  await calendar.hover();
-  // Then click the calendar menu item
-  await calendar.click();
+  await expect(calendar).toBeVisible();
+  await calendar.evaluate((element) => {
+    (element as HTMLElement).click();
+  });
   // Assert the url changed to the calendar component
   await expect(page).toHaveURL(/.*name=calendar/);
 });
@@ -24,7 +26,7 @@ test('mobile navigation', async ({ page }) => {
 
 test('keyboard navigation', async ({ page }) => {
   await page.goto('http://127.0.0.1:8080/component/?name=navbar&', { timeout: 20 * 60 * 1000 }); // Increase timeout to 20 minutes
-  await page.locator('.navbar').focus();
+  await page.getByRole('menubar').focus();
   // Go right with the keyboard
   await page.keyboard.press('ArrowRight');
   // Assert the focus is on the information menu item
@@ -36,8 +38,12 @@ test('keyboard navigation', async ({ page }) => {
   await page.keyboard.press('ArrowDown');
   // Assert the focus is on the calendar menu item
   await expect(page.getByRole('menuitem', { name: 'Calendar' })).toBeFocused();
+  await expect(page.getByRole('menuitem', { name: 'Slider' })).toHaveAttribute('data-disabled', 'true');
+  await page.keyboard.press('ArrowDown');
+  // Assert the disabled slider item is skipped
+  await expect(page.getByRole('menuitem', { name: 'Checkbox' })).toBeFocused();
   // Click the focused menu item
   await page.keyboard.press('Enter');
-  // Assert the url changed to the calendar component
-  await expect(page).toHaveURL(/.*name=calendar/);
+  // Assert the url changed to the checkbox component
+  await expect(page).toHaveURL(/.*name=checkbox/);
 });

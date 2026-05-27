@@ -4,7 +4,6 @@ use crate::{
     portal::{use_portal, PortalIn, PortalOut},
     use_global_keydown_listener, use_unique_id,
 };
-use dioxus::dioxus_core::DynamicNode;
 use dioxus::prelude::*;
 use dioxus_sdk_time::use_timeout;
 use std::collections::VecDeque;
@@ -36,7 +35,7 @@ impl ToastType {
 
 // A single toast item
 #[derive(Debug, Clone, PartialEq)]
-struct ToastItem {
+struct ToastRecord {
     id: usize,
     title: String,
     description: Option<String>,
@@ -52,7 +51,7 @@ type AddToastCallback = Callback<(String, Option<String>, ToastType, Option<Dura
 #[derive(Clone)]
 struct ToastCtx {
     #[allow(dead_code)]
-    toasts: Signal<VecDeque<ToastItem>>,
+    toasts: Signal<VecDeque<ToastRecord>>,
     add_toast: AddToastCallback,
     remove_toast: Callback<usize>,
     focus_region: Callback,
@@ -71,10 +70,36 @@ pub struct ToastProviderProps {
     pub max_toasts: ReadSignal<usize>,
 
     /// The callback to render a toast. Defaults to rendering the [`Toast`] component.
-    #[props(default = Callback::new(|props: ToastPropsWithOwner| rsx! { {DynamicNode::Component(props.into_vcomponent(Toast))} }))]
+    #[props(default = Callback::new(|props: ToastPropsWithOwner| rsx! { Toast { ..props } }))]
     pub render_toast: Callback<ToastPropsWithOwner, Element>,
 
+    /// Additional attributes to apply to the toast container element.
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+
     /// The children of the toast provider component.
+    pub children: Element,
+}
+
+/// The props for the [`ToastList`] component.
+#[derive(Props, Clone, PartialEq)]
+pub struct ToastListProps {
+    /// Additional attributes to apply to the toast list element.
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+
+    /// The children of the toast list element.
+    pub children: Element,
+}
+
+/// The props for the [`ToastListItem`] component.
+#[derive(Props, Clone, PartialEq)]
+pub struct ToastListItemProps {
+    /// Additional attributes to apply to the toast list item element.
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+
+    /// The children of the toast list item element.
     pub children: Element,
 }
 
@@ -132,7 +157,7 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
     // Remove toast callback
     let remove_toast = use_callback(move |id: usize| {
         let mut toasts_vec = toasts.write();
-        if let Some(pos) = toasts_vec.iter().position(|t: &ToastItem| t.id == id) {
+        if let Some(pos) = toasts_vec.iter().position(|t: &ToastRecord| t.id == id) {
             toasts_vec.remove(pos);
         }
     });
@@ -161,7 +186,7 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                 duration.or_else(|| (props.default_duration)())
             };
 
-            let toast = ToastItem {
+            let toast = ToastRecord {
                 id,
                 title,
                 description,
@@ -230,19 +255,17 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                 role: "region",
                 aria_label: "{length} notifications",
                 tabindex: "-1",
-                class: "toast-container",
                 style: "--toast-count: {length}",
                 onmounted: move |e| {
                     region_ref.set(Some(e.data()));
                 },
+                ..props.attributes,
 
-                ol {
-                    class: "toast-list",
+                ToastList {
                     // Render all toasts
                     for (index, toast) in toast_list.read().iter().rev().enumerate() {
-                        li {
+                        ToastListItem {
                             key: "{toast.id}",
-                            class: "toast-item",
                             {
                                 props.render_toast.call(ToastProps::builder().id(toast.id)
                                     .index(index)
@@ -274,6 +297,28 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
     }
 }
 
+/// The ordered list containing rendered toasts.
+#[component]
+pub fn ToastList(props: ToastListProps) -> Element {
+    rsx! {
+        ol {
+            ..props.attributes,
+            {props.children}
+        }
+    }
+}
+
+/// A list item wrapper for a rendered toast.
+#[component]
+pub fn ToastListItem(props: ToastListItemProps) -> Element {
+    rsx! {
+        li {
+            ..props.attributes,
+            {props.children}
+        }
+    }
+}
+
 /// The props for the [`Toast`] component
 #[derive(Props, Clone, PartialEq)]
 pub struct ToastProps {
@@ -299,6 +344,66 @@ pub struct ToastProps {
     /// Additional attributes to apply to the toast element.
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
+
+    /// The children of the toast element.
+    #[props(default)]
+    pub children: Option<Element>,
+}
+
+/// The props for the [`ToastContent`] component.
+#[derive(Props, Clone, PartialEq)]
+pub struct ToastContentProps {
+    /// Additional attributes to apply to the toast content element.
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+
+    /// The children of the toast content element.
+    pub children: Element,
+}
+
+/// The props for the [`ToastTitle`] component.
+#[derive(Props, Clone, PartialEq)]
+pub struct ToastTitleProps {
+    /// Additional attributes to apply to the toast title element.
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+
+    /// Additional children for the toast title element.
+    #[props(default)]
+    pub children: Option<Element>,
+}
+
+/// The props for the [`ToastDescription`] component.
+#[derive(Props, Clone, PartialEq)]
+pub struct ToastDescriptionProps {
+    /// Additional attributes to apply to the toast description element.
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+
+    /// Additional children for the toast description element.
+    #[props(default)]
+    pub children: Option<Element>,
+}
+
+/// The props for the [`ToastCloseButton`] component.
+#[derive(Props, Clone, PartialEq)]
+pub struct ToastCloseButtonProps {
+    /// Additional attributes to apply to the toast close button.
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+
+    /// The children of the toast close button.
+    #[props(default)]
+    pub children: Option<Element>,
+}
+
+#[derive(Clone)]
+struct ToastRenderCtx {
+    label_id: String,
+    description_id: Option<String>,
+    title: String,
+    description: Option<String>,
+    on_close: Callback<MouseEvent>,
 }
 
 /// # Toast
@@ -366,6 +471,13 @@ pub fn Toast(props: ToastProps) -> Element {
 
     // Get the context at the top level of the component
     let ctx = use_context::<ToastCtx>();
+    use_context_provider(|| ToastRenderCtx {
+        label_id: label_id.clone(),
+        description_id: description_id.clone(),
+        title: props.title.clone(),
+        description: props.description.clone(),
+        on_close: props.on_close,
+    });
 
     // Handle auto-dismissal for non-permanent toasts with a duration
     // Double-check that the toast is not permanent and has a duration
@@ -386,6 +498,16 @@ pub fn Toast(props: ToastProps) -> Element {
         });
     }
 
+    let children = props.children.unwrap_or_else(|| {
+        rsx! {
+            ToastContent {
+                ToastTitle {}
+                ToastDescription {}
+            }
+            ToastCloseButton {}
+        }
+    });
+
     rsx! {
         div {
             id,
@@ -395,7 +517,6 @@ pub fn Toast(props: ToastProps) -> Element {
             aria_modal: "false",
             tabindex: "0",
 
-            class: "toast",
             "data-type": props.toast_type.as_str(),
             "data-permanent": props.permanent,
             "data-toast-even": (props.index % 2 == 0).then_some("true"),
@@ -404,36 +525,81 @@ pub fn Toast(props: ToastProps) -> Element {
             style: "--toast-index: {props.index}",
             ..props.attributes,
 
-            div { class: "toast-content",
-                role: "alert",
-                aria_atomic: "true",
+            {children}
+        }
+    }
+}
 
-                div {
-                    id: label_id,
-                    class: "toast-title",
-                    {props.title.clone()}
-                }
+/// The content wrapper inside a toast.
+#[component]
+pub fn ToastContent(props: ToastContentProps) -> Element {
+    rsx! {
+        div {
+            role: "alert",
+            aria_atomic: "true",
+            ..props.attributes,
+            {props.children}
+        }
+    }
+}
 
-                if let Some(description) = &props.description {
-                    div {
-                        id: description_id.clone(),
-                        class: "toast-description",
-                        {description.clone()}
-                    }
-                }
-            }
+/// The title element inside a toast.
+#[component]
+pub fn ToastTitle(props: ToastTitleProps) -> Element {
+    let ctx = use_context::<ToastRenderCtx>();
+    let children = props.children.unwrap_or_else(|| {
+        let title = ctx.title.clone();
+        rsx! { {title} }
+    });
 
-            button {
-                class: "toast-close",
-                aria_label: "close",
-                type: "button",
-                onclick: move |e| {
-                    // Focus the region again after closing
-                    ctx.focus_region.call(());
-                    props.on_close.call(e);
-                },
-                "×"
-            }
+    rsx! {
+        div {
+            id: ctx.label_id,
+            ..props.attributes,
+            {children}
+        }
+    }
+}
+
+/// The description element inside a toast.
+#[component]
+pub fn ToastDescription(props: ToastDescriptionProps) -> Element {
+    let ctx = use_context::<ToastRenderCtx>();
+    let Some(id) = ctx.description_id else {
+        return rsx! {};
+    };
+    let children = props.children.unwrap_or_else(|| {
+        let description = ctx.description.unwrap_or_default();
+        rsx! { {description} }
+    });
+
+    rsx! {
+        div {
+            id,
+            ..props.attributes,
+            {children}
+        }
+    }
+}
+
+/// The close button inside a toast.
+#[component]
+pub fn ToastCloseButton(props: ToastCloseButtonProps) -> Element {
+    let ctx = use_context::<ToastCtx>();
+    let render_ctx = use_context::<ToastRenderCtx>();
+    let children = props.children.unwrap_or_else(|| rsx! { "×" });
+
+    rsx! {
+        button {
+            aria_label: "close",
+            type: "button",
+            onclick: move |e| {
+                // Focus the region again after closing
+                ctx.focus_region.call(());
+                render_ctx.on_close.call(e);
+            },
+            ..props.attributes,
+            {children}
         }
     }
 }

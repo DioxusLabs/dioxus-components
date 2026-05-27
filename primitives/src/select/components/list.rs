@@ -1,8 +1,6 @@
 //! SelectList component implementation.
 
-use crate::{
-    select::context::SelectListContext, use_animated_open, use_effect, use_id_or, use_unique_id,
-};
+use crate::{listbox::use_listbox_container, use_effect};
 use dioxus::prelude::*;
 
 use super::super::context::SelectContext;
@@ -41,11 +39,10 @@ pub struct SelectListProps {
 /// fn Demo() -> Element {
 ///     rsx! {
 ///         Select::<String> {
-///             placeholder: "Select a fruit...",
 ///             SelectTrigger {
 ///                 aria_label: "Select Trigger",
 ///                 width: "12rem",
-///                 SelectValue {}
+///                 SelectValue { placeholder: "Select a fruit..." }
 ///             }
 ///             SelectList {
 ///                 aria_label: "Select Demo",
@@ -73,15 +70,9 @@ pub struct SelectListProps {
 pub fn SelectList(props: SelectListProps) -> Element {
     let mut ctx = use_context::<SelectContext>();
 
-    let id = use_unique_id();
-    let id = use_id_or(id, props.id);
-    use_effect(move || {
-        ctx.list_id.set(Some(id()));
-    });
-
-    let mut open = ctx.open;
+    let open = ctx.selectable.open;
     let mut listbox_ref: Signal<Option<std::rc::Rc<MountedData>>> = use_signal(|| None);
-    let focused = move || open() && !ctx.focus_state.any_focused();
+    let focused = move || open() && !ctx.selectable.focus_state.any_focused();
 
     use_effect(move || {
         let Some(listbox_ref) = listbox_ref() else {
@@ -125,28 +116,27 @@ pub fn SelectList(props: SelectListProps) -> Element {
             }
             Key::ArrowUp => {
                 arrow_key_navigation(event);
-                ctx.focus_state.focus_prev();
+                ctx.selectable.focus_state.focus_prev();
             }
             Key::End => {
                 arrow_key_navigation(event);
-                ctx.focus_state.focus_last();
+                ctx.selectable.focus_state.focus_last();
             }
             Key::ArrowDown => {
                 arrow_key_navigation(event);
-                ctx.focus_state.focus_next();
+                ctx.selectable.focus_state.focus_next();
             }
             Key::Home => {
                 arrow_key_navigation(event);
-                ctx.focus_state.focus_first();
+                ctx.selectable.focus_state.focus_first();
             }
             Key::Enter => {
                 ctx.select_current_item();
-                open.set(false);
                 event.prevent_default();
                 event.stop_propagation();
             }
             Key::Escape => {
-                open.set(false);
+                ctx.set_open(false);
                 event.prevent_default();
                 event.stop_propagation();
             }
@@ -154,27 +144,16 @@ pub fn SelectList(props: SelectListProps) -> Element {
         }
     };
 
-    let render = use_animated_open(id, open);
-    let render = use_memo(render);
-
-    use_context_provider(|| SelectListContext {
-        render: render.into(),
-    });
-
-    use_effect(move || {
-        if render() {
-            ctx.focus_state.set_focus(ctx.initial_focus.cloned());
-        } else {
-            ctx.initial_focus.set(None);
-        }
-    });
+    let listbox = use_listbox_container(props.id, ctx.selectable);
+    let render = listbox.render;
 
     rsx! {
         if render() {
             div {
-                id,
+                id: listbox.id,
                 role: "listbox",
                 tabindex: if focused() { "0" } else { "-1" },
+                aria_multiselectable: ctx.multi(),
 
                 // Data attributes
                 "data-state": if open() { "open" } else { "closed" },
@@ -183,7 +162,7 @@ pub fn SelectList(props: SelectListProps) -> Element {
                 onkeydown,
                 onblur: move |_| {
                     if focused() {
-                        open.set(false);
+                        ctx.set_open(false);
                     }
                 },
 

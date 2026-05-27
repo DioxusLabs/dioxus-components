@@ -1,17 +1,25 @@
-/* This file contains the global styles for the styled dioxus components. You only
+/* This file contains the theme variables for the styled dioxus-components components. You only
  * need to import this file once in your project root.
  */
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
-body {
-  padding: 0;
-  margin: 0;
-  background-color: var(--primary-color);
-  color: var(--secondary-color-4);
-  font-family: Inter, sans-serif;
-  font-optical-sizing: auto;
-  font-style: normal;
-  font-weight: 400;
+html[data-theme="dark"] {
+  --dark: initial;
+  --light: ;
+}
+
+html[data-theme="light"] {
+  --dark: ;
+  --light: initial;
+}
+
+html[data-theme="dark"] [class~="dxc-system"] {
+  --dxc-light-on: ;
+  --dxc-dark-on: initial;
+}
+
+html[data-theme="light"] [class~="dxc-system"] {
+  --dxc-light-on: initial;
+  --dxc-dark-on: ;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -56,28 +64,7 @@ body {
   --secondary-warning-color: var(--dark, #feeac7) var(--light, #f59e0b);
   --primary-error-color: var(--dark, #a22e2e) var(--light, #dc2626);
   --secondary-error-color: var(--dark, #9b1c1c) var(--light, #ef4444);
-  --contrast-error-color: var(--dark, var(--secondary-color-3))
-    var(--light, var(--primary-color));
-  --primary-info-color: var(--dark, var(--primary-color-5))
-    var(--light, var(--primary-color));
-  --secondary-info-color: var(--dark, var(--primary-color-7))
-    var(--light, var(--secondary-color-3));
-}
-
-/* Modern browsers with `scrollbar-*` support */
-@supports (scrollbar-width: auto) {
-  :not(:hover) {
-    scrollbar-color: rgb(0 0 0 / 0%) rgb(0 0 0 / 0%);
-  }
-
-  :hover {
-    scrollbar-color: var(--secondary-color-2) rgb(0 0 0 / 0%);
-  }
-}
-
-/* Legacy browsers with `::-webkit-scrollbar-*` support */
-@supports selector(::-webkit-scrollbar) {
-  :root::-webkit-scrollbar-track {
-    background: transparent;
-  }
+  --contrast-error-color: var(--dark, var(--secondary-color-3)) var(--light, var(--primary-color));
+  --primary-info-color: var(--dark, var(--primary-color-5)) var(--light, var(--primary-color));
+  --secondary-info-color: var(--dark, var(--primary-color-7)) var(--light, var(--secondary-color-3));
 }

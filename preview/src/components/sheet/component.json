@@ -13,6 +13,10 @@
     {
       "name": "dioxus-primitives",
       "git": "https://github.com/DioxusLabs/components"
+    },
+    {
+      "name": "dioxus-icons",
+      "version": "0.1.0"
     }
   ],
   "globalAssets": [

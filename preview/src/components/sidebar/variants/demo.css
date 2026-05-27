@@ -1,0 +1,53 @@
+.dx-sidebar-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.dx-sidebar-info-block {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.dx-sidebar-info-title,
+.dx-sidebar-info-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dx-sidebar-info-title {
+  font-weight: 600;
+}
+
+.dx-sidebar-info-subtitle {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.dx-sidebar-chevron {
+  margin-left: auto;
+  transition: transform 200ms ease-out;
+}
+
+.dx-sidebar-menu-disclosure-button[data-open="true"] .dx-sidebar-chevron {
+  transform: rotate(90deg);
+}
+
+.dx-sidebar-hide-on-collapse {
+  transition: opacity 200ms ease-out, max-height 200ms ease-out, padding 200ms ease-out, visibility 0ms 0ms;
+}
+
+[data-collapsible="icon"] .dx-sidebar-hide-on-collapse {
+  overflow: hidden;
+  max-height: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease-out, max-height 200ms ease-out, padding 200ms ease-out, visibility 0ms 200ms;
+  visibility: hidden;
+}

@@ -1,10 +1,10 @@
-.radio-group {
+.dx-radio-group {
   display: flex;
   flex-direction: column;
   gap: .75rem;
 }
 
-.radio-item {
+.dx-radio-item {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -14,35 +14,40 @@
   color: var(--secondary-color-4);
   font-size: 14px;
   gap: .75rem;
+}
 
-  &::before {
-    display: block;
-    width: 1rem;
-    height: 1rem;
-    box-sizing: border-box;
-    border-radius: 1.5rem;
-    background: var(--light, var(--primary-color)) var(--dark, var(--primary-color-3));
-    box-shadow: 0 0 0 1px var(--light, var(--primary-color-6)) 
-      var(--dark, var(--primary-color-7));
-    content: "";
-    cursor: pointer;
-  }
+.dx-radio-item::before {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  box-sizing: border-box;
+  border-radius: 1.5rem;
+  background: var(--light, var(--primary-color)) var(--dark, var(--primary-color-3));
+  box-shadow: 0 0 0 1px var(--light, var(--primary-color-6))
+    var(--dark, var(--primary-color-7));
+  content: "";
+  cursor: pointer;
+}
 
-  &:focus-visible {
-    outline: none;
-  }
+.dx-radio-item:focus-visible {
+  outline: none;
+}
 
-  &:focus-visible::before {
-    box-shadow: 0 0 0 2px var(--focused-border-color);
-  }
+.dx-radio-item:focus-visible::before {
+  box-shadow: 0 0 0 2px var(--focused-border-color);
+}
 
-  &[data-state="checked"]::before {
-    border: 0.25rem solid var(--light, var(--primary-color)) var(--dark, var(--primary-color-3));
-    background: var(--secondary-color-4);
-  }
+.dx-radio-item[data-state="checked"]::before {
+  border: 0.25rem solid var(--light, var(--primary-color)) var(--dark, var(--primary-color-3));
+  background: var(--secondary-color-4);
+}
 
-  &[data-disabled="true"]::before {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
+.dx-radio-item:disabled {
+  color: var(--secondary-color-5);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dx-radio-item:disabled::before {
+  cursor: not-allowed;
 }

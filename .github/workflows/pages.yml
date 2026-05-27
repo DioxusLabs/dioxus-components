@@ -1,0 +1,23 @@
+name: Pages
+
+on:
+  workflow_run:
+    workflows: ["Web"]
+    types: [completed]
+  pull_request:
+    types: [closed]
+
+permissions:
+  actions: read
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.id || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    uses: DioxusLabs/dioxus-ci/.github/workflows/pages-publish.yml@v0.1.0
+    with:
+      pages-url-base: https://dioxuslabs.github.io

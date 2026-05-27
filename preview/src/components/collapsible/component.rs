@@ -1,20 +1,25 @@
 use dioxus::prelude::*;
+use dioxus_icons::lucide::ChevronsUpDown;
 use dioxus_primitives::collapsible::{
     self, CollapsibleContentProps, CollapsibleProps, CollapsibleTriggerProps,
 };
+use dioxus_primitives::dioxus_attributes::attributes;
+use dioxus_primitives::merge_attributes;
+
+#[css_module("/src/components/collapsible/style.css")]
+struct Styles;
 
 #[component]
 pub fn Collapsible(props: CollapsibleProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         collapsible::Collapsible {
             keep_mounted: props.keep_mounted,
             default_open: props.default_open,
             disabled: props.disabled,
             open: props.open,
             on_open_change: props.on_open_change,
+            as: props.r#as,
             attributes: props.attributes,
-            class: "collapsible",
             {props.children}
         }
     }
@@ -22,17 +27,21 @@ pub fn Collapsible(props: CollapsibleProps) -> Element {
 
 #[component]
 pub fn CollapsibleTrigger(props: CollapsibleTriggerProps) -> Element {
+    let base = attributes!(button {
+        class: Styles::dx_collapsible_trigger,
+    });
+    let merged = merge_attributes(vec![base, props.attributes]);
+
+    let show_icon = props.r#as.is_none();
+
     rsx! {
-        collapsible::CollapsibleTrigger { class: "collapsible-trigger", attributes: props.attributes,
+        collapsible::CollapsibleTrigger { as: props.r#as, attributes: merged,
             {props.children}
-            svg {
-                class: "collapsible-expand-icon",
-                view_box: "0 0 24 24",
-                xmlns: "http://www.w3.org/2000/svg",
-                // shifted up by 6 polyline { points: "6 9 12 15 18 9" }
-                polyline { points: "6 15 12 21 18 15" }
-                // shifted down by 6 polyline { points: "6 15 12 9 18 15" }
-                polyline { points: "6 9 12 3 18 9" }
+            if show_icon {
+                ChevronsUpDown {
+                    size: "1rem",
+                    stroke: "var(--secondary-color-3)",
+                }
             }
         }
     }
@@ -42,7 +51,7 @@ pub fn CollapsibleTrigger(props: CollapsibleTriggerProps) -> Element {
 pub fn CollapsibleContent(props: CollapsibleContentProps) -> Element {
     rsx! {
         collapsible::CollapsibleContent {
-            class: "collapsible-content",
+            class: Styles::dx_collapsible_content,
             id: props.id,
             attributes: props.attributes,
             {props.children}

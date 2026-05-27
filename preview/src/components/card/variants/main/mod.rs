@@ -16,7 +16,7 @@ pub fn Demo() -> Element {
                 }
             }
             CardContent {
-                form {
+                form { id: "login-form",
                     div { style: "display: flex; flex-direction: column; gap: 1.5rem;",
                         div { style: "display: grid; gap: 0.5rem;",
                             Label { html_for: "email", "Email" }
@@ -41,7 +41,12 @@ pub fn Demo() -> Element {
                 }
             }
             CardFooter { style: "flex-direction: column; gap: 0.5rem;",
-                Button { r#type: "submit", style: "width: 100%;", "Login" }
+                Button {
+                    r#type: "submit",
+                    form: "login-form",
+                    style: "width: 100%;",
+                    "Login"
+                }
                 Button { variant: ButtonVariant::Outline, style: "width: 100%;", "Login with Google" }
             }
         }

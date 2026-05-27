@@ -23,7 +23,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
+  reporter: process.env.CI ? [["list"], ["html"]] : "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -78,7 +78,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     cwd: path.join(process.cwd(), "../preview"),
-    command: "dx run --web",
+    command: "dx run --web --release",
     port: 8080,
     timeout: 50 * 60 * 1000,
     reuseExistingServer: !process.env.CI,

@@ -16,7 +16,6 @@ pub fn Demo() -> Element {
                     selected_range.set(range);
                 },
                 month_count: 2,
-                DateRangePickerInput {}
             }
         }
     }

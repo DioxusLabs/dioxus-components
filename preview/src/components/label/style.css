@@ -1,5 +1,5 @@
 /* Label Styles */
-.label {
+.dx-label {
   display: flex;
   align-items: center;
   color: var(--secondary-color-4);

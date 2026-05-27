@@ -1,12 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["primitives", "preview", "test-harness"]
+members = ["primitives", "preview", "test-harness", "dioxus-attributes"]
 
 [workspace.dependencies]
 dioxus-primitives = { path = "primitives" }
-
-dioxus = "0.7.0"
 tracing = { version = "0.1", features = ["std"] }
+
+dioxus = "0.7.8"
+dioxus-rsx = "0.7.8"
 
 [profile.release]
 opt-level = "z"
@@ -16,9 +17,15 @@ codegen-units = 1
 strip = true
 incremental = false
 
+[profile.dev]
+debug = 0
+
+[profile.dev.build-override]
+opt-level = 3
+codegen-units = 1
+
 # Outside of wasm, we need to use our wry/desktop compatible patch for the wasm-bindgen family of libraries
 [patch.crates-io]
-dioxus = { git = "https://github.com/ealmloff/dioxus", branch = "wasm-bindgen" }
 wasm-bindgen = { git = "https://github.com/DioxusLabs/wasm-bindgen-wry" }
 wasm-bindgen-futures = { git = "https://github.com/DioxusLabs/wasm-bindgen-wry" }
 js-sys = { git = "https://github.com/DioxusLabs/wasm-bindgen-wry" }

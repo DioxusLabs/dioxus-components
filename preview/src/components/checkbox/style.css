@@ -1,4 +1,4 @@
-.checkbox {
+.dx-checkbox {
     width: 1rem;
     height: 1rem;
     box-sizing: border-box;
@@ -12,28 +12,18 @@
     cursor: pointer;
 }
 
-.checkbox-indicator {
+.dx-checkbox-indicator {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.checkbox[data-state="checked"] {
+.dx-checkbox[data-state="checked"] {
     background-color: var(--secondary-color-2);
     box-shadow: none;
     color: var(--primary-color);
 }
 
-.checkbox:focus-visible {
+.dx-checkbox:focus-visible {
     box-shadow: 0 0 0 2px var(--focused-border-color);
-}
-
-.checkbox-check-icon {
-    width: 1rem;
-    height: 1rem;
-    fill: none;
-    stroke: currentcolor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2;
 }

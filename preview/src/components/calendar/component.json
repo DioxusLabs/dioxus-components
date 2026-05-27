@@ -7,6 +7,14 @@
     {
       "name": "dioxus-primitives",
       "git": "https://github.com/DioxusLabs/components"
+    },
+    {
+      "name": "dioxus-icons",
+      "version": "0.1.0"
+    },
+    {
+      "name": "time",
+      "version": "0.3.44"
     }
   ],
   "globalAssets": ["../../../assets/dx-components-theme.css"]

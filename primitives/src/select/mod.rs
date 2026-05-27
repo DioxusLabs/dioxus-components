@@ -37,11 +37,10 @@
 //! fn Demo() -> Element {
 //!     rsx! {
 //!         Select::<String> {
-//!             placeholder: "Select a fruit...",
 //!             SelectTrigger{
 //!                 aria_label: "Select Trigger",
 //!                 width: "12rem",
-//!                 SelectValue {}
+//!                 SelectValue { placeholder: "Select a fruit..." }
 //!             }
 //!             SelectList {
 //!                 aria_label: "Select Demo",
@@ -74,7 +73,7 @@ pub(crate) mod text_search;
 // Re-export all public components and types
 pub use components::{
     Select, SelectGroup, SelectGroupLabel, SelectGroupLabelProps, SelectGroupProps,
-    SelectItemIndicator, SelectItemIndicatorProps, SelectList, SelectListProps, SelectOption,
-    SelectOptionProps, SelectProps, SelectTrigger, SelectTriggerProps, SelectValue,
-    SelectValueProps,
+    SelectItemIndicator, SelectItemIndicatorProps, SelectList, SelectListProps, SelectMulti,
+    SelectMultiProps, SelectOption, SelectOptionProps, SelectProps, SelectTrigger,
+    SelectTriggerProps, SelectValue, SelectValueProps,
 };

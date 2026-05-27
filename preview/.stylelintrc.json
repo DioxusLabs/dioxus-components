@@ -2,7 +2,24 @@
   "extends": ["stylelint-config-standard", "stylelint-config-idiomatic-order"],
   "rules": {
     "number-max-precision": null,
-    "no-descending-specificity": null
+    "no-descending-specificity": null,
+    "selector-class-pattern": "^dx-[a-z0-9-]+$",
+    "nesting-selector-no-missing-scoping-root": true
   },
+  "overrides": [
+    {
+      "files": ["src/components/**/*.css"],
+      "rules": {
+        "selector-disallowed-list": [
+          "/^(?!.*\\.dx-[a-z0-9-]+).*$/",
+          {
+            "ignore": ["keyframe-selectors"],
+            "splitList": true
+          }
+        ],
+        "selector-max-specificity": "0,6,1"
+      }
+    }
+  ],
   "ignoreFiles": ["assets/prism.css", "**/*.js"]
 }

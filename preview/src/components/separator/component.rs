@@ -1,15 +1,22 @@
 use dioxus::prelude::*;
 use dioxus_primitives::separator::{self, SeparatorProps};
+use dioxus_primitives::{dioxus_attributes::attributes, merge_attributes};
+
+#[css_module("/src/components/separator/style.css")]
+struct Styles;
 
 #[component]
 pub fn Separator(props: SeparatorProps) -> Element {
+    let base = attributes!(div {
+        class: Styles::dx_separator,
+    });
+    let merged = merge_attributes(vec![base, props.attributes]);
+
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         separator::Separator {
-            class: "separator",
             horizontal: props.horizontal,
             decorative: props.decorative,
-            attributes: props.attributes,
+            attributes: merged,
             {props.children}
         }
     }

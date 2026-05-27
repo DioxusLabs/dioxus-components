@@ -1,45 +1,43 @@
 /* Alert Dialog Backdrop */
-.alert-dialog-backdrop {
+.dx-alert-dialog-backdrop {
   position: fixed;
   z-index: 1000;
   background: rgb(0 0 0 / 30%);
   inset: 0;
+  opacity: 0;
+  will-change: opacity;
 }
 
-.alert-dialog-backdrop[data-state="closed"] {
-  animation: alert-animate-out 150ms ease-in forwards;
+.dx-alert-dialog-backdrop[data-state="closed"] {
+  animation: dx-alert-animate-out 150ms ease-in forwards;
 }
 
-@keyframes alert-animate-out {
+@keyframes dx-alert-animate-out {
   0% {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
 
   100% {
     opacity: 0;
-    transform: scale(0.95) translateY(-2px);
   }
 }
 
-.alert-dialog-backdrop[data-state="open"] {
-  animation: alert-animate-in 150ms ease-out forwards;
+.dx-alert-dialog-backdrop[data-state="open"] {
+  animation: dx-alert-animate-in 150ms ease-out forwards;
 }
 
-@keyframes alert-animate-in {
+@keyframes dx-alert-animate-in {
   0% {
     opacity: 0;
-    transform: scale(0.95) translateY(-2px);
   }
 
   100% {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
 }
 
 /* Alert Dialog Container - improved for theme consistency */
-.alert-dialog {
+.dx-alert-dialog {
   position: fixed;
   z-index: 1001;
   top: 50%;
@@ -64,38 +62,38 @@
   transform: translate(-50%, -50%);
 }
 
-.alert-dialog-title {
+.dx-alert-dialog-title {
   margin: 0;
   color: var(--secondary-color-4);
   font-size: 1.25rem;
   font-weight: 700;
 }
 
-.alert-dialog-description {
+.dx-alert-dialog-description {
   margin: 0;
   color: var(--secondary-color-5);
   font-size: 1rem;
 }
 
-.alert-dialog-actions {
+.dx-alert-dialog-actions {
   display: flex;
   flex-direction: column-reverse;
   gap: 12px;
 }
 
 @media (width >= 40rem) {
-  .alert-dialog-actions {
+  .dx-alert-dialog-actions {
     flex-direction: row;
     justify-content: flex-end;
   }
 
-  .alert-dialog {
+  .dx-alert-dialog {
     max-width: 32rem;
     text-align: left;
   }
 }
 
-.alert-dialog-cancel {
+.dx-alert-dialog-cancel {
   padding: 8px 18px;
   border: 1px solid var(--primary-color-6);
   border-radius: 0.5rem;
@@ -107,15 +105,15 @@
   transition: background-color 0.2s ease;
 }
 
-.alert-dialog-cancel:hover {
+.dx-alert-dialog-cancel:hover {
   background-color: var(--primary-color-4);
 }
 
-.alert-dialog-cancel:focus-visible {
+.dx-alert-dialog-cancel:focus-visible {
   box-shadow: 0 0 0 2px var(--focused-border-color);
 }
 
-.alert-dialog-action {
+.dx-alert-dialog-action {
   padding: 8px 18px;
   border: 1px solid var(--primary-error-color);
   border-radius: 0.5rem;
@@ -126,10 +124,10 @@
   transition: background-color 0.2s ease;
 }
 
-.alert-dialog-action:hover {
+.dx-alert-dialog-action:hover {
   background-color: var(--secondary-error-color);
 }
 
-.alert-dialog-action:focus-visible {
+.dx-alert-dialog-action:focus-visible {
   box-shadow: 0 0 0 2px var(--focused-border-color);
 }

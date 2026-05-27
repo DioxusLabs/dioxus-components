@@ -1,14 +1,17 @@
 use dioxus::prelude::*;
+use dioxus_icons::lucide::ChevronDown;
 use dioxus_primitives::accordion::{
     self, AccordionContentProps, AccordionItemProps, AccordionProps, AccordionTriggerProps,
 };
 
+#[css_module("/src/components/accordion/style.css")]
+struct Styles;
+
 #[component]
 pub fn Accordion(props: AccordionProps) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         accordion::Accordion {
-            class: "accordion",
+            class: Styles::dx_accordion,
             width: "15rem",
             id: props.id,
             allow_multiple_open: props.allow_multiple_open,
@@ -25,7 +28,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
 pub fn AccordionItem(props: AccordionItemProps) -> Element {
     rsx! {
         accordion::AccordionItem {
-            class: "accordion-item",
+            class: Styles::dx_accordion_item,
             disabled: props.disabled,
             default_open: props.default_open,
             on_change: props.on_change,
@@ -41,15 +44,14 @@ pub fn AccordionItem(props: AccordionItemProps) -> Element {
 pub fn AccordionTrigger(props: AccordionTriggerProps) -> Element {
     rsx! {
         accordion::AccordionTrigger {
-            class: "accordion-trigger",
+            class: Styles::dx_accordion_trigger,
             id: props.id,
             attributes: props.attributes,
             {props.children}
-            svg {
-                class: "accordion-expand-icon",
-                view_box: "0 0 24 24",
-                xmlns: "http://www.w3.org/2000/svg",
-                polyline { points: "6 9 12 15 18 9" }
+            ChevronDown {
+                class: Styles::dx_accordion_expand_icon,
+                size: "20px",
+                stroke: "var(--secondary-color-4)",
             }
         }
     }
@@ -59,7 +61,7 @@ pub fn AccordionTrigger(props: AccordionTriggerProps) -> Element {
 pub fn AccordionContent(props: AccordionContentProps) -> Element {
     rsx! {
         accordion::AccordionContent {
-            class: "accordion-content",
+            class: Styles::dx_accordion_content,
             style: "--collapsible-content-width: 140px",
             id: props.id,
             attributes: props.attributes,

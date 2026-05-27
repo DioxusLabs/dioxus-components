@@ -98,7 +98,6 @@ pub fn HoverCard(props: HoverCardProps) -> Element {
 
     rsx! {
         div {
-            class: "hover-card",
             "data-state": if open() { "open" } else { "closed" },
             "data-disabled": (props.disabled)(),
             ..props.attributes,
@@ -185,7 +184,6 @@ pub fn HoverCardTrigger(props: HoverCardTriggerProps) -> Element {
     rsx! {
         div {
             id,
-            class: "hover-card-trigger",
             tabindex: "0", // Make the trigger focusable
 
             // Mouse events
@@ -309,7 +307,6 @@ pub fn HoverCardContent(props: HoverCardContentProps) -> Element {
         if render() {
             div {
                 id,
-                class: "hover-card-content",
                 role: "tooltip",
                 "data-state": if is_open { "open" } else { "closed" },
                 "data-side": props.side.as_str(),

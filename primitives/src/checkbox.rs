@@ -3,6 +3,7 @@
 use crate::{use_controlled, use_unique_id};
 use dioxus::prelude::*;
 use std::ops::Not;
+use std::rc::Rc;
 use wasm_bindgen::JsCast;
 
 /// The state of a [`Checkbox`] component.
@@ -136,6 +137,12 @@ pub fn Checkbox(props: CheckboxProps) -> Element {
         disabled: props.disabled,
     });
 
+    // Safari and Firefox on macOS do not focus <button> on click by default
+    // (matches the macOS "Press Tab to highlight items" preference). Capture
+    // a mounted ref so we can explicitly focus on click, matching what
+    // Radix UI / Headless UI / Material UI do for the same reason.
+    let mut button_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
+
     rsx! {
         button {
             type: "button",
@@ -147,9 +154,15 @@ pub fn Checkbox(props: CheckboxProps) -> Element {
             "data-state": checked().to_data_state(),
             "data-disabled": props.disabled,
 
+            onmounted: move |evt| button_ref.set(Some(evt.data())),
             onclick: move |_| {
                 let new_checked = !checked();
                 set_checked.call(new_checked);
+                if let Some(node) = button_ref() {
+                    spawn(async move {
+                        let _ = node.set_focus(true).await;
+                    });
+                }
             },
 
             // Aria says only spacebar can change state of checkboxes.

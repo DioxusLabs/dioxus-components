@@ -1,26 +1,26 @@
-.progress {
+.dx-progress {
     position: relative;
     overflow: hidden;
-    width: 200px;
+    min-width: 200px;
     height: .5rem;
     box-sizing: border-box;
     border-radius: 9999px;
     background: var(--primary-color-5);
 }
 
-.progress[data-state='indeterminate'] .progress-indicator {
+.dx-progress[data-state='indeterminate'] .dx-progress-indicator {
     width: 50%;
-    animation: indeterminate 1s infinite linear;
+    animation: dx-indeterminate 1s infinite linear;
 }
 
-.progress-indicator {
+.dx-progress-indicator {
     width: var(--progress-value, 0%);
     height: 100%;
     background-color: var(--secondary-color-1);
     transition: width 250ms ease;
 }
 
-@keyframes indeterminate {
+@keyframes dx-indeterminate {
     0% {
         transform: translateX(-100%);
     }

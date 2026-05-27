@@ -1,14 +1,16 @@
 use dioxus::prelude::*;
 
+#[css_module("/src/components/card/style.css")]
+struct Styles;
+
 #[component]
 pub fn Card(
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         div {
-            class: "card",
+            class: Styles::dx_card,
             "data-slot": "card",
             ..attributes,
             {children}
@@ -23,7 +25,7 @@ pub fn CardHeader(
 ) -> Element {
     rsx! {
         div {
-            class: "card-header",
+            class: Styles::dx_card_header,
             "data-slot": "card-header",
             ..attributes,
             {children}
@@ -38,7 +40,7 @@ pub fn CardTitle(
 ) -> Element {
     rsx! {
         div {
-            class: "card-title",
+            class: Styles::dx_card_title,
             "data-slot": "card-title",
             ..attributes,
             {children}
@@ -53,7 +55,7 @@ pub fn CardDescription(
 ) -> Element {
     rsx! {
         div {
-            class: "card-description",
+            class: Styles::dx_card_description,
             "data-slot": "card-description",
             ..attributes,
             {children}
@@ -68,7 +70,7 @@ pub fn CardAction(
 ) -> Element {
     rsx! {
         div {
-            class: "card-action",
+            class: Styles::dx_card_action,
             "data-slot": "card-action",
             ..attributes,
             {children}
@@ -83,7 +85,7 @@ pub fn CardContent(
 ) -> Element {
     rsx! {
         div {
-            class: "card-content",
+            class: Styles::dx_card_content,
             "data-slot": "card-content",
             ..attributes,
             {children}
@@ -98,7 +100,7 @@ pub fn CardFooter(
 ) -> Element {
     rsx! {
         div {
-            class: "card-footer",
+            class: Styles::dx_card_footer,
             "data-slot": "card-footer",
             ..attributes,
             {children}

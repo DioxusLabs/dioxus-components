@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn Demo() -> Element {
-    let mut description = use_signal(String::new);
+    let mut description = use_signal(|| "sample text".to_string());
     rsx! {
         div {
             display: "flex",

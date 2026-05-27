@@ -16,11 +16,9 @@ pub fn Demo() -> Element {
                     tracing::info!("Selected date changed: {:?}", v);
                     selected_date.set(v);
                 },
-                DatePickerInput {
-                    on_format_day_placeholder: || tid!("D_Abbr"),
-                    on_format_month_placeholder: || tid!("M_Abbr"),
-                    on_format_year_placeholder: || tid!("Y_Abbr"),
-                }
+                on_format_day_placeholder: || tid!("D_Abbr"),
+                on_format_month_placeholder: || tid!("M_Abbr"),
+                on_format_year_placeholder: || tid!("Y_Abbr"),
             }
         }
     }

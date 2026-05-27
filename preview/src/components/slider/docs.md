@@ -3,30 +3,22 @@ The slider component allows users to select a value from a range by sliding a ha
 ## Component Structure
 
 ```rust
-// The slider component wraps all slider-related elements.
 Slider {
-    // The current value of the slider, which should be updated as the user interacts with the slider.
-    value: SliderValue::Single(0.0),
-    // The orientation of the slider, true for horizontal and false for vertical.
+    value: 0.0,
     horizontal: true,
-    // Callback function triggered when the slider value changes.
-    on_value_change: |value: u32| {
+    on_value_change: |value: f64| {
         // Handle the change in slider value.
     },
-    // The track represents the visual track along which the handle moves.
-    SliderTrack {
-        // The slider range represents the filled portion of the track
-        SliderRange {
-            // The content of the range
-            {children}
-        }
-        // The slider thumb represents the draggable handle that the user moves along the track.
-        SliderThumb {
-            // An optional index which can be either 0 or 1 to indicate if this is the first or second thumb in a range slider.
-            index: 0,
-            // The content of the thumb button
-            {children}
-        }
-    }
+}
+```
+
+For a two-thumb range selector, use `RangeSlider`:
+
+```rust
+RangeSlider {
+    default_value: 20.0..80.0,
+    on_value_change: |value: std::ops::Range<f64>| {
+        // value.start and value.end give the two endpoints
+    },
 }
 ```

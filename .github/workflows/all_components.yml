@@ -44,23 +44,21 @@ jobs:
         with:
           packages: libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev libxdo-dev
           version: 1.0
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+      - uses: DioxusLabs/dioxus-ci/actions/setup-dioxus@v0.1.0
         with:
           toolchain: stable
           targets: x86_64-unknown-linux-gnu,wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-        with:
-          cache-all-crates: "true"
           cache-on-failure: "false"
-      - uses: cargo-bins/cargo-binstall@main
-      - name: Install CLI
-        run: cargo binstall dioxus-cli -y --force --version 0.7.0
+      - uses: DioxusLabs/dioxus-ci/actions/install-dioxus-cli@v0.1.0
+        with:
+          version: 0.7.6
       - name: Add components and check
         run: |
           cd test-harness
           # Add dependencies manually; TODO: remove this once dx components supports local dependencies
           dx components add calendar,popover --path ..
+          dx components add button,separator,sheet,skeleton,tooltip --path ..
+          dx components add dialog,input --path ..
           # Add all components
           dx components add --all --path .. --force
           # Switch to the local version of dioxus-primitives
@@ -80,18 +78,14 @@ jobs:
         with:
           packages: libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev libxdo-dev
           version: 1.0
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+      - uses: DioxusLabs/dioxus-ci/actions/setup-dioxus@v0.1.0
         with:
           toolchain: stable
           targets: x86_64-unknown-linux-gnu,wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-        with:
-          cache-all-crates: "true"
           cache-on-failure: "false"
-      - uses: cargo-bins/cargo-binstall@main
-      - name: Install CLI
-        run: cargo binstall dioxus-cli -y --force --version 0.7.0
+      - uses: DioxusLabs/dioxus-ci/actions/install-dioxus-cli@v0.1.0
+        with:
+          version: 0.7.6
       - name: Add each component and check
         run: |
           cd preview/src/components/
@@ -106,6 +100,12 @@ jobs:
             # Add dependencies manually; TODO: remove this once dx components supports local dependencies
             if [ "$file" = "date_picker" ]; then
               dx components add calendar,popover --path ..
+            elif [ "$file" = "sidebar" ]; then
+              dx components add button,separator,sheet,skeleton,tooltip --path ..
+            elif [ "$file" = "item" ]; then
+              dx components add separator --path ..
+            elif [ "$file" = "color_picker" ]; then
+              dx components add popover,input --path ..
             fi
             # Add the component
             dx components add "$file" --path ..

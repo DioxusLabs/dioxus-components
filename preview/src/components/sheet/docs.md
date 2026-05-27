@@ -3,33 +3,17 @@ The sheet component is a panel that slides in from the edge of the screen. It ca
 ## Component Structure
 
 ```rust
-// The sheet component must wrap all sheet elements.
 Sheet {
-    // The open prop determines if the sheet is currently open or closed.
     open: open(),
-    // SheetContent wraps the content and defines the side from which the sheet slides in.
-    // Available sides: Top, Right (default), Bottom, Left.
-    SheetContent {
-        side: SheetSide::Right,
-        // SheetHeader groups the title and description at the top.
-        SheetHeader {
-            // The sheet title defines the heading of the sheet.
-            SheetTitle {
-                "Edit Profile"
-            }
-            // The sheet description provides additional information about the sheet.
-            SheetDescription {
-                "Make changes to your profile here."
-            }
-        }
-        // Add your main content here.
-        // SheetFooter groups actions at the bottom.
-        SheetFooter {
-            // SheetClose can be used to close the sheet.
-            SheetClose {
-                "Close"
-            }
-        }
+    // Which edge to slide in from. Available sides: Top, Right (default), Bottom, Left.
+    "data-side": SheetSide::Right.as_str(),
+    SheetContentClose {}
+    SheetHeader {
+        SheetTitle { "Edit Profile" }
+        SheetDescription { "Make changes to your profile here." }
+    }
+    SheetFooter {
+        SheetClose { "Close" }
     }
 }
 ```
@@ -44,7 +28,7 @@ SheetClose { "Close" }
 
 // Custom element: attributes include the preset onclick handler
 SheetClose {
-    r#as: |attributes| rsx! {
+    as: |attributes| rsx! {
         a { href: "#", ..attributes, "Go back" }
     }
 }

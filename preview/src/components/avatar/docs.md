@@ -1,25 +1,23 @@
-The Avatar component is used to display a user's profile picture or an icon representing the user. It handles the loading state of the image and can display a fallback icon if the image fails to load.
+The Avatar components display a user's profile picture or fallback initials. Use the composable `Avatar`, `AvatarImage`, and `AvatarFallback` primitives when you need full control, or `ImageAvatar` for the common image-with-fallback case.
 
 ## Component Structure
 
 ```rust
-// All avatar contents must be wrapped in the Avatar component.
 Avatar {
-    on_state_change: |state: AvatarState| {
-        // This callback is triggered when the avatar's state changes. The state can be used to determine if the image is loading, loaded, or failed to load.
-    },
-    // The avatar image component is used to display the user's profile picture.
+    aria_label: "Jane Doe",
     AvatarImage {
-        // The source URL of the image to be displayed.
-        src: "",
-        // The alt text for the image, used for accessibility.
-        alt: "",
+        src: "https://example.com/avatar.png",
+        alt: "Jane Doe",
     }
-    // The avatar fallback component is used to display an icon or text when the image fails to load.
-    AvatarFallback {
-        // The content to display when the image fails to load.
-        // This can be an icon or text representing the user.
-        {children}
-    }
+    AvatarFallback { "JD" }
+}
+```
+
+```rust
+ImageAvatar {
+    src: "https://example.com/avatar.png",
+    alt: "Jane Doe",
+    on_state_change: |state: AvatarState| { /* image is loading/loaded/failed */ },
+    "JD"
 }
 ```

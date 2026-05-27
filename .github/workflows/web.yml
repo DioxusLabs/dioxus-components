@@ -1,0 +1,27 @@
+name: Web
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: DioxusLabs/dioxus-ci/.github/workflows/web-build.yml@v0.1.0
+    with:
+      working-directory: preview
+      ssg: true
+      features: fullstack
+      base-path: ${{ github.event.repository.name }}
+      dx-cli-version: 0.7.6

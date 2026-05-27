@@ -1,48 +1,44 @@
 /* Dialog Backdrop */
-.dialog-backdrop {
+.dx-dialog-backdrop {
   position: fixed;
   z-index: 1000;
   background: rgb(0 0 0 / 30%);
   inset: 0;
   opacity: 0;
-  will-change: transform, opacity;
+  will-change: opacity;
 }
 
-.dialog-backdrop[data-state="closed"] {
-  animation: dialog-backdrop-animate-out 150ms ease-in forwards;
+.dx-dialog-backdrop[data-state="closed"] {
+  animation: dx-dialog-backdrop-animate-out 150ms ease-in forwards;
   pointer-events: none;
 }
 
-@keyframes dialog-backdrop-animate-out {
+@keyframes dx-dialog-backdrop-animate-out {
   0% {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
 
   100% {
     opacity: 0;
-    transform: scale(0.95) translateY(-2px);
   }
 }
 
-.dialog-backdrop[data-state="open"] {
-  animation: dialog-content-animate-in 150ms ease-out forwards;
+.dx-dialog-backdrop[data-state="open"] {
+  animation: dx-dialog-backdrop-animate-in 150ms ease-out forwards;
 }
 
-@keyframes dialog-content-animate-in {
+@keyframes dx-dialog-backdrop-animate-in {
   0% {
     opacity: 0;
-    transform: scale(0.95) translateY(-2px);
   }
 
   100% {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
 }
 
 /* Dialog Container - improved for theme consistency */
-.dialog {
+.dx-dialog {
   position: fixed;
   z-index: 1001;
   top: 50%;
@@ -66,27 +62,27 @@
   transform: translate(-50%, -50%);
 }
 
-.dialog-title {
+.dx-dialog-title {
   margin: 0;
   color: var(--secondary-color-4);
   font-size: 1.25rem;
   font-weight: 700;
 }
 
-.dialog-description {
+.dx-dialog-description {
   margin: 0;
   color: var(--secondary-color-5);
   font-size: 1rem;
 }
 
 @media (width >= 40rem) {
-  .dialog {
+  .dx-dialog {
     max-width: 32rem;
     text-align: left;
   }
 }
 
-.dialog-close {
+.dx-dialog-close {
   position: absolute;
   top: 1rem;
   right: 1rem;
@@ -101,6 +97,6 @@
   line-height: 1;
 }
 
-.dialog-close:hover {
+.dx-dialog-close:hover {
   color: var(--secondary-color-1);
 }

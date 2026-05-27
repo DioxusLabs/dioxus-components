@@ -5,8 +5,9 @@ The button element is used to trigger actions or events in a user interface.
 ```rust
 button {
     // Global html attributes
-    class: "button",
+    class: "dx-button",
     "data-style": "outline",
+    "data-size": "default",
     // Children
     {children}
 }

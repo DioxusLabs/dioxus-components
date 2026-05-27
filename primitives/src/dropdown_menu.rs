@@ -3,10 +3,11 @@
 use std::rc::Rc;
 
 use crate::{
-    focus::{use_focus_controlled_item, use_focus_provider, FocusState},
-    use_animated_open, use_controlled, use_id_or, use_unique_id,
+    focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
+    merge_attributes, use_animated_open, use_controlled, use_id_or, use_unique_id,
 };
 use dioxus::prelude::*;
+use dioxus_attributes::attributes;
 
 #[derive(Clone, Copy)]
 struct DropdownMenuContext {
@@ -158,10 +159,14 @@ pub fn DropdownMenu(props: DropdownMenuProps) -> Element {
 /// The props for the [`DropdownMenuTrigger`] component
 #[derive(Props, Clone, PartialEq)]
 pub struct DropdownMenuTriggerProps {
-    /// Additional attributes to apply to the trigger button element.
+    /// Render the trigger element as a custom component/element.
+    #[props(default)]
+    pub r#as: Option<Callback<Vec<Attribute>, Element>>,
+
+    /// Additional attributes to apply to the trigger element.
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
-    /// The children of the trigger button
+    /// The children of the trigger
     pub children: Element,
 }
 
@@ -216,37 +221,54 @@ pub fn DropdownMenuTrigger(props: DropdownMenuTriggerProps) -> Element {
     let mut ctx: DropdownMenuContext = use_context();
     let mut element = use_signal(|| None::<Rc<MountedData>>);
 
-    rsx! {
-        button {
-            id: "{ctx.trigger_id}",
-            type: "button",
-            "data-state": if (ctx.open)() { "open" } else { "closed" },
-            "data-disabled": (ctx.disabled)(),
-            disabled: (ctx.disabled)(),
-            aria_expanded: ctx.open,
-            aria_haspopup: "listbox",
+    let open = ctx.open;
+    let disabled = ctx.disabled;
+    let data_state = if open() { "open" } else { "closed" };
 
-            onmounted: move |e: MountedEvent| {
-                element.set(Some(e.data()));
-            },
-            onclick: move |_| {
-                let new_open = !(ctx.open)();
-                ctx.set_open.call(new_open);
-                // Focus the element on click. Safari does not do this automatically. https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#clicking_and_focus
-                if let Some(data) = element() {
-                    spawn(async move {
-                        _ = data.set_focus(true).await;
-                    });
-                }
-            },
-            onblur: move |_| {
-                if !ctx.focus.any_focused() {
-                    ctx.focus.blur();
-                }
-            },
+    let base = attributes!(button {
+        id: ctx.trigger_id,
+        r#type: "button",
+        "data-state": data_state,
+        "data-disabled": disabled,
+        disabled: disabled,
+        aria_expanded: open,
+        aria_haspopup: "listbox",
+        onmounted: move |e: MountedEvent| {
+            element.set(Some(e.data()));
+        },
+        onclick: move |_| {
+            if disabled() {
+                return;
+            }
 
-            ..props.attributes,
-            {props.children}
+            let new_open = !open();
+            ctx.set_open.call(new_open);
+
+            // Focus the element on click. Safari does not do this automatically.
+            // https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#clicking_and_focus
+            if let Some(data) = element() {
+                spawn(async move {
+                    _ = data.set_focus(true).await;
+                });
+            }
+        },
+        onblur: move |_| {
+            if !ctx.focus.any_focused() {
+                ctx.focus.blur();
+                ctx.set_open.call(false);
+            }
+        },
+    });
+    let merged = merge_attributes(vec![base, props.attributes]);
+
+    if let Some(dynamic) = props.r#as {
+        dynamic.call(merged)
+    } else {
+        rsx! {
+            button {
+                ..merged,
+                {props.children}
+            }
         }
     }
 }
@@ -416,7 +438,7 @@ pub fn DropdownMenuItem<T: Clone + PartialEq + 'static>(
     let disabled = move || (ctx.disabled)() || (props.disabled)();
     let focused = move || ctx.focus.is_focused((props.index)());
 
-    let onmounted = use_focus_controlled_item(props.index);
+    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
 
     rsx! {
         div {
@@ -450,7 +472,6 @@ pub fn DropdownMenuItem<T: Clone + PartialEq + 'static>(
                     ctx.focus.blur();
                 }
             },
-
 
             ..props.attributes,
             {props.children}

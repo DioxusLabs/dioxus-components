@@ -9,7 +9,6 @@ use dioxus::core::{current_scope_id, use_drop};
 use dioxus::prelude::*;
 use dioxus::prelude::{asset, manganis, Asset};
 use dioxus_core::AttributeValue::Text;
-use time::OffsetDateTime;
 
 pub use dioxus_attributes;
 
@@ -330,7 +329,7 @@ pub(crate) trait LocalDateExt {
 
 impl LocalDateExt for time::OffsetDateTime {
     fn now_local_date() -> time::Date {
-        OffsetDateTime::now_local()
+        time::OffsetDateTime::now_local()
             .map(|x| x.date())
             .unwrap_or_else(|_| time::UtcDateTime::now().date())
     }

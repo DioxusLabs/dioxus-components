@@ -91,16 +91,16 @@ macro_rules! examples {
             )),
             docs: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/docs.html")),
             component: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/component.rs")),
+                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/component.rs.html")),
             },
             style: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/style.css")),
+                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/style.css.html")),
             },
             variants: &[
                 ComponentVariantDemoData {
                     name: "main",
                     rs_highlighted: HighlightedCode {
-                        source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/main/mod.rs")),
+                        html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/main/mod.rs.html")),
                     },
                     css_highlighted: None,
                     component: $name::variants::main::Demo,
@@ -110,7 +110,7 @@ macro_rules! examples {
                         ComponentVariantDemoData {
                             name: stringify!($variant),
                             rs_highlighted: HighlightedCode {
-                                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/", stringify!($variant), "/mod.rs")),
+                                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/", stringify!($variant), "/mod.rs.html")),
                             },
                             css_highlighted: None,
                             component: $name::variants::$variant::Demo,
@@ -134,19 +134,19 @@ macro_rules! examples {
             )),
             docs: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/docs.html")),
             component: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/component.rs")),
+                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/component.rs.html")),
             },
             style: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/style.css")),
+                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/style.css.html")),
             },
             variants: &[
                 ComponentVariantDemoData {
                     name: "main",
                     rs_highlighted: HighlightedCode {
-                        source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/main/mod.rs")),
+                        html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/main/mod.rs.html")),
                     },
                     css_highlighted: Some(HighlightedCode {
-                        source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/demo.css")),
+                        html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/demo.css.html")),
                     }),
                     component: $name::variants::main::Demo,
                 },
@@ -155,10 +155,10 @@ macro_rules! examples {
                         ComponentVariantDemoData {
                             name: stringify!($variant),
                             rs_highlighted: HighlightedCode {
-                                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/", stringify!($variant), "/mod.rs")),
+                                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/", stringify!($variant), "/mod.rs.html")),
                             },
                             css_highlighted: Some(HighlightedCode {
-                                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/demo.css")),
+                                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/demo.css.html")),
                             }),
                             component: $name::variants::$variant::Demo,
                         },

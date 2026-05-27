@@ -4,6 +4,7 @@ fn main() {
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let out_dir = std::path::PathBuf::from(out_dir);
     println!("cargo:rerun-if-changed=src/components");
+    println!("cargo:rerun-if-changed=assets/dx-components-theme.css");
     // Process all markdown files in each component folder.
     for folder in std::fs::read_dir("src/components").unwrap().flatten() {
         if !folder.file_type().unwrap().is_dir() {
@@ -12,6 +13,13 @@ fn main() {
         let folder_path = folder.path();
         walk_markdown_dir(&folder_path, &out_dir).unwrap();
     }
+
+    let theme_css = std::path::Path::new("assets/dx-components-theme.css");
+    write_highlighted_source_html(
+        theme_css,
+        &out_dir.join("assets").join("dx-components-theme.css.html"),
+    )
+    .unwrap();
 }
 
 fn walk_markdown_dir(dir: &std::path::Path, out_dir: &std::path::Path) -> std::io::Result<()> {
@@ -31,6 +39,14 @@ fn walk_markdown_dir(dir: &std::path::Path, out_dir: &std::path::Path) -> std::i
             let markdown = process_markdown_to_html(&file.path());
             let out_file_path = out_folder.join(file.file_name()).with_extension("html");
             std::fs::write(out_file_path, markdown).unwrap();
+            continue;
+        }
+        if source_language_from_path(&file.path()).is_some() {
+            let out_file_path = out_folder.join(file.file_name()).with_extension(format!(
+                "{}.html",
+                file.path().extension().unwrap().to_string_lossy()
+            ));
+            write_highlighted_source_html(&file.path(), &out_file_path).unwrap();
             continue;
         }
         if file.file_name() == "component.json" {
@@ -109,6 +125,37 @@ fn render_code_block_html(kind: &pulldown_cmark::CodeBlockKind<'_>, source: &str
         return render_plain_code_block(source);
     };
 
+    render_highlighted_code_block(language, source)
+}
+
+fn write_highlighted_source_html(
+    source_path: &std::path::Path,
+    out_file_path: &std::path::Path,
+) -> std::io::Result<()> {
+    println!("cargo:rerun-if-changed={}", source_path.display());
+    let source = std::fs::read_to_string(source_path)?;
+    let Some(language) = source_language_from_path(source_path) else {
+        std::fs::write(out_file_path, render_plain_code_block(&source))?;
+        return Ok(());
+    };
+    if let Some(parent) = out_file_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(
+        out_file_path,
+        render_highlighted_code_block(language, &source),
+    )
+}
+
+fn source_language_from_path(path: &std::path::Path) -> Option<dioxus_code::Language> {
+    match path.extension().and_then(std::ffi::OsStr::to_str) {
+        Some("rs") => Some(dioxus_code::Language::Rust),
+        Some("css") => Some(dioxus_code::Language::Css),
+        _ => None,
+    }
+}
+
+fn render_highlighted_code_block(language: dioxus_code::Language, source: &str) -> String {
     let source = source.trim_end_matches('\n');
     let highlighted: dioxus_code::advanced::HighlightedSource =
         dioxus_code::SourceCode::new(language, source).into();

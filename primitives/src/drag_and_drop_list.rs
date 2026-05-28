@@ -1,6 +1,8 @@
 //! Defines the [`DragAndDropList`] component and its sub-components.
+use crate::{EventListener, EventListenerOptions, EventListenerPhase};
 use dioxus::prelude::*;
 use std::rc::Rc;
+use wasm_bindgen::JsCast;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum DropPosition {
@@ -64,6 +66,12 @@ enum DragState {
         from: usize,
         to: usize,
     },
+}
+
+struct DocumentDragListeners {
+    _dragover: EventListener,
+    _drop: EventListener,
+    _dragend: EventListener,
 }
 
 /// Context provided by [`DragAndDropList`] to its descendants.
@@ -542,6 +550,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     }
 
     let mut item_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
+    let mut document_drag_listeners = use_hook(|| CopyValue::new(None::<DocumentDragListeners>));
     use_effect(move || {
         if ctx.is_focused(index) {
             if let Some(md) = item_ref() {
@@ -641,51 +650,61 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                 event.data_transfer().set_drop_effect("move");
                 // Note: this is only for Firefox (without it, DnD won't work)
                 let _ = event.data_transfer().set_data("text/html", "");
-                let mut document_drop_ctx = ctx;
-                let mut document_drop = document::eval(
-                    r#"
-                    function cleanup() {
-                        document.removeEventListener("dragover", onDragOver, true);
-                        document.removeEventListener("drop", onDrop, true);
-                        document.removeEventListener("dragend", onDragEnd, true);
-                    }
+                document_drag_listeners.take();
+                if let Some(document) = web_sys::window().and_then(|window| window.document()) {
+                    let options = EventListenerOptions {
+                        phase: EventListenerPhase::Capture,
+                        passive: false,
+                    };
 
-                    function onDragOver(event) {
-                        event.preventDefault();
-                        if (event.dataTransfer) {
-                            event.dataTransfer.dropEffect = "move";
-                        }
-                    }
+                    let dragover = EventListener::new_with_options(
+                        &document,
+                        "dragover",
+                        options,
+                        move |event| {
+                            event.prevent_default();
+                            if let Some(drag_event) = event.dyn_ref::<web_sys::DragEvent>() {
+                                if let Some(data_transfer) = drag_event.data_transfer() {
+                                    data_transfer.set_drop_effect("move");
+                                }
+                            }
+                        },
+                    );
 
-                    function onDrop(event) {
-                        event.preventDefault();
-                        dioxus.send("drop");
-                        cleanup();
-                    }
-
-                    function onDragEnd() {
-                        dioxus.send("end");
-                        cleanup();
-                    }
-
-                    document.addEventListener("dragover", onDragOver, true);
-                    document.addEventListener("drop", onDrop, true);
-                    document.addEventListener("dragend", onDragEnd, true);
-
-                    await dioxus.recv();
-                    cleanup();
-                    "#,
-                );
-                spawn(async move {
-                    if let Ok(action) = document_drop.recv::<String>().await {
-                        if action == "drop" {
+                    let mut document_drop_ctx = ctx;
+                    let mut drop_listeners = document_drag_listeners;
+                    let drop = EventListener::new_with_options(
+                        &document,
+                        "drop",
+                        options,
+                        move |event| {
+                            event.prevent_default();
                             document_drop_ctx.drop();
-                        }
-                    }
-                    let _ = document_drop.send(true);
-                });
+                            drop_listeners.take();
+                        },
+                    );
+
+                    let mut end_listeners = document_drag_listeners;
+                    let dragend = EventListener::new_with_options(
+                        &document,
+                        "dragend",
+                        options,
+                        move |_| {
+                            end_listeners.take();
+                        },
+                    );
+
+                    document_drag_listeners.set(Some(DocumentDragListeners {
+                        _dragover: dragover,
+                        _drop: drop,
+                        _dragend: dragend,
+                    }));
+                }
             },
-            ondragend: move |_| ctx.end_drag(),
+            ondragend: move |_| {
+                document_drag_listeners.take();
+                ctx.end_drag();
+            },
             ondragover: move |event: Event<DragData>| {
                 event.prevent_default();
                 event.data_transfer().set_drop_effect("move");

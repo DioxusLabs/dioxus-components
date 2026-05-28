@@ -11,6 +11,8 @@ use dioxus_icons::lucide::PanelLeft;
 use dioxus_primitives::dioxus_attributes::attributes;
 use dioxus_primitives::merge_attributes;
 use dioxus_primitives::use_controlled;
+use dioxus_primitives::{EventListener, EventListenerOptions};
+use wasm_bindgen::JsCast;
 
 #[css_module("/src/components/sidebar/style.css")]
 struct Styles;
@@ -133,40 +135,32 @@ pub fn use_sidebar() -> SidebarCtx {
 
 pub fn use_is_mobile() -> Signal<bool> {
     let mut is_mobile = use_signal(|| false);
+    let mut resize_listener = use_hook(|| CopyValue::new(None::<EventListener>));
 
     use_effect(move || {
-        spawn(async move {
-            let js_code = format!(
-                r#"
-                function checkMobile() {{
-                    return window.innerWidth < {MOBILE_BREAKPOINT};
-                }}
-                function handleResize() {{
-                    dioxus.send(checkMobile());
-                }}
-                window.__sidebarResizeHandler = handleResize;
-                window.addEventListener('resize', window.__sidebarResizeHandler);
-                dioxus.send(checkMobile());
-                "#
-            );
-            let mut eval = document::eval(&js_code);
-
-            while let Ok(result) = eval.recv::<bool>().await {
-                is_mobile.set(result);
-            }
-        });
+        let Some(window) = web_sys::window() else {
+            return;
+        };
+        is_mobile.set(window_is_mobile());
+        resize_listener.take();
+        resize_listener.set(Some(EventListener::new(&window, "resize", move |_| {
+            is_mobile.set(window_is_mobile());
+        })));
     });
 
-    use_drop(|| {
-        _ = document::eval(
-            r#"
-            window.removeEventListener('resize', window.__sidebarResizeHandler);
-            delete window.__sidebarResizeHandler;
-            "#,
-        );
+    use_drop(move || {
+        resize_listener.take();
     });
 
     is_mobile
+}
+
+fn window_is_mobile() -> bool {
+    web_sys::window()
+        .and_then(|window| window.inner_width().ok())
+        .and_then(|width| width.as_f64())
+        .map(|width| width < MOBILE_BREAKPOINT as f64)
+        .unwrap_or(false)
 }
 
 #[component]
@@ -202,37 +196,31 @@ pub fn SidebarProvider(
 
     use_context_provider(|| ctx);
 
+    let mut key_listener = use_hook(|| CopyValue::new(None::<EventListener>));
     use_effect(move || {
-        spawn(async move {
-            let js_code = format!(
-                r#"
-                function sidebarKeyHandler(event) {{
-                    if (event.key === '{SIDEBAR_KEYBOARD_SHORTCUT}' && (event.metaKey || event.ctrlKey)) {{
-                        event.preventDefault();
-                        dioxus.send(true);
-                    }}
-                }}
-                window.__sidebarKeyHandler = sidebarKeyHandler;
-                window.addEventListener('keydown', window.__sidebarKeyHandler);
-                "#
-            );
-            let mut eval = document::eval(&js_code);
-
-            loop {
-                if eval.recv::<bool>().await.is_ok() {
+        let Some(window) = web_sys::window() else {
+            return;
+        };
+        key_listener.take();
+        key_listener.set(Some(EventListener::new_with_options(
+            &window,
+            "keydown",
+            EventListenerOptions::enable_prevent_default(),
+            move |event| {
+                let Some(event) = event.dyn_ref::<web_sys::KeyboardEvent>() else {
+                    return;
+                };
+                if event.key() == SIDEBAR_KEYBOARD_SHORTCUT && (event.meta_key() || event.ctrl_key())
+                {
+                    event.prevent_default();
                     ctx.toggle();
                 }
-            }
-        });
+            },
+        )));
     });
 
-    use_drop(|| {
-        _ = document::eval(
-            r#"
-            window.removeEventListener('keydown', window.__sidebarKeyHandler);
-            delete window.__sidebarKeyHandler;
-            "#,
-        );
+    use_drop(move || {
+        key_listener.take();
     });
 
     let sidebar_style = format!(

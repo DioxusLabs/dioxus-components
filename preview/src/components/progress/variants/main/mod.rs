@@ -1,7 +1,7 @@
 use super::super::component::*;
 use dioxus::prelude::*;
-use futures::StreamExt;
-use gloo_timers::future::IntervalStream;
+use dioxus_primitives::sleep;
+use std::time::Duration;
 
 #[component]
 pub fn Demo() -> Element {
@@ -9,9 +9,11 @@ pub fn Demo() -> Element {
 
     use_effect(move || {
         spawn(async move {
-            let mut interval = IntervalStream::new(1000);
-            while interval.next().await.is_some() {
-                let random_value = (js_sys::Math::random() * 30.0).floor() as usize;
+            let mut seed = 0x9e37_79b9_u32;
+            loop {
+                sleep(Duration::from_secs(1)).await;
+                seed = seed.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+                let random_value = (seed % 30) as usize;
                 let mut progress = progress.write();
                 *progress = (*progress + random_value) % 101;
             }

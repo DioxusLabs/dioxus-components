@@ -4,7 +4,27 @@ use crate::{use_controlled, use_unique_id};
 use dioxus::prelude::*;
 use std::ops::Not;
 use std::rc::Rc;
-use wasm_bindgen::JsCast;
+use wasm_bindgen::prelude::wasm_bindgen;
+
+#[wasm_bindgen(inline_js = r#"
+export function dx_set_checkbox_state(id, checked, indeterminate) {
+    const document = globalThis.document;
+    if (!document) {
+        return;
+    }
+
+    const input = document.getElementById(id);
+    if (!input) {
+        return;
+    }
+
+    input.checked = checked;
+    input.indeterminate = indeterminate;
+}
+"#)]
+extern "C" {
+    fn dx_set_checkbox_state(id: &str, checked: bool, indeterminate: bool);
+}
 
 /// The state of a [`Checkbox`] component.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -252,32 +272,10 @@ fn BubbleInput(
         let checked = checked();
         let id_str = id();
 
-        let Some(window) = web_sys::window() else {
-            return;
-        };
-        let Some(document) = window.document() else {
-            return;
-        };
-        let Some(element) = document.get_element_by_id(&id_str) else {
-            return;
-        };
-        let Ok(input) = element.dyn_into::<web_sys::HtmlInputElement>() else {
-            return;
-        };
-
         match checked {
-            CheckboxState::Checked => {
-                input.set_checked(true);
-                input.set_indeterminate(false);
-            }
-            CheckboxState::Indeterminate => {
-                input.set_checked(true);
-                input.set_indeterminate(true);
-            }
-            CheckboxState::Unchecked => {
-                input.set_checked(false);
-                input.set_indeterminate(false);
-            }
+            CheckboxState::Checked => dx_set_checkbox_state(&id_str, true, false),
+            CheckboxState::Indeterminate => dx_set_checkbox_state(&id_str, true, true),
+            CheckboxState::Unchecked => dx_set_checkbox_state(&id_str, false, false),
         }
     });
 

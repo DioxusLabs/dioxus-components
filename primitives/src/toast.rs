@@ -2,10 +2,9 @@
 
 use crate::{
     portal::{use_portal, PortalIn, PortalOut},
-    use_global_keydown_listener, use_unique_id,
+    sleep, use_global_keydown_listener, use_unique_id,
 };
 use dioxus::prelude::*;
-use dioxus_sdk_time::use_timeout;
 use std::collections::VecDeque;
 use std::time::Duration;
 
@@ -486,15 +485,11 @@ pub fn Toast(props: ToastProps) -> Element {
         let toast_id = props.id;
         let remove_toast = ctx.remove_toast;
 
-        // Create a timeout using dioxus-time
-        let timeout = use_timeout(duration, move |()| {
-            // Call the remove_toast function directly with the toast ID
-            remove_toast.call(toast_id);
-        });
-
-        // Start the timeout when the component mounts
         use_effect(move || {
-            timeout.action(());
+            spawn(async move {
+                sleep(duration).await;
+                remove_toast.call(toast_id);
+            });
         });
     }
 

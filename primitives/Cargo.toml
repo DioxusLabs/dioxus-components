@@ -13,36 +13,47 @@ repository = "https://github.com/DioxusLabs/components"
 
 [dependencies]
 dioxus.workspace = true
+dioxus-core.workspace = true
 dioxus-attributes = { path = "../dioxus-attributes" }
-dioxus-sdk-time = "0.7.0"
 time = { version = "0.3.44", features = ["std", "macros", "parsing", "local-offset"] }
 num-integer = "0.1.46"
 tracing.workspace = true
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 palette = "0.7.6"
-wasm-bindgen = "0.2"
-js-sys = "0.3"
-wasm-bindgen-futures = "0.4"
-gloo-events = "0.2"
-gloo-timers = { version = "0.3", features = ["futures"] }
-web-sys = { version = "0.3", features = [
+wasm-bindgen = { version = "0.2.106-alpha.1", package = "wasm-bindgen-x" }
+js-sys = { version = "0.3.83-alpha.1", package = "js-sys-x" }
+wasm-bindgen-futures = { version = "0.4.56-alpha.1", package = "wasm-bindgen-futures-x" }
+web-sys = { version = "0.3.83-alpha.1", package = "web-sys-x", features = [
+    "AddEventListenerOptions",
     "Window",
     "Document",
     "Element",
+    "Event",
     "HtmlElement",
+    "HtmlHeadElement",
+    "HtmlImageElement",
     "HtmlInputElement",
     "HtmlBodyElement",
     "CssStyleDeclaration",
     "EventTarget",
     "KeyboardEvent",
     "PointerEvent",
+    "Node",
+    "DragEvent",
+    "DataTransfer",
+    "VisualViewport",
+    "Navigator",
 ] }
 
 [build-dependencies]
-lazy-js-bundle = "0.7.9"
+lazy-js-bundle = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.52.3", features = ["time"] }
 
 [dev-dependencies]
-dioxus-ssr = "0.7.0"
+dioxus-ssr = { workspace = true }
 
 [features]
 default = ["router"]

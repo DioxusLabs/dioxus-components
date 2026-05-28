@@ -1,12 +1,11 @@
 //! Defines the [`DialogRoot`] component and its sub-components.
 
-use dioxus::document;
 use dioxus::prelude::*;
 
 use crate::focus_trap::{self, FocusTrap};
 use crate::{
     use_animated_open, use_controlled, use_global_escape_listener, use_id_or, use_outside_dismiss,
-    use_unique_id, FOCUS_TRAP_JS,
+    use_unique_id, HeadScript, FOCUS_TRAP_JS,
 };
 
 /// Context for the [`DialogRoot`] component
@@ -133,7 +132,7 @@ pub fn DialogRoot(props: DialogRootProps) -> Element {
     let render = use_animated_open(id, open);
 
     rsx! {
-        document::Script {
+        HeadScript {
             src: FOCUS_TRAP_JS,
             defer: true
         }

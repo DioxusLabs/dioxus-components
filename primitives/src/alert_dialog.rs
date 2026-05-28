@@ -2,8 +2,7 @@
 
 use crate::focus_trap::{self, FocusTrap};
 use crate::use_global_escape_listener;
-use crate::{use_animated_open, use_id_or, use_unique_id, FOCUS_TRAP_JS};
-use dioxus::document;
+use crate::{use_animated_open, use_id_or, use_unique_id, HeadScript, FOCUS_TRAP_JS};
 use dioxus::prelude::*;
 
 #[derive(Clone)]
@@ -100,7 +99,7 @@ pub fn AlertDialogRoot(props: AlertDialogRootProps) -> Element {
     let render_element = use_animated_open(id, open);
 
     rsx! {
-        document::Script {
+        HeadScript {
             src: FOCUS_TRAP_JS,
             defer: true
         }

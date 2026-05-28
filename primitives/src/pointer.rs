@@ -1,6 +1,8 @@
-use crate::dioxus_core::{queue_effect, Runtime};
+use crate::dioxus_core::queue_effect;
+use crate::EventListener;
 use dioxus::html::geometry::ClientPoint;
 use dioxus::prelude::*;
+use wasm_bindgen::JsCast;
 
 #[derive(Debug)]
 struct Pointer {
@@ -9,44 +11,45 @@ struct Pointer {
 }
 
 static POINTERS: GlobalSignal<Vec<Pointer>> = Global::new(|| {
-    let runtime = Runtime::current();
     queue_effect(move || {
-        runtime.spawn(ScopeId::ROOT, async move {
-            let mut pointer_updates = dioxus::document::eval(
-                // clientX/clientY (not pageX/pageY) must match element handlers
-                // that store `evt.client_coordinates()` and viewport-relative
-                // rects from getBoundingClientRect.
-                "window.addEventListener('pointerdown', (e) => {
-                    dioxus.send(['down', [e.pointerId, e.clientX, e.clientY]]);
-                });
-                window.addEventListener('pointermove', (e) => {
-                    dioxus.send(['move', [e.pointerId, e.clientX, e.clientY]]);
-                });
-                window.addEventListener('pointerup', (e) => {
-                    dioxus.send(['up', [e.pointerId, e.clientX, e.clientY]]);
-                });
-                window.addEventListener('pointercancel', (e) => {
-                    dioxus.send(['up', [e.pointerId, e.clientX, e.clientY]]);
-                });",
-            );
+        let Some(window) = web_sys::window() else {
+            return;
+        };
 
-            while let Ok((event_type, (pointer_id, x, y))) =
-                pointer_updates.recv::<(String, (i32, f64, f64))>().await
-            {
-                let position = ClientPoint::new(x, y);
-
-                match event_type.as_str() {
-                    "down" => add_pointer(pointer_id, position),
-                    "move" => update_pointer(pointer_id, position),
-                    "up" => remove_pointer(pointer_id),
-                    _ => {}
-                }
+        let pointerdown = EventListener::new(&window, "pointerdown", move |event| {
+            if let Some((pointer_id, position)) = pointer_event_position(event) {
+                add_pointer(pointer_id, position);
             }
         });
+        let pointermove = EventListener::new(&window, "pointermove", move |event| {
+            if let Some((pointer_id, position)) = pointer_event_position(event) {
+                update_pointer(pointer_id, position);
+            }
+        });
+        let pointerup = EventListener::new(&window, "pointerup", move |event| {
+            if let Some((pointer_id, _)) = pointer_event_position(event) {
+                remove_pointer(pointer_id);
+            }
+        });
+        let pointercancel = EventListener::new(&window, "pointercancel", move |event| {
+            if let Some((pointer_id, _)) = pointer_event_position(event) {
+                remove_pointer(pointer_id);
+            }
+        });
+
+        std::mem::forget((pointerdown, pointermove, pointerup, pointercancel));
     });
 
     Vec::new()
 });
+
+fn pointer_event_position(event: &web_sys::Event) -> Option<(i32, ClientPoint)> {
+    let event = event.dyn_ref::<web_sys::PointerEvent>()?;
+    Some((
+        event.pointer_id(),
+        ClientPoint::new(event.client_x() as f64, event.client_y() as f64),
+    ))
+}
 
 pub(crate) fn track_pointer_down(pointer_id: i32, position: ClientPoint) {
     add_pointer(pointer_id, position);

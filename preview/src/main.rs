@@ -27,9 +27,12 @@ use dioxus_icons::lucide::{
     ArrowRight, ArrowUpRight, Check, ChevronDown, ChevronLeft, Copy, ExternalLink, Mail, Menu,
     Pause, Play, SkipBack, SkipForward, X,
 };
+use dioxus_primitives::{use_wasm_bindgen_document, HeadLink};
 use std::str::FromStr;
+use std::time::{Duration, Instant};
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 use unic_langid::{langid, LanguageIdentifier};
+use wasm_bindgen::JsValue;
 
 mod components;
 mod dashboard;
@@ -116,6 +119,8 @@ fn main() {
 
 #[component]
 pub fn App() -> Element {
+    use_wasm_bindgen_document();
+
     use_init_i18n(|| {
         I18nConfig::new(langid!("en-US"))
             .with_locale((langid!("en-US"), include_str!("i18n/en-US.ftl")))
@@ -246,20 +251,26 @@ fn NavigationLayout() -> Element {
             return;
         }
 
-        let eval = document::eval(
-            "let route = await dioxus.recv();
-            window.top.postMessage({ 'route': route }, '*');",
-        );
-        let _ = eval.send(route.to_string());
+        if let Some(window) = web_sys::window() {
+            if let Ok(Some(top)) = window.top() {
+                let message = js_sys::Object::new();
+                let _ = js_sys::Reflect::set(
+                    &message,
+                    &JsValue::from_str("route"),
+                    &JsValue::from_str(&route.to_string()),
+                );
+                let _ = top.post_message(&message.into(), "*");
+            }
+        }
     });
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("/assets/main.css") }
-        document::Link {
+        HeadLink { rel: "stylesheet", href: asset!("/assets/main.css") }
+        HeadLink {
             rel: "stylesheet",
             href: asset!("/assets/dx-components-theme.css"),
         }
-        document::Link { rel: "stylesheet", href: asset!("/assets/hero.css") }
+        HeadLink { rel: "stylesheet", href: asset!("/assets/hero.css") }
         Navbar {}
         Outlet::<Route> {}
         Footer {}
@@ -523,7 +534,7 @@ fn LanguageSelect() -> Element {
     let mut current_lang = use_signal(|| Language::English);
 
     rsx! {
-        document::Stylesheet { href: asset!("/assets/language-select.css") }
+        HeadLink { rel: "stylesheet", href: asset!("/assets/language-select.css") }
         div { class: "dx-language-container",
             span { class: "dx-language-select-container",
                 select {
@@ -1098,8 +1109,8 @@ fn BlockComponentVariantHighlight(
 #[component]
 fn EmailClientDashboard(dark_mode: Option<bool>) -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("/assets/main.css") }
-        document::Link { rel: "stylesheet", href: asset!("/assets/dx-components-theme.css") }
+        HeadLink { rel: "stylesheet", href: asset!("/assets/main.css") }
+        HeadLink { rel: "stylesheet", href: asset!("/assets/dx-components-theme.css") }
         dashboard::views::email_client::EmailClient {}
     }
 }
@@ -1130,8 +1141,8 @@ fn ComponentBlockDemo(name: String, variant: Option<String>, dark_mode: Option<b
     let Comp = variant.component;
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("/assets/main.css") }
-        document::Link {
+        HeadLink { rel: "stylesheet", href: asset!("/assets/main.css") }
+        HeadLink {
             rel: "stylesheet",
             href: asset!("/assets/dx-components-theme.css"),
         }
@@ -1423,20 +1434,16 @@ fn BlockPlayer() -> Element {
     let duration_time = format_track_time(TRACK_DURATION_SECONDS);
 
     use_effect(move || {
-        let mut timer = document::eval(
-            "setInterval(() => {
-                dioxus.send(performance.now());
-            }, 100);",
-        );
-
         spawn(async move {
-            let mut last_tick_ms: Option<f64> = None;
+            let mut last_tick: Option<Instant> = None;
 
-            while let Ok(now_ms) = timer.recv::<f64>().await {
-                let elapsed_seconds = last_tick_ms
-                    .map(|last_ms| ((now_ms - last_ms) / 1000.0).clamp(0.0, 0.25))
+            loop {
+                dioxus_primitives::sleep(Duration::from_millis(100)).await;
+                let now = Instant::now();
+                let elapsed_seconds = last_tick
+                    .map(|last| now.duration_since(last).as_secs_f64().clamp(0.0, 0.25))
                     .unwrap_or(0.0);
-                last_tick_ms = Some(now_ms);
+                last_tick = Some(now);
 
                 if !playing() {
                     continue;

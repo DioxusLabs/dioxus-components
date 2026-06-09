@@ -1,8 +1,8 @@
 //! Defines the [`AlertDialogRoot`] component and its sub-components.
 
+use crate::focus_trap::{self, FocusTrap};
 use crate::use_global_escape_listener;
-use crate::{use_animated_open, use_id_or, use_unique_id, FOCUS_TRAP_JS};
-use dioxus::document;
+use crate::{use_animated_open, use_id_or, use_unique_id, HeadScript, FOCUS_TRAP_JS};
 use dioxus::prelude::*;
 
 #[derive(Clone)]
@@ -99,7 +99,7 @@ pub fn AlertDialogRoot(props: AlertDialogRootProps) -> Element {
     let render_element = use_animated_open(id, open);
 
     rsx! {
-        document::Script {
+        HeadScript {
             src: FOCUS_TRAP_JS,
             defer: true
         }
@@ -185,22 +185,13 @@ pub fn AlertDialogContent(props: AlertDialogContentProps) -> Element {
 
     let gen_id = use_unique_id();
     let id = use_id_or(gen_id, props.id);
-    use_effect(move || {
-        let eval = document::eval(
-            r#"let id = await dioxus.recv();
-            let is_open = await dioxus.recv();
-            let dialog = document.getElementById(id);
 
-            if (is_open) {
-                dialog.trap = window.createFocusTrap(dialog);
-            }
-            if (!is_open && dialog.trap) {
-                dialog.trap.remove();
-                dialog.trap = null;
-            }"#,
-        );
-        let _ = eval.send(id.to_string());
-        let _ = eval.send(open.cloned());
+    let mut trap: Signal<Option<FocusTrap>> = use_signal(|| None);
+    use_effect(move || {
+        let id_str = id();
+        let is_open = open();
+        let mut trap_ref = trap.write();
+        focus_trap::setup_focus_trap(&id_str, is_open, &mut trap_ref);
     });
 
     rsx! {

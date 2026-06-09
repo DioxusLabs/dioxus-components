@@ -9,7 +9,10 @@ use dioxus::core::{current_scope_id, use_drop};
 use dioxus::prelude::*;
 use dioxus::prelude::{asset, manganis, Asset};
 use dioxus_core::AttributeValue::Text;
+use runtime_closure::closure_with_runtime;
 use time::OffsetDateTime;
+use wasm_bindgen::prelude::wasm_bindgen;
+use wasm_bindgen::JsCast;
 
 pub use dioxus_attributes;
 
@@ -27,7 +30,10 @@ pub mod date_picker;
 pub mod dialog;
 pub mod drag_and_drop_list;
 pub mod dropdown_menu;
+mod event_listener;
 mod focus;
+pub(crate) mod focus_trap;
+mod head;
 pub mod hover_card;
 pub mod label;
 mod listbox;
@@ -40,6 +46,7 @@ pub mod popover;
 mod portal;
 pub mod progress;
 pub mod radio_group;
+mod runtime_closure;
 pub mod scroll_area;
 pub mod select;
 mod selectable;
@@ -48,6 +55,7 @@ pub mod separator;
 pub mod slider;
 pub mod switch;
 pub mod tabs;
+mod timers;
 pub mod toast;
 pub mod toggle;
 pub mod toggle_group;
@@ -56,7 +64,54 @@ pub mod tooltip;
 pub(crate) mod r#virtual;
 pub mod virtual_list;
 
+pub use event_listener::{EventListener, EventListenerOptions, EventListenerPhase};
+pub use head::{use_wasm_bindgen_document, HeadLink, HeadScript};
+pub use timers::{sleep, use_task_spawner, DioxusTaskSpawner, Timeout};
+
 pub(crate) const FOCUS_TRAP_JS: Asset = asset!("/src/js/focus-trap.js");
+
+#[wasm_bindgen(inline_js = r#"
+const outsideDismissListeners = globalThis.__dxOutsideDismissListeners ??= new Map();
+
+export function dx_add_outside_dismiss(key, rootId, callback) {
+    dx_remove_outside_dismiss(key);
+
+    const document = globalThis.document;
+    if (!document) {
+        return;
+    }
+
+    const handler = (event) => {
+        const root = document.getElementById(rootId);
+        if (root && event.target && !root.contains(event.target)) {
+            callback();
+        }
+    };
+
+    document.addEventListener("pointerdown", handler, true);
+    document.addEventListener("focusin", handler, true);
+    outsideDismissListeners.set(key, handler);
+}
+
+export function dx_remove_outside_dismiss(key) {
+    const handler = outsideDismissListeners.get(key);
+    if (!handler) {
+        return;
+    }
+
+    const document = globalThis.document;
+    if (document) {
+        document.removeEventListener("pointerdown", handler, true);
+        document.removeEventListener("focusin", handler, true);
+    }
+    outsideDismissListeners.delete(key);
+}
+"#)]
+extern "C" {
+    fn dx_add_outside_dismiss(key: &str, root_id: &str, callback: &js_sys::Function);
+
+    fn dx_remove_outside_dismiss(key: &str);
+}
 
 /// Generate a runtime-unique id.
 fn use_unique_id() -> Signal<String> {
@@ -185,27 +240,26 @@ fn use_global_escape_listener(mut on_escape: impl FnMut() + Clone + 'static) {
 
 fn use_global_keydown_listener(key: &'static str, on_escape: impl FnMut() + Clone + 'static) {
     use_effect_with_cleanup(move || {
-        let mut escape = document::eval(
-            "let targetKey = await dioxus.recv();
-            function listener(event) {
-                if (event.key === targetKey) {
-                    event.preventDefault();
-                    dioxus.send(true);
+        let listener = (|| {
+            let window = web_sys::window()?;
+            let document = window.document()?;
+            let mut on_escape = on_escape.clone();
+            let listener = EventListener::new(&document, "keydown", move |event| {
+                let event = event.dyn_ref::<web_sys::KeyboardEvent>().unwrap();
+                if event.key() == key {
+                    event.prevent_default();
+                    on_escape();
                 }
-            }
-            document.addEventListener('keydown', listener);
-            await dioxus.recv();
-            document.removeEventListener('keydown', listener);",
-        );
-        let _ = escape.send(key);
-        let mut on_escape = on_escape.clone();
-        spawn(async move {
-            while let Ok(true) = escape.recv().await {
-                on_escape();
-            }
-        });
-        move || _ = escape.send(true)
+            });
+            Some(listener)
+        })();
+        move || drop(listener)
     });
+}
+
+/// Wait for the default exit animation budget.
+async fn wait_for_animations(_element_id: &str) {
+    sleep(std::time::Duration::from_millis(300)).await;
 }
 
 /// Light-dismiss when pointerdown/focusin lands outside the element with the given `id`.
@@ -214,28 +268,24 @@ fn use_outside_dismiss(
     id: impl Readable<Target = String> + Copy + 'static,
     on_dismiss: impl FnMut() + Clone + 'static,
 ) {
+    let listener_key = use_hook(|| {
+        static NEXT_OUTSIDE_DISMISS_ID: AtomicUsize = AtomicUsize::new(0);
+
+        let id = NEXT_OUTSIDE_DISMISS_ID.fetch_add(1, Ordering::Relaxed);
+        format!("dxc-outside-dismiss-{id}")
+    });
+
     use_effect_with_cleanup(move || {
-        let mut eval = document::eval(
-            "const id = await dioxus.recv();
-            const f = e => {
-                const root = document.getElementById(id);
-                if (root && !root.contains(e.target)) dioxus.send(true);
-            };
-            document.addEventListener('pointerdown', f, true);
-            document.addEventListener('focusin', f, true);
-            await dioxus.recv();
-            document.removeEventListener('pointerdown', f, true);
-            document.removeEventListener('focusin', f, true);",
-        );
-        let _ = eval.send(id.cloned());
+        let key = listener_key.clone();
+        let root_id = id.cloned();
         let mut on_dismiss = on_dismiss.clone();
-        spawn(async move {
-            while let Ok(true) = eval.recv().await {
-                on_dismiss();
-            }
-        });
+        let callback = closure_with_runtime(move || on_dismiss());
+
+        dx_add_outside_dismiss(&key, &root_id, callback.as_ref().unchecked_ref());
+
         move || {
-            let _ = eval.send(true);
+            dx_remove_outside_dismiss(&key);
+            drop(callback);
         }
     });
 }
@@ -257,19 +307,7 @@ fn use_animated_open(
         } else {
             spawn(async move {
                 let id = id.cloned();
-                let mut eval = dioxus::document::eval(
-                    "const id = await dioxus.recv();
-                    const element = document.getElementById(id);
-                    if (element && element.getAnimations().length > 0) {
-                        Promise.all(element.getAnimations().map((animation) => animation.finished)).then(() => {
-                            dioxus.send(true);
-                        });
-                    } else {
-                        dioxus.send(true);
-                    }"
-                );
-                let _ = eval.send(id);
-                _ = eval.recv::<bool>().await;
+                wait_for_animations(&id).await;
                 show_in_dom.set(open);
             });
         }

@@ -1,9 +1,30 @@
 //! Defines the [`Checkbox`] component and its subcomponents, which manage checkbox inputs with controlled state.
 
 use crate::{use_controlled, use_unique_id};
-use dioxus::{document::eval, prelude::*};
+use dioxus::prelude::*;
 use std::ops::Not;
 use std::rc::Rc;
+use wasm_bindgen::prelude::wasm_bindgen;
+
+#[wasm_bindgen(inline_js = r#"
+export function dx_set_checkbox_state(id, checked, indeterminate) {
+    const document = globalThis.document;
+    if (!document) {
+        return;
+    }
+
+    const input = document.getElementById(id);
+    if (!input) {
+        return;
+    }
+
+    input.checked = checked;
+    input.indeterminate = indeterminate;
+}
+"#)]
+extern "C" {
+    fn dx_set_checkbox_state(id: &str, checked: bool, indeterminate: bool);
+}
 
 /// The state of a [`Checkbox`] component.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -249,31 +270,13 @@ fn BubbleInput(
     // Update the actual input state to match our virtual state.
     use_effect(move || {
         let checked = checked();
-        let js = eval(
-            r#"
-            let id = await dioxus.recv();
-            let action = await dioxus.recv();
-            let input = document.getElementById(id);
+        let id_str = id();
 
-            switch(action) {
-                case "checked":
-                    input.checked = true;
-                    input.indeterminate = false;
-                    break;
-                case "indeterminate":
-                    input.indeterminate = true;
-                    input.checked = true;
-                    break;
-                case "unchecked":
-                    input.checked = false;
-                    input.indeterminate = false;
-                    break;
-            }
-            "#,
-        );
-
-        let _ = js.send(id());
-        let _ = js.send(checked.to_data_state());
+        match checked {
+            CheckboxState::Checked => dx_set_checkbox_state(&id_str, true, false),
+            CheckboxState::Indeterminate => dx_set_checkbox_state(&id_str, true, true),
+            CheckboxState::Unchecked => dx_set_checkbox_state(&id_str, false, false),
+        }
     });
 
     rsx! {

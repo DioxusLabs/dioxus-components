@@ -1,6 +1,7 @@
 //! Defines the [`Avatar`] component and its subcomponents, which manage user profile images with fallback options.
 
-use dioxus::{document, prelude::*};
+use dioxus::prelude::*;
+use wasm_bindgen::JsCast;
 
 use crate::{use_id_or, use_unique_id};
 
@@ -294,58 +295,43 @@ pub fn AvatarImage(props: AvatarImageProps) -> Element {
             return;
         }
 
-        let image_id_value = image_id();
-        let mut eval = document::eval(
-            r#"
-            const imageId = await dioxus.recv();
-            const expectedSrc = await dioxus.recv();
-            const image = document.getElementById(imageId);
-
-            const matchesExpectedSrc = image && (
-                image.getAttribute("src") === expectedSrc ||
-                image.currentSrc === expectedSrc ||
-                image.src === expectedSrc
-            );
-
-            if (!matchesExpectedSrc || !image.complete) {
-                dioxus.send("pending");
-            } else {
-                dioxus.send(image.naturalWidth > 0 ? "loaded" : "error");
-            }
-            "#,
-        );
-        let _ = eval.send(image_id_value);
-        let _ = eval.send(watcher_src.clone());
-
-        let event_ctx = watcher_ctx.clone();
         let mut event_current_src = watcher_current_src;
-        spawn(async move {
-            let Ok(state) = eval.recv::<String>().await else {
-                return;
-            };
+        let matches_current_src = event_current_src
+            .peek()
+            .as_ref()
+            .map(|src| src == &watcher_src)
+            .unwrap_or(true);
 
-            let matches_current_src = event_current_src
-                .peek()
-                .as_ref()
-                .map(|src| src == &watcher_src)
-                .unwrap_or(true);
+        if !matches_current_src {
+            return;
+        }
 
-            if !matches_current_src {
-                return;
-            }
+        let Some(element) = web_sys::window()
+            .and_then(|window| window.document())
+            .and_then(|document| document.get_element_by_id(&image_id()))
+        else {
+            return;
+        };
 
-            match state.as_str() {
-                "loaded" => {
-                    event_current_src.set(Some(watcher_src.clone()));
-                    mark_avatar_loaded(event_ctx.clone());
-                }
-                "error" => {
-                    event_current_src.set(Some(watcher_src.clone()));
-                    mark_avatar_error(event_ctx.clone());
-                }
-                _ => {}
-            }
-        });
+        let attribute_src = element.get_attribute("src");
+        let Ok(image) = element.dyn_into::<web_sys::HtmlImageElement>() else {
+            return;
+        };
+
+        let matches_expected_src = attribute_src.as_deref() == Some(watcher_src.as_str())
+            || image.current_src() == watcher_src
+            || image.src() == watcher_src;
+
+        if !matches_expected_src || !image.complete() {
+            return;
+        }
+
+        event_current_src.set(Some(watcher_src.clone()));
+        if image.natural_width() > 0 {
+            mark_avatar_loaded(watcher_ctx.clone());
+        } else {
+            mark_avatar_error(watcher_ctx.clone());
+        }
     }));
 
     let load_src = props.src.clone();

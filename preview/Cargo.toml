@@ -6,26 +6,40 @@ rust-version = "1.88.0"
 
 [dependencies]
 dioxus = { workspace = true, features = ["router"] }
-dioxus-code = { version = "0.1.0", default-features = false, features = ["macro", "lang-css"] }
-dioxus-icons = "0.1.0"
+dioxus-code = { git = "https://github.com/ealmloff/dioxus-code", rev = "ac2358660106f6b8ba499757bbc7d22f8e625c59", default-features = false, features = ["macro", "lang-css"] }
+dioxus-icons = { git = "https://github.com/dioxuslabs/dioxus-icons", rev = "e2b1dab0b15547c543f84995d5b87451849cadda" }
 dioxus-primitives.workspace = true
-dioxus-i18n = { git = "https://github.com/ealmloff/dioxus-i18n", branch = "bump-dioxus" }
+dioxus-i18n = { git = "https://github.com/ealmloff/dioxus-i18n", rev = "b65ce01adb685d99d585c7d44215ef467513cee2" }
 palette = "0.7.6"
 unic-langid = { version = "0.9", features = ["macros"] }
 strum = { version = "0.27.2", features = ["derive"] }
 tracing = { workspace = true }
 time = { version = "0.3.44", features = ["std", "macros"] }
+wasm-bindgen = { version = "0.2.122-alpha.5", package = "wasm-bindgen-x" }
+js-sys = { version = "0.3.99-alpha.5", package = "js-sys-x" }
+web-sys = { version = "0.3.99-alpha.5", package = "web-sys-x", features = [
+    "AddEventListenerOptions",
+    "Window",
+    "Document",
+    "Element",
+    "Event",
+    "EventTarget",
+    "KeyboardEvent",
+    "HtmlElement",
+    "HtmlDocument",
+    "MessageEvent",
+] }
 
 
 [build-dependencies]
 dioxus = { workspace = true }
-dioxus-code = { version = "0.1.0", default-features = false, features = ["runtime", "lang-css"] }
-dioxus-ssr = "0.7.0"
+dioxus-code = { git = "https://github.com/ealmloff/dioxus-code", rev = "ac2358660106f6b8ba499757bbc7d22f8e625c59", default-features = false, features = ["runtime", "lang-css"] }
+dioxus-ssr = { workspace = true }
 pulldown-cmark = "0.13.0"
 serde_json = "1"
 
 [dev-dependencies]
-dioxus-ssr = "0.7.0"
+dioxus-ssr = { workspace = true }
 
 [features]
 web = ["dioxus/web", "dioxus-primitives/web"]

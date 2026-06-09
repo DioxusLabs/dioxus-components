@@ -5,6 +5,7 @@ use crate::components::separator::Separator;
 use crate::components::sidebar::{SidebarInset, SidebarProvider, SidebarTrigger};
 use crate::components::toast::ToastProvider;
 use crate::theme::DarkModeToggle;
+use dioxus_primitives::HeadLink;
 
 mod avatars;
 mod compose;
@@ -35,7 +36,7 @@ pub fn EmailClient() -> Element {
     let read_open = state.read_open().cloned() && selected_uid.read().is_some();
 
     rsx! {
-        document::Link { rel: "stylesheet", href: asset!("./email_client.css") }
+        HeadLink { rel: "stylesheet", href: asset!("./email_client.css") }
 
         ToastProvider {
             SidebarProvider {

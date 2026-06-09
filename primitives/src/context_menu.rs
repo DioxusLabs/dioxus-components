@@ -3,13 +3,13 @@
 use crate::{
     focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
     selectable::{pointer_select_cancel, pointer_select_commit, pointer_select_start},
-    use_animated_open, use_controlled, use_effect_with_cleanup, use_id_or, use_outside_dismiss,
-    use_unique_id,
+    sleep, use_animated_open, use_controlled, use_effect_with_cleanup, use_id_or,
+    use_outside_dismiss, use_unique_id, EventListener, EventListenerOptions, EventListenerPhase,
 };
 use dioxus::prelude::*;
 use dioxus_core::Task;
-use dioxus_sdk_time::sleep;
 use std::time::Duration;
+use wasm_bindgen::JsCast;
 
 /// How long a touch must be held before the context menu opens.
 const LONG_PRESS_DURATION: Duration = Duration::from_millis(500);
@@ -24,13 +24,40 @@ const LONG_PRESS_MOVE_TOLERANCE_SQ: f64 = 100.0;
 /// there — it would double-count the pan offset and shift the menu by 2× the
 /// pan distance.
 async fn visual_viewport_offset() -> (f64, f64) {
-    let mut eval = dioxus::document::eval(
-        "const vv = window.visualViewport; \
-         const ua = navigator.userAgent; \
-         const isWebKit = ua.includes('AppleWebKit') && !ua.includes('Chrome'); \
-         dioxus.send(isWebKit ? [vv ? vv.offsetLeft : 0, vv ? vv.offsetTop : 0] : [0, 0]);",
-    );
-    eval.recv::<(f64, f64)>().await.unwrap_or((0.0, 0.0))
+    let Some(window) = web_sys::window() else {
+        return (0.0, 0.0);
+    };
+
+    let user_agent = window.navigator().user_agent().unwrap_or_default();
+    let is_webkit = user_agent.contains("AppleWebKit") && !user_agent.contains("Chrome");
+    if !is_webkit {
+        return (0.0, 0.0);
+    }
+
+    window
+        .visual_viewport()
+        .map(|viewport| (viewport.offset_left(), viewport.offset_top()))
+        .unwrap_or((0.0, 0.0))
+}
+
+fn prevent_scroll_outside(root_id: &str, event: &web_sys::Event) {
+    let should_prevent = web_sys::window()
+        .and_then(|window| window.document())
+        .and_then(|document| document.get_element_by_id(root_id))
+        .map_or(true, |root| {
+            let Some(target) = event.target() else {
+                return true;
+            };
+            let Ok(target) = target.dyn_into::<web_sys::Node>() else {
+                return true;
+            };
+
+            !root.contains(Some(&target))
+        });
+
+    if should_prevent {
+        event.prevent_default();
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -467,23 +494,25 @@ pub fn ContextMenuContent(props: ContextMenuContentProps) -> Element {
         if !open() {
             return Box::new(|| {}) as Box<dyn FnOnce()>;
         }
-        let root = ctx.root_id;
-        let eval = dioxus::document::eval(
-            "const id = await dioxus.recv(); \
-             const f = (e) => { \
-                 const r = document.getElementById(id); \
-                 if (!r || !r.contains(e.target)) e.preventDefault(); \
-             }; \
-             window.addEventListener('wheel', f, { capture: true, passive: false }); \
-             window.addEventListener('touchmove', f, { capture: true, passive: false }); \
-             await dioxus.recv(); \
-             window.removeEventListener('wheel', f, true); \
-             window.removeEventListener('touchmove', f, true);",
-        );
-        let _ = eval.send(root.cloned());
-        Box::new(move || {
-            let _ = eval.send(true);
-        })
+        let listeners = (|| {
+            let window = web_sys::window()?;
+            let options = EventListenerOptions {
+                phase: EventListenerPhase::Capture,
+                passive: false,
+            };
+            let root_id = ctx.root_id.cloned();
+            let wheel_root_id = root_id.clone();
+            let wheel = EventListener::new_with_options(&window, "wheel", options, move |event| {
+                prevent_scroll_outside(&wheel_root_id, event);
+            });
+            let touchmove =
+                EventListener::new_with_options(&window, "touchmove", options, move |event| {
+                    prevent_scroll_outside(&root_id, event);
+                });
+            Some((wheel, touchmove))
+        })();
+
+        Box::new(move || drop(listeners))
     });
 
     rsx! {

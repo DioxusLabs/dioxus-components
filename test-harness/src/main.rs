@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_primitives::{use_wasm_bindgen_document, HeadLink};
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
@@ -12,9 +13,11 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    use_wasm_bindgen_document();
+
     rsx! {
-        document::Link { rel: "icon", href: FAVICON }
-        document::Link { rel: "stylesheet", href: MAIN_CSS }
+        HeadLink { rel: "icon", href: FAVICON }
+        HeadLink { rel: "stylesheet", href: MAIN_CSS }
         Hero {}
 
     }

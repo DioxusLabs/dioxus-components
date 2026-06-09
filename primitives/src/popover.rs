@@ -1,11 +1,11 @@
 //! Defines the [`PopoverRoot`] component and its sub-components.
 
-use dioxus::document;
 use dioxus::prelude::*;
 
+use crate::focus_trap::{self, FocusTrap};
 use crate::{
     use_animated_open, use_controlled, use_global_escape_listener, use_id_or, use_outside_dismiss,
-    use_unique_id, ContentAlign, ContentSide, FOCUS_TRAP_JS,
+    use_unique_id, ContentAlign, ContentSide, HeadScript, FOCUS_TRAP_JS,
 };
 
 #[derive(Clone, Copy)]
@@ -215,6 +215,7 @@ pub fn PopoverContent(props: PopoverContentProps) -> Element {
 
     let render = use_animated_open(id, ctx.open);
 
+    let mut trap: Signal<Option<FocusTrap>> = use_signal(|| None);
     use_effect(move || {
         if !render() {
             return;
@@ -225,25 +226,14 @@ pub fn PopoverContent(props: PopoverContentProps) -> Element {
             return;
         }
 
-        let eval = document::eval(
-            r#"let id = await dioxus.recv();
-            let is_open = await dioxus.recv();
-            let dialog = document.getElementById(id);
-
-            if (is_open) {
-                dialog.trap = window.createFocusTrap(dialog);
-            }
-            if (!is_open && dialog.trap) {
-                dialog.trap.remove();
-                dialog.trap = null;
-            }"#,
-        );
-        let _ = eval.send(id.to_string());
-        let _ = eval.send(open.cloned());
+        let id_str = id();
+        let is_open = open();
+        let mut trap_ref = trap.write();
+        focus_trap::setup_focus_trap(&id_str, is_open, &mut trap_ref);
     });
 
     rsx! {
-        document::Script {
+        HeadScript {
             src: FOCUS_TRAP_JS,
             defer: true
         }

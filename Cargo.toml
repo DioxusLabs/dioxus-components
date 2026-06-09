@@ -28,12 +28,9 @@ opt-level = 3
 codegen-units = 1
 
 [patch.crates-io]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0" }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0" }
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0" }
-dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0" }
-dioxus-ssr = { git = "https://github.com/DioxusLabs/dioxus", rev = "be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0" }
-lazy-js-bundle = { git = "https://github.com/DioxusLabs/dioxus", rev = "be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0" }
-wry-bindgen = { path = "../wasm-bindgen-wry/wry-bindgen" }
-wry-bindgen-macro = { path = "../wasm-bindgen-wry/wry-bindgen-macro" }
-wry-bindgen-macro-support = { path = "../wasm-bindgen-wry/wry-bindgen-macro-support" }
+dioxus = { git = "https://github.com/ealmloff/dioxus", branch = "wasm-bindgen" }
+dioxus-core = { git = "https://github.com/ealmloff/dioxus", branch = "wasm-bindgen" }
+dioxus-rsx = { git = "https://github.com/ealmloff/dioxus", branch = "wasm-bindgen" }
+dioxus-signals = { git = "https://github.com/ealmloff/dioxus", branch = "wasm-bindgen" }
+dioxus-ssr = { git = "https://github.com/ealmloff/dioxus", branch = "wasm-bindgen" }
+lazy-js-bundle = { git = "https://github.com/ealmloff/dioxus", branch = "wasm-bindgen" }

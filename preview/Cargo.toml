@@ -15,9 +15,9 @@ unic-langid = { version = "0.9", features = ["macros"] }
 strum = { version = "0.27.2", features = ["derive"] }
 tracing = { workspace = true }
 time = { version = "0.3.44", features = ["std", "macros"] }
-wasm-bindgen = { version = "0.2.106-alpha.1", package = "wasm-bindgen-x" }
-js-sys = { version = "0.3.83-alpha.1", package = "js-sys-x" }
-web-sys = { version = "0.3.83-alpha.1", package = "web-sys-x", features = [
+wasm-bindgen = { version = "0.2.122-alpha.5", package = "wasm-bindgen-x" }
+js-sys = { version = "0.3.99-alpha.5", package = "js-sys-x" }
+web-sys = { version = "0.3.99-alpha.5", package = "web-sys-x", features = [
     "AddEventListenerOptions",
     "Window",
     "Document",

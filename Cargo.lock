@@ -117,6 +117,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "aliasable"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "250f629c0161ad8107cf89319e990051fae62832fd343083bea452d93e2205fd"
+
+[[package]]
 name = "aligned-vec"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -214,9 +220,9 @@ dependencies = [
 
 [[package]]
 name = "anyrender_vello_cpu"
-version = "0.12.1"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "379caa953b953149c002c4a956443e09771b432b74e1c7074af26a8854a93ae7"
+checksum = "0234f657ff09eb6d3154887ea674f34b32a4a7bc03d1ac16567dc6f65ced3d89"
 dependencies = [
  "anyrender",
  "debug_timer",
@@ -229,9 +235,9 @@ dependencies = [
 
 [[package]]
 name = "anyrender_vello_hybrid"
-version = "0.5.2"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c29d7d94f31a211293ec18341a2768e5bdae16b5207dcfcf6817f1359396f0b1"
+checksum = "7bb7175d60a20edfb23d590344c02efb77c9eccbb6a749af3c4b9bf14b092dda"
 dependencies = [
  "anyrender",
  "debug_timer",
@@ -410,18 +416,6 @@ name = "askama_escape"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3df27b8d5ddb458c5fb1bbc1ce172d4a38c614a97d550b0ac89003897fb01de4"
-
-[[package]]
-name = "async-channel"
-version = "2.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "924ed96dd52d1b75e9c1a3e6275715fd320f5f9439fb5a4a11fa51f4221158d2"
-dependencies = [
- "concurrent-queue",
- "event-listener-strategy",
- "futures-core",
- "pin-project-lite",
-]
 
 [[package]]
 name = "async-stream"
@@ -1138,7 +1132,7 @@ dependencies = [
 [[package]]
 name = "const-serialize"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "const-serialize-macro",
  "serde",
@@ -1147,7 +1141,7 @@ dependencies = [
 [[package]]
 name = "const-serialize-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1568,7 +1562,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-asset-resolver",
  "dioxus-cli-config",
@@ -1602,21 +1596,21 @@ dependencies = [
 [[package]]
 name = "dioxus-asset-resolver"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-cli-config",
  "http",
  "infer",
  "jni 0.21.1",
- "js-sys",
+ "js-sys-x",
  "ndk",
  "ndk-context",
  "ndk-sys",
  "percent-encoding",
  "thiserror 2.0.18",
  "tokio",
- "wasm-bindgen-futures",
- "web-sys",
+ "wasm-bindgen-futures-x",
+ "web-sys-x",
 ]
 
 [[package]]
@@ -1632,9 +1626,9 @@ dependencies = [
 [[package]]
 name = "dioxus-cli-config"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
- "wasm-bindgen",
+ "wasm-bindgen-x",
 ]
 
 [[package]]
@@ -1666,7 +1660,7 @@ dependencies = [
 [[package]]
 name = "dioxus-config-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1675,12 +1669,12 @@ dependencies = [
 [[package]]
 name = "dioxus-config-macros"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 
 [[package]]
 name = "dioxus-core"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "anyhow",
  "const_format",
@@ -1702,7 +1696,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "convert_case",
  "dioxus-rsx",
@@ -1714,12 +1708,12 @@ dependencies = [
 [[package]]
 name = "dioxus-core-types"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 
 [[package]]
 name = "dioxus-desktop"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1770,16 +1764,17 @@ dependencies = [
  "tracing",
  "tray-icon",
  "tungstenite 0.28.0",
+ "wasm-bindgen-x",
  "web-sys-x",
  "webbrowser",
  "wry",
- "wry-bindgen",
+ "wry-bindgen-runtime",
 ]
 
 [[package]]
 name = "dioxus-devtools"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -1798,7 +1793,7 @@ dependencies = [
 [[package]]
 name = "dioxus-devtools-types"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-core",
  "serde",
@@ -1808,7 +1803,7 @@ dependencies = [
 [[package]]
 name = "dioxus-document"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -1826,7 +1821,7 @@ dependencies = [
 [[package]]
 name = "dioxus-fullstack"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -1890,7 +1885,7 @@ dependencies = [
 [[package]]
 name = "dioxus-fullstack-core"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "anyhow",
  "axum-core",
@@ -1917,7 +1912,7 @@ dependencies = [
 [[package]]
 name = "dioxus-fullstack-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "const_format",
  "convert_case",
@@ -1930,7 +1925,7 @@ dependencies = [
 [[package]]
 name = "dioxus-history"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-core",
  "tracing",
@@ -1939,7 +1934,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-core",
  "dioxus-signals",
@@ -1954,7 +1949,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1980,7 +1975,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html-internal-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -2013,7 +2008,7 @@ dependencies = [
 [[package]]
 name = "dioxus-interpreter-js"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-core",
  "dioxus-core-types",
@@ -2032,7 +2027,7 @@ dependencies = [
 [[package]]
 name = "dioxus-liveview"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "axum",
  "dioxus-cli-config",
@@ -2059,7 +2054,7 @@ dependencies = [
 [[package]]
 name = "dioxus-logger"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-cli-config",
  "tracing",
@@ -2070,7 +2065,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "android-activity",
  "anyrender",
@@ -2103,7 +2098,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-dom"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "blitz-dom",
  "blitz-traits",
@@ -2139,7 +2134,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -2159,7 +2154,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "base16",
  "digest",
@@ -2173,7 +2168,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "proc-macro2",
  "proc-macro2-diagnostics",
@@ -2185,7 +2180,7 @@ dependencies = [
 [[package]]
 name = "dioxus-server"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2242,7 +2237,7 @@ dependencies = [
 [[package]]
 name = "dioxus-signals"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -2257,7 +2252,7 @@ dependencies = [
 [[package]]
 name = "dioxus-ssr"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "askama_escape",
  "dioxus-core",
@@ -2268,7 +2263,7 @@ dependencies = [
 [[package]]
 name = "dioxus-stores"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-core",
  "dioxus-signals",
@@ -2279,7 +2274,7 @@ dependencies = [
 [[package]]
 name = "dioxus-stores-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -2290,7 +2285,7 @@ dependencies = [
 [[package]]
 name = "dioxus-web"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -2321,7 +2316,7 @@ dependencies = [
 [[package]]
 name = "dioxus-web-eval"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-document",
  "futures-util",
@@ -2337,7 +2332,7 @@ dependencies = [
 [[package]]
 name = "dioxus-web-sys-events"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dioxus-core",
  "dioxus-html",
@@ -2581,27 +2576,6 @@ checksum = "f1a05365e3b1c6d1650318537c7460c6923f1abdd272ad6842baa2b509957a06"
 dependencies = [
  "num-traits",
  "serde",
-]
-
-[[package]]
-name = "event-listener"
-version = "5.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e13b66accf52311f30a0db42147dadea9850cb48cd070028831ae5f5d4b856ab"
-dependencies = [
- "concurrent-queue",
- "parking",
- "pin-project-lite",
-]
-
-[[package]]
-name = "event-listener-strategy"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8be9f3dfaaffdae2972880079a491a1a8bb7cbed0b8dd7a347f668b4150a3b93"
-dependencies = [
- "event-listener",
- "pin-project-lite",
 ]
 
 [[package]]
@@ -3033,7 +3007,7 @@ dependencies = [
 [[package]]
 name = "generational-box"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "parking_lot",
  "tracing",
@@ -3197,9 +3171,9 @@ dependencies = [
 
 [[package]]
 name = "glifo"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae9d48c6d81526ad2f9d5d6e5fddf5f6949ffbc46fcac0db0d061a6e65097019"
+checksum = "d99fc21d493812643aae86d53b7bbd02f376434a90317e8a790bc209fdd6605e"
 dependencies = [
  "bytemuck",
  "foldhash 0.2.0",
@@ -4273,11 +4247,12 @@ dependencies = [
 
 [[package]]
 name = "js-sys-x"
-version = "0.3.83-alpha.1"
+version = "0.3.99-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc4596fecc49165ed5d6554c9265cb4db607451a2235b1198fee92d068e5dca1"
+checksum = "b2bae5bf184d63e6de0563f534122299e45a8611a648223e14e478cb01dad526"
 dependencies = [
- "once_cell",
+ "cfg-if",
+ "futures-util",
  "wasm-bindgen-x",
 ]
 
@@ -4355,7 +4330,7 @@ checksum = "ccafada6c9541db44db758619236f2748f6e1bdaa84d04ded858567cd1e89321"
 [[package]]
 name = "lazy-js-bundle"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 
 [[package]]
 name = "lazy_static"
@@ -4575,7 +4550,7 @@ dependencies = [
 [[package]]
 name = "manganis"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "const-serialize",
  "jni 0.21.1",
@@ -4589,7 +4564,7 @@ dependencies = [
 [[package]]
 name = "manganis-core"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "const-serialize",
  "dioxus-cli-config",
@@ -4601,7 +4576,7 @@ dependencies = [
 [[package]]
 name = "manganis-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "dunce",
  "macro-string",
@@ -4768,7 +4743,7 @@ dependencies = [
  "httparse",
  "memchr",
  "mime",
- "spin 0.9.8",
+ "spin",
  "version_check",
 ]
 
@@ -5369,6 +5344,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "ouroboros"
+version = "0.18.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e0f050db9c44b97a94723127e6be766ac5c340c48f2c4bb3ffa11713744be59"
+dependencies = [
+ "aliasable",
+ "ouroboros_macro",
+ "static_assertions",
+]
+
+[[package]]
+name = "ouroboros_macro"
+version = "0.18.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c7028bdd3d43083f6d8d4d5187680d0d3560d54df4cc9d752005268b41e64d0"
+dependencies = [
+ "heck 0.4.1",
+ "proc-macro2",
+ "proc-macro2-diagnostics",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "owned_ttf_parser"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5425,12 +5424,6 @@ dependencies = [
  "libc",
  "system-deps",
 ]
-
-[[package]]
-name = "parking"
-version = "2.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f38d5652c16fde515bb1ecef450ab0f6a219d619a7274976324d5e377f7dceba"
 
 [[package]]
 name = "parking_lot"
@@ -5885,6 +5878,7 @@ dependencies = [
  "quote",
  "syn 2.0.117",
  "version_check",
+ "yansi",
 ]
 
 [[package]]
@@ -7000,15 +6994,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 
 [[package]]
-name = "spin"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5fe4ccb98d9c292d56fec89a5e07da7fc4cf0dc11e156b41793132775d3e591"
-dependencies = [
- "lock_api",
-]
-
-[[package]]
 name = "spirv"
 version = "0.4.0+sdk-1.4.341.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7258,9 +7243,9 @@ dependencies = [
 [[package]]
 name = "subsecond"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
- "js-sys",
+ "js-sys-x",
  "libc",
  "libloading 0.8.9",
  "memfd",
@@ -7268,15 +7253,15 @@ dependencies = [
  "serde",
  "subsecond-types",
  "thiserror 2.0.18",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
+ "wasm-bindgen-futures-x",
+ "wasm-bindgen-x",
+ "web-sys-x",
 ]
 
 [[package]]
 name = "subsecond-types"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0#be7bc4683a77b2e8a7c1945fd17f6f7f91af28d0"
+source = "git+https://github.com/ealmloff/dioxus?branch=wasm-bindgen#647d036cd5e160468b26eb4975e548e816bdbfc7"
 dependencies = [
  "serde",
 ]
@@ -8300,9 +8285,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "vello_common"
-version = "0.0.8"
+version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3361bff7f7d82c0c496b92048db83846691f0e844cc28dee92b1c824291b55ee"
+checksum = "19d672facaa2d697285a786cd9d44d614cd2ce54cdc022504bf339f8fff3b750"
 dependencies = [
  "bytemuck",
  "fearless_simd",
@@ -8317,9 +8302,9 @@ dependencies = [
 
 [[package]]
 name = "vello_cpu"
-version = "0.0.8"
+version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d8ded630e8316bb94a55881256506d1f3b9947b5f66db8a7d32ca7ba02decd0"
+checksum = "588691169aed86b5c8fb487266afee01323234e6fd0a3f2aaec0eaa8e4007f23"
 dependencies = [
  "bytemuck",
  "glifo",
@@ -8329,9 +8314,9 @@ dependencies = [
 
 [[package]]
 name = "vello_hybrid"
-version = "0.0.8"
+version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "644d88a5ccb2280a407eada75a9318920bdee029e293b52c6e8b3fc8c31c70dd"
+checksum = "86ca7acbf6e59ae8c354c524732c73da45239a3a8ee03d0c8a9ad66a6622e488"
 dependencies = [
  "bytemuck",
  "glifo",
@@ -8345,9 +8330,9 @@ dependencies = [
 
 [[package]]
 name = "vello_sparse_shaders"
-version = "0.0.8"
+version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45c3abf652bc0f42be7b8235bc2b9ae97991ee801bbdbc694485dead5786202c"
+checksum = "e004cfe28eb71738643f60460b9cae2236eba57b351afebf244148256ff25d8b"
 
 [[package]]
 name = "version-compare"
@@ -8448,15 +8433,12 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-futures-x"
-version = "0.4.56-alpha.1"
+version = "0.4.72-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "244455489d63ea92a1d6269953ecaf83a4f399e93f5d7d4ebc05b03251460a33"
+checksum = "7ae991b9c105f3c87287e0c74f5b03d7133ed1c8052ee12ec7ca22ac13e0a133"
 dependencies = [
- "cfg-if",
  "js-sys-x",
- "once_cell",
  "wasm-bindgen-x",
- "web-sys-x",
 ]
 
 [[package]]
@@ -8483,10 +8465,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasm-bindgen-macro-x"
-version = "0.2.106-alpha.1"
+name = "wasm-bindgen-macro-support-x"
+version = "0.2.122-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e447f2ddaf7de33e5a01a5f16d3d4a94f6b978ec84cd9801d92c6b8de273a81"
+checksum = "3203840162601e02d4d62911ebea58bc039f0596156b13cb9439a3c7bc6a0473"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+ "wasm-bindgen-shared",
+]
+
+[[package]]
+name = "wasm-bindgen-macro-x"
+version = "0.2.122-alpha.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee965bc71dab7cd2e2fcdad65f29146220d373792d82504ea6c7df4e2cb520ea"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -8505,9 +8499,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-x"
-version = "0.2.106-alpha.1"
+version = "0.2.122-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad338d82321ba007c90007a201d5a632ce24908d28bd3e2767e496fd99b3259a"
+checksum = "cf11fc0aa5eba290900a5432a465cd07f318fc94702f058a980513faae298aad"
 dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-macro-x",
@@ -8674,9 +8668,9 @@ dependencies = [
 
 [[package]]
 name = "web-sys-x"
-version = "0.3.83-alpha.1"
+version = "0.3.99-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ee0ace88a6dbec8e3f9cfae4d79906f4e6dff4a27569cf26961e920c2d31f9b"
+checksum = "adb98ae475bc3a2f8fc2a73cba1a5b68b0df138e2eb34b2b2c2e7f2084ad98b1"
 dependencies = [
  "js-sys-x",
  "wasm-bindgen-x",
@@ -9814,26 +9808,33 @@ dependencies = [
 
 [[package]]
 name = "wry-bindgen"
-version = "0.2.106-alpha.1"
+version = "0.2.122-alpha.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "66f6e0160db50b6c4eaf641f38944b804e234b3f6ef80095fce5a531f7671558"
 dependencies = [
- "async-channel",
- "base64",
- "bytemuck",
- "futures-channel",
- "futures-core",
- "futures-util",
- "http",
+ "cfg-if",
  "inventory",
  "lazy-js-bundle 0.7.9",
- "once_cell",
- "pollster",
- "spin 0.10.0",
+ "ouroboros",
+ "wry-bindgen-core",
  "wry-bindgen-macro",
 ]
 
 [[package]]
+name = "wry-bindgen-core"
+version = "0.1.0-alpha.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9969f035a77162e2648d7446ed034b8f269de28e8d1feaed8e174304c8523be2"
+dependencies = [
+ "once_cell",
+ "wry-bindgen-runtime",
+]
+
+[[package]]
 name = "wry-bindgen-macro"
-version = "0.2.106-alpha.1"
+version = "0.2.122-alpha.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "494e8af12ca2e609d06c866c8910061167fbd12555c0bf27f4d5dc8b4cd2944f"
 dependencies = [
  "quote",
  "wry-bindgen-macro-support",
@@ -9841,11 +9842,30 @@ dependencies = [
 
 [[package]]
 name = "wry-bindgen-macro-support"
-version = "0.2.106-alpha.1"
+version = "0.2.122-alpha.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c75ed47edf1f1d0ade9fa224f3089f5072b5a64566e32893a3c51c7d47d872ae"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
+ "wasm-bindgen-macro-support-x",
+]
+
+[[package]]
+name = "wry-bindgen-runtime"
+version = "0.1.0-alpha.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27c76f7ddc9c4bf96120cc977dfbd2d44270db19bfbd29a60b3bf89285f6a7e6"
+dependencies = [
+ "atomic-waker",
+ "base64",
+ "bytemuck",
+ "http",
+ "inventory",
+ "lazy-js-bundle 0.7.9",
+ "once_cell",
+ "ouroboros",
 ]
 
 [[package]]
@@ -9955,6 +9975,12 @@ name = "xxhash-rust"
 version = "0.8.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fdd20c5420375476fbd4394763288da7eb0cc0b8c11deed431a91562af7335d3"
+
+[[package]]
+name = "yansi"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049"
 
 [[package]]
 name = "yeslogic-fontconfig-sys"

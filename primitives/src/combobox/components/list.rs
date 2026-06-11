@@ -1,13 +1,13 @@
-//! ComboboxList component.
+//! Combobox options components.
 
 use dioxus::prelude::*;
 
 use super::super::context::ComboboxContext;
-use crate::listbox::use_listbox_container;
+use crate::listbox::{use_listbox_container_with_open, use_listbox_id};
 
-/// Props for [`ComboboxList`].
+/// Props for [`ComboboxOptions`].
 #[derive(Props, Clone, PartialEq)]
-pub struct ComboboxListProps {
+pub struct ComboboxOptionsProps {
     /// Optional id for the list element.
     #[props(default)]
     pub id: ReadSignal<Option<String>>,
@@ -23,10 +23,11 @@ pub struct ComboboxListProps {
 
 /// Listbox that contains the visible options.
 #[component]
-pub fn ComboboxList(props: ComboboxListProps) -> Element {
+pub fn ComboboxOptions(props: ComboboxOptionsProps) -> Element {
     let ctx = use_context::<ComboboxContext>();
-    let open = ctx.selectable.open;
-    let listbox = use_listbox_container(props.id, ctx.selectable);
+    let open = use_memo(move || ctx.store.dropdown_opened());
+    let id = use_listbox_id(props.id, ctx.selectable.list_id);
+    let listbox = use_listbox_container_with_open(id, ctx.selectable, open);
     let render = listbox.render;
 
     rsx! {
@@ -42,6 +43,21 @@ pub fn ComboboxList(props: ComboboxListProps) -> Element {
                 {props.children}
             }
         } else {
+            {props.children}
+        }
+    }
+}
+
+/// Compatibility props alias for [`ComboboxOptions`].
+pub type ComboboxListProps = ComboboxOptionsProps;
+
+/// Compatibility alias for [`ComboboxOptions`].
+#[component]
+pub fn ComboboxList(props: ComboboxListProps) -> Element {
+    rsx! {
+        ComboboxOptions {
+            id: props.id,
+            attributes: props.attributes,
             {props.children}
         }
     }

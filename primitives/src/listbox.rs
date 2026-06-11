@@ -47,10 +47,18 @@ pub(crate) fn use_listbox_render(
 
 pub(crate) fn use_listbox_container(
     id: ReadSignal<Option<String>>,
-    mut selectable: SelectableContext,
+    selectable: SelectableContext,
 ) -> ListboxState {
     let id = use_listbox_id(id, selectable.list_id);
-    let render = use_listbox_render(id, selectable.open);
+    use_listbox_container_with_open(id, selectable, selectable.open)
+}
+
+pub(crate) fn use_listbox_container_with_open(
+    id: Memo<String>,
+    mut selectable: SelectableContext,
+    open: impl Readable<Target = bool> + Copy + 'static,
+) -> ListboxState {
+    let render = use_listbox_render(id, open);
 
     use_context_provider(|| ListboxContext {
         render: render.into(),

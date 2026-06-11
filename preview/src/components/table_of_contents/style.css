@@ -1,0 +1,33 @@
+.dx-table-of-contents {
+  display: flex;
+  flex-direction: column;
+  min-width: 14rem;
+  font-size: 0.875rem;
+}
+
+.dx-table-of-contents a {
+  border-left: 2px solid var(--primary-color-6);
+  border-radius: 0 0.625rem 0.625rem 0;
+  color: var(--secondary-color-5);
+  font-weight: 500;
+  padding: 0.5rem 0.75rem 0.5rem calc(0.875rem + var(--depth) * var(--depth-offset));
+  text-decoration: none;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease,
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.dx-table-of-contents a:hover {
+  background-color: var(--primary-color-4);
+  color: var(--secondary-color-1);
+}
+
+.dx-table-of-contents a[data-active="true"] {
+  border-left-color: var(--focused-border-color);
+  background-color: color-mix(in srgb, var(--focused-border-color) 18%, transparent);
+  color: var(--secondary-color-1);
+  font-weight: 700;
+  transform: translateX(2px);
+}

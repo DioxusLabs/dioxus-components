@@ -11,14 +11,32 @@ pub fn Demo() -> Element {
             div { style: "display: flex; gap: 0.5rem;",
                 button {
                     r#type: "button",
-                    onpointerdown: move |event| event.prevent_default(),
-                    onclick: move |_| show_svelte.toggle(),
+                    onpointerdown: move |event| {
+                        event.prevent_default();
+                        show_svelte.toggle();
+                    },
+                    onkeydown: move |event| {
+                        let key = event.key();
+                        if matches!(key, Key::Enter) || matches!(key, Key::Character(ch) if ch == " ") {
+                            event.prevent_default();
+                            show_svelte.toggle();
+                        }
+                    },
                     "Toggle SvelteKit"
                 }
                 button {
                     r#type: "button",
-                    onpointerdown: move |event| event.prevent_default(),
-                    onclick: move |_| show_solid.toggle(),
+                    onpointerdown: move |event| {
+                        event.prevent_default();
+                        show_solid.toggle();
+                    },
+                    onkeydown: move |event| {
+                        let key = event.key();
+                        if matches!(key, Key::Enter) || matches!(key, Key::Character(ch) if ch == " ") {
+                            event.prevent_default();
+                            show_solid.toggle();
+                        }
+                    },
                     "Toggle SolidStart"
                 }
             }

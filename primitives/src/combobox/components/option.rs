@@ -2,13 +2,15 @@
 
 use dioxus::prelude::*;
 
-use super::super::context::ComboboxContext;
+use super::super::{context::ComboboxContext, hook::ComboboxDropdownEventSource};
 use crate::{
     listbox::{ListboxContext, ListboxItemIndicator},
     selectable::{
         pointer_select_cancel, pointer_select_commit, pointer_select_start, use_selectable_option,
-        RcPartialEqValue, SelectableOptionConfig,
+        SelectableOptionConfig,
     },
+    selection::option_text_value,
+    use_effect_with_cleanup,
 };
 
 /// Props for [`ComboboxOption`].
@@ -54,7 +56,10 @@ pub fn ComboboxOption<T: PartialEq + Clone + 'static>(props: ComboboxOptionProps
     let index = props.index;
 
     let mut ctx: ComboboxContext = use_context();
-    let visible = move || ctx.is_visible(index());
+    let text_value = use_memo(move || {
+        option_text_value(&*props.value.read(), (props.text_value)(), "ComboboxOption")
+    });
+    let visible = move || ctx.is_visible_text(index(), text_value.cloned());
     let option = use_selectable_option(
         ctx.selectable,
         SelectableOptionConfig {
@@ -66,6 +71,17 @@ pub fn ComboboxOption<T: PartialEq + Clone + 'static>(props: ComboboxOptionProps
             component_name: "ComboboxOption",
         },
     );
+    use_effect_with_cleanup({
+        let store = ctx.store;
+        let id = option.id;
+        let disabled = option.disabled;
+        let selected = option.selected;
+        move || {
+            let id_value = id.cloned();
+            store.register_option(id_value.clone(), index(), disabled(), visible(), selected());
+            move || store.unregister_option(&id_value)
+        }
+    });
 
     let render = use_context::<ListboxContext>().render;
 
@@ -87,6 +103,7 @@ pub fn ComboboxOption<T: PartialEq + Clone + 'static>(props: ComboboxOptionProps
                 onmouseenter: move |_| {
                     if !(option.disabled)() {
                         ctx.selectable.focus_state.set_focus(Some((option.index)()));
+                        ctx.store.select_option((option.index)());
                     }
                 },
                 onpointerdown: move |event| {
@@ -94,7 +111,7 @@ pub fn ComboboxOption<T: PartialEq + Clone + 'static>(props: ComboboxOptionProps
                 },
                 onpointerup: move |event| {
                     if pointer_select_commit(&event, (option.disabled)(), option.down_pos) {
-                        ctx.selectable.select_value(RcPartialEqValue::new(option.value.cloned()));
+                        ctx.submit_index((option.index)(), ComboboxDropdownEventSource::Mouse);
                     }
                 },
                 onpointercancel: move |_| {

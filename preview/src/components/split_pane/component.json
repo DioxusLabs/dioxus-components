@@ -1,0 +1,13 @@
+{
+  "name": "split_pane",
+  "description": "A resizable split-pane layout component.",
+  "authors": ["Dioxus Labs"],
+  "exclude": ["variants", "docs.md", "component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-primitives",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../../assets/dx-components-theme.css"]
+}

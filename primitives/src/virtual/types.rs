@@ -1,11 +1,11 @@
 //! Core types for the virtual list implementation.
 
 /// A unique key for identifying items in the virtualizer.
-pub(crate) type Key = usize;
+pub type Key = usize;
 
 /// A single virtualized item with computed position.
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct VirtualItem {
+pub struct VirtualItem {
     key: Key,
     index: usize,
     start: u32,
@@ -13,7 +13,8 @@ pub(crate) struct VirtualItem {
 }
 
 impl VirtualItem {
-    pub(crate) fn new(key: Key, index: usize, start: u32, size: u32) -> Self {
+    /// Create a new virtual item measurement.
+    pub fn new(key: Key, index: usize, start: u32, size: u32) -> Self {
         Self {
             key,
             index,
@@ -22,23 +23,28 @@ impl VirtualItem {
         }
     }
 
-    pub(crate) fn key(&self) -> Key {
+    /// Return the stable key used for size caching.
+    pub fn key(&self) -> Key {
         self.key
     }
 
-    pub(crate) fn index(&self) -> usize {
+    /// Return the absolute item index.
+    pub fn index(&self) -> usize {
         self.index
     }
 
-    pub(crate) fn start(&self) -> u32 {
+    /// Return the item start offset in pixels.
+    pub fn start(&self) -> u32 {
         self.start
     }
 
-    pub(crate) fn end(&self) -> u32 {
+    /// Return the item end offset in pixels.
+    pub fn end(&self) -> u32 {
         self.start + self.size
     }
 
-    pub(crate) fn size(&self) -> u32 {
+    /// Return the item size in pixels.
+    pub fn size(&self) -> u32 {
         self.size
     }
 }

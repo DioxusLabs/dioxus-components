@@ -80,6 +80,10 @@ impl SelectableContext {
         selection::selected_text(values.iter(), &options)
     }
 
+    pub(crate) fn list_id(&self) -> Option<String> {
+        (self.list_id)()
+    }
+
     pub(crate) fn is_selected(&self, value: &RcPartialEqValue) -> bool {
         self.values.read().iter().any(|selected| selected == value)
     }
@@ -209,10 +213,71 @@ pub(crate) fn use_selectable_root(
     open: Controlled<bool>,
 ) -> SelectableContext {
     let (open, set_open) = use_controlled(open.value, open.default.cloned(), open.on_change);
-    let options: Signal<Vec<OptionState>> = use_signal(Vec::default);
-    let list_id = use_signal(|| None);
     let focus_state = use_focus_provider(roving_loop);
     let initial_focus = use_signal(|| None);
+
+    build_selectable_context(
+        SelectableRootState {
+            open,
+            set_open,
+            focus_state,
+            initial_focus,
+        },
+        values,
+        set_value,
+        selection_mode,
+        disabled,
+    )
+}
+
+pub(crate) fn use_selectable_root_with_state(
+    values: Memo<Vec<RcPartialEqValue>>,
+    set_value: Callback<RcPartialEqValue>,
+    selection_mode: SelectionMode,
+    disabled: ReadSignal<bool>,
+    roving_loop: ReadSignal<bool>,
+    open: Memo<bool>,
+    set_open: Callback<bool>,
+) -> SelectableContext {
+    let focus_state = use_focus_provider(roving_loop);
+    let initial_focus = use_signal(|| None);
+
+    build_selectable_context(
+        SelectableRootState {
+            open,
+            set_open,
+            focus_state,
+            initial_focus,
+        },
+        values,
+        set_value,
+        selection_mode,
+        disabled,
+    )
+}
+
+struct SelectableRootState {
+    open: Memo<bool>,
+    set_open: Callback<bool>,
+    focus_state: FocusState,
+    initial_focus: Signal<Option<usize>>,
+}
+
+fn build_selectable_context(
+    state: SelectableRootState,
+    values: Memo<Vec<RcPartialEqValue>>,
+    set_value: Callback<RcPartialEqValue>,
+    selection_mode: SelectionMode,
+    disabled: ReadSignal<bool>,
+) -> SelectableContext {
+    let options: Signal<Vec<OptionState>> = use_signal(Vec::default);
+    let list_id = use_signal(|| None);
+    let SelectableRootState {
+        open,
+        set_open,
+        focus_state,
+        initial_focus,
+    } = state;
 
     SelectableContext {
         open,

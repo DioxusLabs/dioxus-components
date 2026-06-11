@@ -1,7 +1,5 @@
 //! Defines the [`VirtualList`] component for rendering large lists with virtualization.
 
-use std::collections::HashMap;
-
 use dioxus::prelude::*;
 use serde::Deserialize;
 
@@ -84,16 +82,7 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
     let container_id = crate::use_unique_id();
 
     // Create the Store — only holds mutable shared state
-    let state: Store<VirtualizerState> = use_store(|| VirtualizerState {
-        scroll_offset: 0,
-        viewport_size: 0,
-        is_scrolling: false,
-        item_size_cache: HashMap::new(),
-        scroll_adjustments: 0,
-        stable_total_size: None,
-        stable_measurement_count: None,
-        deferred_adjustments: 0,
-    });
+    let state: Store<VirtualizerState> = use_store(VirtualizerState::new);
 
     // Measurements as a memo — recomputes when count or item_size_cache change.
     // Read (not peeked) by the render body so the component re-renders when the

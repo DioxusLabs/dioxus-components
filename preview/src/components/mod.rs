@@ -36,16 +36,16 @@ pub fn category_of(name: &str) -> ComponentCategory {
     match name {
         "button" | "input" | "textarea" | "label" | "checkbox" | "switch" | "radio_group"
         | "toggle" | "toggle_group" | "select" | "slider" | "calendar" | "date_picker"
-        | "color_picker" => ComponentCategory::Forms,
+        | "schedule" | "color_picker" | "time_picker" => ComponentCategory::Forms,
         "navbar" | "sidebar" | "tabs" | "pagination" | "menubar" | "toolbar" | "context_menu"
-        | "dropdown_menu" => ComponentCategory::Navigation,
+        | "dropdown_menu" | "table_of_contents" => ComponentCategory::Navigation,
         "dialog" | "alert_dialog" | "sheet" | "popover" | "tooltip" | "hover_card" => {
             ComponentCategory::Overlays
         }
         "toast" | "progress" | "skeleton" | "badge" => ComponentCategory::Feedback,
         "accordion" | "collapsible" => ComponentCategory::Disclosure,
         "avatar" | "card" | "separator" | "aspect_ratio" | "item" | "drag_and_drop_list"
-        | "virtual_list" | "scroll_area" => ComponentCategory::DataDisplay,
+        | "virtual_list" | "scroll_area" | "split_pane" => ComponentCategory::DataDisplay,
         _ => ComponentCategory::DataDisplay,
     }
 }
@@ -77,6 +77,10 @@ macro_rules! examples {
     (@kind) => { ComponentType::Normal };
     (@kind normal) => { ComponentType::Normal };
     (@kind block) => { ComponentType::Block };
+    (@variant_name r#static) => { "static" };
+    (@variant_name $variant:ident) => { stringify!($variant) };
+    (@variant_path r#static) => { "static" };
+    (@variant_path $variant:ident) => { stringify!($variant) };
 
     // Normal components: no variant-level css_highlighted
     (@demo $name:ident $([$($variant:ident),*])?) => {
@@ -91,16 +95,16 @@ macro_rules! examples {
             )),
             docs: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/docs.html")),
             component: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/component.rs")),
+                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/component.rs.html")),
             },
             style: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/style.css")),
+                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/style.css.html")),
             },
             variants: &[
                 ComponentVariantDemoData {
                     name: "main",
                     rs_highlighted: HighlightedCode {
-                        source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/main/mod.rs")),
+                        html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/main/mod.rs.html")),
                     },
                     css_highlighted: None,
                     component: $name::variants::main::Demo,
@@ -108,9 +112,9 @@ macro_rules! examples {
                 $(
                     $(
                         ComponentVariantDemoData {
-                            name: stringify!($variant),
+                            name: examples!(@variant_name $variant),
                             rs_highlighted: HighlightedCode {
-                                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/", stringify!($variant), "/mod.rs")),
+                                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/", examples!(@variant_path $variant), "/mod.rs.html")),
                             },
                             css_highlighted: None,
                             component: $name::variants::$variant::Demo,
@@ -134,31 +138,31 @@ macro_rules! examples {
             )),
             docs: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/docs.html")),
             component: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/component.rs")),
+                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/component.rs.html")),
             },
             style: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/style.css")),
+                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/style.css.html")),
             },
             variants: &[
                 ComponentVariantDemoData {
                     name: "main",
                     rs_highlighted: HighlightedCode {
-                        source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/main/mod.rs")),
+                        html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/main/mod.rs.html")),
                     },
                     css_highlighted: Some(HighlightedCode {
-                        source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/demo.css")),
+                        html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/demo.css.html")),
                     }),
                     component: $name::variants::main::Demo,
                 },
                 $(
                     $(
                         ComponentVariantDemoData {
-                            name: stringify!($variant),
+                            name: examples!(@variant_name $variant),
                             rs_highlighted: HighlightedCode {
-                                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/", stringify!($variant), "/mod.rs")),
+                                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/", examples!(@variant_path $variant), "/mod.rs.html")),
                             },
                             css_highlighted: Some(HighlightedCode {
-                                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/variants/demo.css")),
+                                html: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/variants/demo.css.html")),
                             }),
                             component: $name::variants::$variant::Demo,
                         },
@@ -181,7 +185,7 @@ examples!(
     checkbox,
     collapsible,
     color_picker,
-    combobox[controlled, disabled, dynamic],
+    combobox[controlled, disabled, dynamic, autocomplete, multi_select, tags_input, virtualized],
     context_menu,
     date_picker[internationalized, range, multi_month, unavailable_dates],
     dialog,
@@ -198,15 +202,45 @@ examples!(
     progress,
     radio_group,
     scroll_area,
+    schedule[
+        controlled,
+        week,
+        responsive,
+        r#static,
+        internationalized,
+        day,
+        month,
+        year,
+        drag_and_drop,
+        external_drop,
+        resize,
+        slot_selection,
+        custom_header,
+        custom_event,
+        recurring,
+        multi_view
+    ],
     select[multi],
     separator,
     sheet,
     sidebar(block)[floating, inset],
     skeleton,
+    split_pane[
+        vertical,
+        multi_pane,
+        controlled,
+        constraints,
+        nested,
+        snap,
+        custom_divider,
+        persistence
+    ],
     slider[dynamic_range, range],
     switch,
     tabs,
-    textarea[outline, fade, ghost],
+    table_of_contents,
+    textarea[outline, fade, ghost, bottom_section, autosize, resize],
+    time_picker,
     toast,
     toggle,
     toggle_group,

@@ -3,9 +3,11 @@
 use dioxus::prelude::*;
 
 use super::super::context::{default_combobox_filter, ComboboxContext};
+use super::super::hook::{use_combobox, UseComboboxOptions};
 use crate::{
     selectable::{
-        use_selectable_root, use_single_selectable_value, RcPartialEqValue, SelectionMode,
+        use_selectable_root_with_state, use_single_selectable_value, RcPartialEqValue,
+        SelectionMode,
     },
     use_controlled, Controlled,
 };
@@ -70,34 +72,55 @@ pub struct ComboboxProps<T: Clone + PartialEq + 'static = String> {
     pub children: Element,
 }
 
-fn use_combobox_root(
+pub(super) fn use_combobox_root(
     values: Memo<Vec<RcPartialEqValue>>,
     set_value: Callback<RcPartialEqValue>,
-    disabled: ReadSignal<bool>,
-    roving_loop: ReadSignal<bool>,
-    open: Controlled<bool>,
-    query: Controlled<String>,
-    filter: Callback<(String, String), bool>,
+    config: ComboboxRootConfig,
 ) -> Memo<bool> {
-    let selectable = use_selectable_root(
-        values,
-        set_value,
-        SelectionMode::Single,
+    let ComboboxRootConfig {
+        selection_mode,
         disabled,
         roving_loop,
         open,
+        query,
+        filter,
+    } = config;
+    let store = use_combobox(UseComboboxOptions {
+        opened: open.value,
+        default_opened: open.default,
+        on_opened_change: open.on_change,
+        loop_navigation: roving_loop,
+        ..Default::default()
+    });
+    let store_open = use_memo(move || store.dropdown_opened());
+    let selectable = use_selectable_root_with_state(
+        values,
+        set_value,
+        selection_mode,
+        disabled,
+        roving_loop,
+        store_open,
+        Callback::new(move |_| {}),
     );
     let (query, set_query) = use_controlled(query.value, query.default.cloned(), query.on_change);
-    let open = selectable.open;
-
     use_context_provider(|| ComboboxContext {
         selectable,
+        store,
         query,
         set_query,
         filter,
     });
 
-    open
+    use_memo(move || store.dropdown_opened())
+}
+
+pub(super) struct ComboboxRootConfig {
+    pub(super) selection_mode: SelectionMode,
+    pub(super) disabled: ReadSignal<bool>,
+    pub(super) roving_loop: ReadSignal<bool>,
+    pub(super) open: Controlled<bool>,
+    pub(super) query: Controlled<String>,
+    pub(super) filter: Callback<(String, String), bool>,
 }
 
 /// A single-select autocomplete input with a filterable popup list.
@@ -113,19 +136,22 @@ pub fn Combobox<T: Clone + PartialEq + 'static>(props: ComboboxProps<T>) -> Elem
     let open = use_combobox_root(
         selected,
         set_value,
-        props.disabled,
-        props.roving_loop,
-        Controlled {
-            value: props.open,
-            default: props.default_open,
-            on_change: props.on_open_change,
+        ComboboxRootConfig {
+            selection_mode: SelectionMode::Single,
+            disabled: props.disabled,
+            roving_loop: props.roving_loop,
+            open: Controlled {
+                value: props.open,
+                default: props.default_open,
+                on_change: props.on_open_change,
+            },
+            query: Controlled {
+                value: props.query,
+                default: props.default_query,
+                on_change: props.on_query_change,
+            },
+            filter: props.filter,
         },
-        Controlled {
-            value: props.query,
-            default: props.default_query,
-            on_change: props.on_query_change,
-        },
-        props.filter,
     );
 
     rsx! {

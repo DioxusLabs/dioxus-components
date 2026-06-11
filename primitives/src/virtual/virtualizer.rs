@@ -1,4 +1,5 @@
 //! Core Virtualizer implementation using Dioxus Store for fine-grained reactivity.
+#![allow(missing_docs)]
 
 use std::collections::HashMap;
 use std::ops::Range;
@@ -35,6 +36,28 @@ pub struct VirtualizerState {
     pub stable_measurement_count: Option<usize>,
     /// Deferred scroll adjustments accumulated while scrolling.
     pub deferred_adjustments: i32,
+}
+
+impl VirtualizerState {
+    /// Create an empty virtualizer state.
+    pub fn new() -> Self {
+        Self {
+            scroll_offset: 0,
+            viewport_size: 0,
+            is_scrolling: false,
+            item_size_cache: HashMap::new(),
+            scroll_adjustments: 0,
+            stable_total_size: None,
+            stable_measurement_count: None,
+            deferred_adjustments: 0,
+        }
+    }
+}
+
+impl Default for VirtualizerState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 // ---------------------------------------------------------------------------

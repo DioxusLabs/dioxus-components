@@ -35,6 +35,7 @@
     "preview/src/components/aspect_ratio",
     "preview/src/components/scroll_area",
     "preview/src/components/date_picker",
+    "preview/src/components/time_picker",
     "preview/src/components/textarea",
     "preview/src/components/skeleton",
     "preview/src/components/card",

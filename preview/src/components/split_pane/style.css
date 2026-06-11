@@ -1,0 +1,70 @@
+.dx-split-pane {
+  --split-pane-divider-size: 6px;
+
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 1px solid var(--primary-color-6);
+  border-radius: 0.5rem;
+  background: var(--primary-color-1);
+}
+
+.dx-split-pane-pane {
+  box-sizing: border-box;
+  color: var(--primary-color-12);
+}
+
+.dx-split-pane-divider {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-color-4);
+  color: var(--primary-color-11);
+  outline: none;
+  touch-action: none;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.dx-split-pane-divider[data-orientation="horizontal"] {
+  height: 100%;
+  cursor: col-resize;
+}
+
+.dx-split-pane-divider[data-orientation="vertical"] {
+  width: 100%;
+  cursor: row-resize;
+}
+
+.dx-split-pane-divider:hover,
+.dx-split-pane-divider:focus-visible,
+.dx-split-pane-divider[data-dragging="true"] {
+  background: var(--secondary-color-2);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--secondary-color-2) 30%, transparent);
+}
+
+.dx-split-pane-divider[data-resizable="false"] {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.dx-split-pane-divider-handle {
+  display: block;
+  border-radius: 9999px;
+  background: currentcolor;
+  opacity: 0.33;
+  pointer-events: none;
+}
+
+.dx-split-pane-divider[data-orientation="horizontal"] .dx-split-pane-divider-handle {
+  width: 33%;
+  height: 2rem;
+}
+
+.dx-split-pane-divider[data-orientation="vertical"] .dx-split-pane-divider-handle {
+  width: 2rem;
+  height: 0.25rem;
+}

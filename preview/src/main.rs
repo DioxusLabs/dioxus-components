@@ -21,7 +21,6 @@ use crate::components::{
 };
 use core::panic;
 use dioxus::prelude::{dioxus_router::LinkProps, *};
-use dioxus_code::{advanced::HighlightedSource, Code, CodeTheme, Theme};
 use dioxus_i18n::prelude::{use_init_i18n, I18nConfig};
 use dioxus_icons::lucide::{
     ArrowRight, ArrowUpRight, Check, ChevronDown, ChevronLeft, Copy, ExternalLink, Mail, Menu,
@@ -406,7 +405,7 @@ fn Footer() -> Element {
 
 #[derive(Clone, PartialEq)]
 pub struct HighlightedCode {
-    pub source: HighlightedSource,
+    pub html: &'static str,
 }
 
 #[component]
@@ -415,23 +414,16 @@ fn CodeBlock(source: HighlightedCode) -> Element {
         div {
             class: "dx-code-block",
             tabindex: "0",
-            PreviewCode { source: source.source }
+            PreviewCode { html: source.html }
         }
         CopyButton { position: "absolute", top: "0.5em", right: "0.5em" }
     }
 }
 
 #[component]
-fn PreviewCode(source: HighlightedSource) -> Element {
+fn PreviewCode(html: &'static str) -> Element {
     rsx! {
-        div {
-            class: "dx-preview-code-theme",
-            tabindex: "0",
-            Code {
-                src: source,
-                theme: CodeTheme::system(Theme::GITHUB_LIGHT, Theme::GITHUB_DARK),
-            }
-        }
+        div { dangerous_inner_html: html }
     }
 }
 
@@ -1267,10 +1259,17 @@ fn WidgetMasonry() -> Element {
 }
 
 #[allow(unpredictable_function_pointer_comparisons)]
+#[derive(Props, Clone, PartialEq)]
+struct MasonryCardProps {
+    component: fn() -> Element,
+    #[props(default)]
+    popout: bool,
+}
+
 #[component]
-fn MasonryCard(component: fn() -> Element, #[props(default)] popout: bool) -> Element {
-    let Comp = component;
-    let class = if popout {
+fn MasonryCard(props: MasonryCardProps) -> Element {
+    let Comp = props.component;
+    let class = if props.popout {
         "dx-widget-card dx-widget-card-popout"
     } else {
         "dx-widget-card"
@@ -1982,5 +1981,8 @@ fn GotoIcon(mut props: LinkProps) -> Element {
 }
 
 const THEME_CSS: HighlightedCode = HighlightedCode {
-    source: dioxus_code::code!("/assets/dx-components-theme.css"),
+    html: include_str!(concat!(
+        env!("OUT_DIR"),
+        "/assets/dx-components-theme.css.html"
+    )),
 };

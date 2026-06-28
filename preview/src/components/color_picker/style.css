@@ -164,6 +164,12 @@
     gap: 8px;
     line-height: 1.5;
     outline: 0 solid;
+    transition: box-shadow 150ms, background-color 150ms, color 150ms;
+}
+
+.dx-color-picker-button:focus-visible {
+    box-shadow: 0 0 0 3px
+        color-mix(in oklab, var(--focused-border-color) 50%, transparent);
 }
 
 .dx-color-picker-popover {

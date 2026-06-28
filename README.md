@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>DioxusComponents</h1>
+  <h1>Dioxus Components</h1>
   <p><strong>Accessible, customizable components for Dioxus.</strong></p>
 </div>
 
@@ -25,7 +25,7 @@
 
 <br/>
 
-DioxusComponents is a shadcn style component library for Dioxus built on top of the unstyled [Dioxus primitives](https://crates.io/crates/dioxus-primitives) library. The unstyled primitives serve as the foundation for building accessible and customizable UI components in Dioxus applications. The styled versions serve as a starting point to develop your own design system.
+Dioxus Components is a shadcn style component library for Dioxus built on top of the unstyled [Dioxus primitives](https://crates.io/crates/dioxus-primitives) library. The unstyled primitives serve as the foundation for building accessible and customizable UI components in Dioxus applications. The styled versions serve as a starting point to develop your own design system.
 
 ## Getting started
 

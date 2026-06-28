@@ -4,6 +4,8 @@
   z-index: 1000;
   background: rgb(0 0 0 / 30%);
   inset: 0;
+  opacity: 0;
+  will-change: opacity;
 }
 
 .dx-alert-dialog-backdrop[data-state="closed"] {
@@ -13,12 +15,10 @@
 @keyframes dx-alert-animate-out {
   0% {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
 
   100% {
     opacity: 0;
-    transform: scale(0.95) translateY(-2px);
   }
 }
 
@@ -29,12 +29,10 @@
 @keyframes dx-alert-animate-in {
   0% {
     opacity: 0;
-    transform: scale(0.95) translateY(-2px);
   }
 
   100% {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
 }
 

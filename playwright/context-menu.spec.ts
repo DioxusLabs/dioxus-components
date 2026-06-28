@@ -205,12 +205,32 @@ test('pointerdown at the trigger location does not dismiss an open menu', async 
   await trigger.click({ button: 'right' });
   await expect(contextMenu).toHaveAttribute('data-state', 'open');
 
-  const box = await trigger.boundingBox();
-  if (!box) throw new Error('trigger has no bounding box');
-  await page.evaluate(({ x, y }) => {
-    const target = document.elementFromPoint(x, y);
-    if (!target) throw new Error('no element at trigger center');
-    target.dispatchEvent(new PointerEvent('pointerdown', {
+  await trigger.evaluate((el) => {
+    const triggerRect = el.getBoundingClientRect();
+    if (triggerRect.width === 0 || triggerRect.height === 0) {
+      throw new Error('trigger has no bounding box');
+    }
+
+    const x = triggerRect.left + triggerRect.width / 2;
+    const y = triggerRect.top + triggerRect.height / 2;
+
+    if (
+      x < triggerRect.left ||
+      x > triggerRect.right ||
+      y < triggerRect.top ||
+      y > triggerRect.bottom
+    ) {
+      throw new Error('point is outside trigger bounds');
+    }
+
+    const root = el.parentElement;
+    if (!root) throw new Error('trigger has no root');
+    const rootRect = root.getBoundingClientRect();
+    if (x < rootRect.left || x > rootRect.right || y < rootRect.top || y > rootRect.bottom) {
+      throw new Error('point is outside context menu root bounds');
+    }
+
+    el.dispatchEvent(new PointerEvent('pointerdown', {
       pointerId: 6060,
       pointerType: 'touch',
       isPrimary: true,
@@ -221,7 +241,7 @@ test('pointerdown at the trigger location does not dismiss an open menu', async 
       bubbles: true,
       cancelable: true,
     }));
-  }, { x: box.x + box.width / 2, y: box.y + box.height / 2 });
+  });
 
   await expect(contextMenu).toHaveAttribute('data-state', 'open');
 });

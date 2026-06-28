@@ -13,11 +13,17 @@
   color: var(--secondary-color-4);
   font-size: 14px;
   outline: none;
+  transition: background-color 150ms, color 150ms, outline-color 150ms;
 }
 
 .dx-toggle:hover, .dx-toggle:focus-visible {
   background-color: var(--primary-color-4);
   cursor: pointer;
+}
+
+.dx-toggle:focus-visible {
+  outline: 2px solid var(--focused-border-color);
+  outline-offset: 2px;
 }
 
 .dx-toggle[data-state="on"] {

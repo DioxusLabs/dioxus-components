@@ -11,7 +11,7 @@
   color: var(--secondary-color-4);
   font-size: 14px;
   outline: none;
-  transition: background-color 200ms ease, border 200ms ease;
+  transition: background-color 200ms ease, border 200ms ease, outline-color 150ms;
 }
 
 .dx-toggle-group[data-allow-multiple-pressed="true"]
@@ -30,6 +30,13 @@
 .dx-toggle-item[data-state="on"] {
   background-color: var(--primary-color-7);
   color: var(--secondary-color-1);
+}
+
+.dx-toggle-item:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--focused-border-color);
+  outline-offset: 2px;
 }
 
 .dx-toggle-group[data-allow-multiple-pressed="true"]

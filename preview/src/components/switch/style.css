@@ -13,11 +13,16 @@
   border-radius: 9999px;
   background-color: var(--primary-color-6);
   cursor: pointer;
-  transition: background-color 150ms;
+  transition: background-color 150ms, box-shadow 150ms;
 }
 
 .dx-switch[data-state="checked"] {
   background-color: var(--secondary-color-2);
+}
+
+.dx-switch:focus-visible {
+  box-shadow: 0 0 0 3px
+    color-mix(in oklab, var(--focused-border-color) 50%, transparent);
 }
 
 .dx-switch-thumb {

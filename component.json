@@ -5,6 +5,7 @@
     "preview/src/components/tabs",
     "preview/src/components/dropdown_menu",
     "preview/src/components/navbar",
+    "preview/src/components/otp",
     "preview/src/components/form",
     "preview/src/components/tooltip",
     "preview/src/components/calendar",

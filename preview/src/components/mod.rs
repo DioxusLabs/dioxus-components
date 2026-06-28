@@ -193,6 +193,7 @@ examples!(
     label,
     menubar,
     navbar,
+    otp[non_ascii],
     pagination,
     popover,
     progress,

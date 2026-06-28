@@ -1,0 +1,123 @@
+.dx-otp {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  font-family: inherit;
+  gap: 0.5rem;
+}
+
+.dx-otp[data-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dx-otp[data-disabled="true"] input {
+  cursor: not-allowed;
+}
+
+.dx-otp-group {
+  display: flex;
+  align-items: center;
+}
+
+.dx-otp-slot {
+  position: relative;
+  display: flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--primary-color-7);
+  border-right: 1px solid var(--primary-color-7);
+  border-bottom: 1px solid var(--primary-color-7);
+  background-color: var(--light, var(--primary-color))
+    var(--dark, color-mix(in oklab, var(--primary-color-7) 30%, transparent));
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
+  color: var(--secondary-color-1);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  line-height: 1.25rem;
+  outline: none;
+  transition: color 100ms ease-out, background-color 100ms ease-out,
+    border-color 100ms ease-out, box-shadow 100ms ease-out;
+}
+
+.dx-otp-group .dx-otp-slot:first-child {
+  border-left: 1px solid var(--primary-color-7);
+  border-bottom-left-radius: 0.375rem;
+  border-top-left-radius: 0.375rem;
+}
+
+.dx-otp-group .dx-otp-slot:last-child {
+  border-bottom-right-radius: 0.375rem;
+  border-top-right-radius: 0.375rem;
+}
+
+.dx-otp-group .dx-otp-slot[data-active="true"] {
+  z-index: 10;
+  border-color: var(--focused-border-color);
+  border-left: 1px solid var(--focused-border-color);
+  box-shadow: 0 0 0 2px var(--focused-border-color);
+}
+
+.dx-otp-group .dx-otp-slot[data-selected="true"] {
+  z-index: 5;
+  border-color: var(--focused-border-color);
+  border-left: 1px solid var(--focused-border-color);
+  background-color: color-mix(in oklab, var(--focused-border-color) 24%, transparent);
+  color: var(--secondary-color-1);
+}
+
+.dx-otp-group .dx-otp-slot[data-selection-start="true"] {
+  border-left: 1px solid var(--focused-border-color);
+}
+
+/* Fake blinking caret — only visible in the active, empty slot */
+.dx-otp-caret {
+  position: absolute;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dx-otp-caret::after {
+  display: block;
+  width: 1px;
+  height: 1rem;
+  animation: dx-otp-caret-blink 1s ease-out infinite;
+  background-color: var(--secondary-color-1);
+  content: "";
+}
+
+.dx-otp-slot[data-active="true"][data-empty="true"] .dx-otp-caret {
+  display: flex;
+}
+
+.dx-otp-slot[data-selected="true"] .dx-otp-caret {
+  display: none;
+}
+
+@keyframes dx-otp-caret-blink {
+  0%,
+  70%,
+  100% {
+    opacity: 1;
+  }
+
+  20%,
+  50% {
+    opacity: 0;
+  }
+}
+
+.dx-otp-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary-color-4);
+  pointer-events: none;
+}

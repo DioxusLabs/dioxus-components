@@ -236,11 +236,7 @@ pub fn SidebarProvider(
     });
 
     let sidebar_style = format!(
-        r#"
-        --dx-sidebar-width: {SIDEBAR_WIDTH};
-        --dx-sidebar-width-mobile: {SIDEBAR_WIDTH_MOBILE};
-        --dx-sidebar-width-icon: {SIDEBAR_WIDTH_ICON}
-        "#
+        r#"--dx-sidebar-width: {SIDEBAR_WIDTH}; --dx-sidebar-width-mobile: {SIDEBAR_WIDTH_MOBILE}; --dx-sidebar-width-icon: {SIDEBAR_WIDTH_ICON}"#
     );
 
     let base = attributes!(div {

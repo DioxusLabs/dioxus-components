@@ -510,3 +510,89 @@ impl Item {
         (self.aria_id)()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::accordion::{Accordion, AccordionContent, AccordionItem, AccordionTrigger};
+    use dioxus::prelude::*;
+    use dioxus_test::{
+        by_role, by_testid,
+        matchers::{attribute, eq, some},
+        render, Result, Role,
+    };
+
+    #[tokio::test]
+    async fn component_reports_it_is_opened_after_button_clicked() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Accordion {
+                    allow_multiple_open: false,
+                    horizontal: false,
+                    AccordionItem {
+                        index: 0,
+                        "data-testid": "item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "First item" }
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent).build();
+        let item = tester.query(by_testid("item"));
+        let opener = item.query(by_role(Role::Button));
+
+        opener.click().await?;
+
+        item.expect(attribute("data-open", some(eq("true")))).await
+    }
+
+    #[tokio::test]
+    async fn closes_one_item_when_another_is_opened() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Accordion {
+                    allow_multiple_open: false,
+                    horizontal: false,
+                    AccordionItem {
+                        index: 0,
+                        "data-testid": "first-item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "First item" }
+                        }
+                    }
+                    AccordionItem {
+                        index: 1,
+                        "data-testid": "second-item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "Second item" }
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent).build();
+        let first_item = tester.query(by_testid("first-item"));
+        let second_item = tester.query(by_testid("second-item"));
+        let first_opener = first_item.query(by_role(Role::Button));
+        let second_opener = second_item.query(by_role(Role::Button));
+
+        first_opener.click().await?;
+        second_opener.click().await?;
+
+        first_item
+            .expect(attribute("data-open", some(eq("false"))))
+            .await
+    }
+}

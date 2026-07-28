@@ -262,7 +262,7 @@ fn use_animated_open(
                     "const id = await dioxus.recv();
                     const element = document.getElementById(id);
                     if (element && element.getAnimations().length > 0) {
-                        Promise.all(element.getAnimations().map((animation) => animation.finished)).then(() => {
+                        Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => {}))).then(() => {
                             dioxus.send(true);
                         });
                     } else {

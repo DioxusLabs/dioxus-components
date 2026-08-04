@@ -136,13 +136,25 @@
   }
 }
 
+@keyframes dx-tooltip-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
 /* State styles */
 .dx-tooltip[data-disabled="true"] .dx-tooltip-trigger {
   cursor: default;
 }
 
 .dx-tooltip-content[data-state="closed"] {
-  display: none;
+  pointer-events: none;
+  opacity: 0;
+  animation: dx-tooltip-fade-out 0.2s ease-in-out forwards;
 }
 
 .dx-tooltip-content[data-state="open"] {

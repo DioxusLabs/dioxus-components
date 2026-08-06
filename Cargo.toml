@@ -4,7 +4,7 @@ members = ["primitives", "preview", "test-harness", "dioxus-attributes"]
 
 [workspace.dependencies]
 dioxus-primitives = { path = "primitives" }
-dioxus-test = { git = "https://github.com/hovinen/dioxus-test", branch = "support-query-all-for-nested-queries" }
+dioxus-test = { git = "https://github.com/hovinen/dioxus-test", branch = "support-focus-and-key-up-down-events" }
 tracing = { version = "0.1", features = ["std"] }
 
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2cc82e63f3f44f92dfddbae8c6b4dde2d65d1e8" }

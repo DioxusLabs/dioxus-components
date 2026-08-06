@@ -517,7 +517,7 @@ mod tests {
     use dioxus::prelude::*;
     use dioxus_test::{
         by_role, by_testid,
-        matchers::{attribute, eq, some},
+        matchers::{attribute, eq, has_focus, some},
         render, Result, Role,
     };
 
@@ -594,5 +594,199 @@ mod tests {
         first_item
             .expect(attribute("data-open", some(eq("false"))))
             .await
+    }
+
+    #[tokio::test]
+    async fn arrow_down_moves_to_next_item() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Accordion {
+                    allow_multiple_open: false,
+                    horizontal: false,
+                    AccordionItem {
+                        index: 0,
+                        "data-testid": "first-item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "First item" }
+                        }
+                    }
+                    AccordionItem {
+                        index: 1,
+                        "data-testid": "second-item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "Second item" }
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent).build();
+        let first_item = tester.query(by_testid("first-item"));
+        let second_item = tester.query(by_testid("second-item"));
+        let first_opener = first_item.query(by_role(Role::Button));
+        let second_opener = second_item.query(by_role(Role::Button));
+
+        first_opener.focus().await?;
+        tester.key_down(Key::ArrowDown, Modifiers::empty())?;
+
+        second_opener.expect(has_focus()).await
+    }
+
+    #[tokio::test]
+    async fn arrow_up_moves_to_previous_item() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Accordion {
+                    allow_multiple_open: false,
+                    horizontal: false,
+                    AccordionItem {
+                        index: 0,
+                        "data-testid": "first-item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "First item" }
+                        }
+                    }
+                    AccordionItem {
+                        index: 1,
+                        "data-testid": "second-item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "Second item" }
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent).build();
+        let first_item = tester.query(by_testid("first-item"));
+        let second_item = tester.query(by_testid("second-item"));
+        let first_opener = first_item.query(by_role(Role::Button));
+        let second_opener = second_item.query(by_role(Role::Button));
+
+        second_opener.focus().await?;
+        tester.key_down(Key::ArrowUp, Modifiers::empty())?;
+
+        first_opener.expect(has_focus()).await
+    }
+
+    #[tokio::test]
+    async fn arrow_down_skips_disabled_item() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Accordion {
+                    allow_multiple_open: false,
+                    horizontal: false,
+                    AccordionItem {
+                        index: 0,
+                        "data-testid": "first-item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "First item" }
+                        }
+                    }
+                    AccordionItem {
+                        index: 1,
+                        "data-testid": "disabled-item",
+                        disabled: true,
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "Disabled item" }
+                        }
+                    }
+                    AccordionItem {
+                        index: 2,
+                        "data-testid": "second-item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "Second item" }
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent).build();
+        let first_item = tester.query(by_testid("first-item"));
+        let second_item = tester.query(by_testid("second-item"));
+        let first_opener = first_item.query(by_role(Role::Button));
+        let second_opener = second_item.query(by_role(Role::Button));
+
+        first_opener.focus().await?;
+        tester.key_down(Key::ArrowDown, Modifiers::empty())?;
+
+        second_opener.expect(has_focus()).await
+    }
+
+    #[tokio::test]
+    async fn arrow_up_skips_disabled_item() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Accordion {
+                    allow_multiple_open: false,
+                    horizontal: false,
+                    AccordionItem {
+                        index: 0,
+                        "data-testid": "first-item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "First item" }
+                        }
+                    }
+                    AccordionItem {
+                        index: 1,
+                        "data-testid": "disabled-item",
+                        disabled: true,
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "Disabled item" }
+                        }
+                    }
+                    AccordionItem {
+                        index: 2,
+                        "data-testid": "second-item",
+                        AccordionTrigger {
+                            "Open"
+                        }
+                        AccordionContent {
+                            div { "Second item" }
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent).build();
+        let first_item = tester.query(by_testid("first-item"));
+        let second_item = tester.query(by_testid("second-item"));
+        let first_opener = first_item.query(by_role(Role::Button));
+        let second_opener = second_item.query(by_role(Role::Button));
+
+        second_opener.focus().await?;
+        tester.key_down(Key::ArrowUp, Modifiers::empty())?;
+
+        first_opener.expect(has_focus()).await
     }
 }

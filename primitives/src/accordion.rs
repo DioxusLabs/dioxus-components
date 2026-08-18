@@ -542,7 +542,7 @@ mod tests {
                 }
             }
         }
-        let tester = render(TestComponent).build();
+        let tester = render(TestComponent);
         let item = tester.query(by_testid("item"));
         let opener = item.query(by_role(Role::Button));
 
@@ -582,7 +582,7 @@ mod tests {
                 }
             }
         }
-        let tester = render(TestComponent).build();
+        let tester = render(TestComponent);
         let first_item = tester.query(by_testid("first-item"));
         let second_item = tester.query(by_testid("second-item"));
         let first_opener = first_item.query(by_role(Role::Button));
@@ -627,7 +627,7 @@ mod tests {
                 }
             }
         }
-        let tester = render(TestComponent).build();
+        let tester = render(TestComponent);
         let first_item = tester.query(by_testid("first-item"));
         let second_item = tester.query(by_testid("second-item"));
         let first_opener = first_item.query(by_role(Role::Button));
@@ -670,7 +670,7 @@ mod tests {
                 }
             }
         }
-        let tester = render(TestComponent).build();
+        let tester = render(TestComponent);
         let first_item = tester.query(by_testid("first-item"));
         let second_item = tester.query(by_testid("second-item"));
         let first_opener = first_item.query(by_role(Role::Button));
@@ -724,7 +724,7 @@ mod tests {
                 }
             }
         }
-        let tester = render(TestComponent).build();
+        let tester = render(TestComponent);
         let first_item = tester.query(by_testid("first-item"));
         let second_item = tester.query(by_testid("second-item"));
         let first_opener = first_item.query(by_role(Role::Button));
@@ -778,7 +778,7 @@ mod tests {
                 }
             }
         }
-        let tester = render(TestComponent).build();
+        let tester = render(TestComponent);
         let first_item = tester.query(by_testid("first-item"));
         let second_item = tester.query(by_testid("second-item"));
         let first_opener = first_item.query(by_role(Role::Button));

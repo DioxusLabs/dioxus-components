@@ -444,3 +444,108 @@ pub fn TabContent(props: TabContentProps) -> Element {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{TabContent, TabList, TabTrigger, Tabs};
+    use dioxus::{
+        html::{Key, Modifiers},
+        prelude::*,
+    };
+    use dioxus_test::{
+        by_role,
+        matchers::{contains_substring, has_focus, inner_html},
+        render, Result, Role,
+    };
+
+    #[tokio::test]
+    async fn arrow_right_moves_focus_to_next_tab() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Tabs {
+                    horizontal: true,
+                    TabList {
+                        TabTrigger {
+                            value: "first-tab".to_string(),
+                            index: 0usize,
+                            "First Tab"
+                        }
+                        TabTrigger {
+                            value: "second-tab".to_string(),
+                            index: 1usize,
+                            "Second Tab"
+                        }
+                    }
+                    TabContent {
+                        index: 0usize,
+                        value: "first-tab".to_string(),
+                        "First tab content"
+                    }
+                    TabContent {
+                        index: 1usize,
+                        value: "second-tab".to_string(),
+                        "Second tab content"
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester
+            .query(by_role(Role::Tab).having_name("First Tab"))
+            .focus()
+            .await?;
+
+        tester.key_down(Key::ArrowRight, Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::Tab).having_name("Second Tab"))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn clicking_a_tab_opens_it() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Tabs {
+                    horizontal: true,
+                    TabList {
+                        TabTrigger {
+                            value: "first-tab".to_string(),
+                            index: 0usize,
+                            "First Tab"
+                        }
+                        TabTrigger {
+                            value: "second-tab".to_string(),
+                            index: 1usize,
+                            "Second Tab"
+                        }
+                    }
+                    TabContent {
+                        index: 0usize,
+                        value: "first-tab".to_string(),
+                        "First tab content"
+                    }
+                    TabContent {
+                        index: 1usize,
+                        value: "second-tab".to_string(),
+                        "Second tab content"
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester
+            .query(by_role(Role::Tab).having_name("Second Tab"))
+            .click()
+            .await?;
+
+        tester
+            .query(by_role(Role::TabPanel))
+            .expect(inner_html(contains_substring("Second tab content")))
+            .await
+    }
+}

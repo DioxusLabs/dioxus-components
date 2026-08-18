@@ -4,7 +4,7 @@ members = ["primitives", "preview", "test-harness", "dioxus-attributes"]
 
 [workspace.dependencies]
 dioxus-primitives = { path = "primitives" }
-dioxus-test = { path = "../dioxus-test" }
+dioxus-test = { git = "https://github.com/hovinen/dioxus-test", branch = "show-element-with-focus-in-failure-message-for-has-focus" }
 tracing = { version = "0.1", features = ["std"] }
 
 dioxus = { version = "0.8.0-alpha.1", git = "https://github.com/hovinen/dioxus", branch = "add-synthetic-form-event" }

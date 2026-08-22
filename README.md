@@ -102,6 +102,14 @@ or for the web build:
 dx serve -p preview --web
 ```
 
+To test against the pinned Blitz native renderer, use the platform flag for your operating system:
+
+```sh
+dx serve -p preview --linux --renderer native --features native
+```
+
+Replace `--linux` with `--macos` or `--windows` as appropriate.
+
 ## License
 
 This project is dual licensed under the [MIT](./LICENSE-MIT) and [Apache 2.0](./LICENSE-APACHE) licenses.

@@ -737,7 +737,7 @@ pub fn NavbarItem(mut props: NavbarItemProps) -> Element {
     let mut onmounted =
         use_item(collection_item(collection, props.index).disabled(disabled)).onmounted();
 
-    props.attributes.push(onkeydown({
+    props.attributes = props.attributes.onkeydown({
         let value = props.value.clone();
         let to = props.to.clone();
         move |event: Event<KeyboardData>| {
@@ -752,17 +752,17 @@ pub fn NavbarItem(mut props: NavbarItemProps) -> Element {
                 event.stop_propagation();
             }
         }
-    }));
+    });
 
-    props.attributes.push(onpointerdown(move |_| {
+    props.attributes = props.attributes.onpointerdown(move |_| {
         if !disabled() {
             if let Some(mut nav_ctx) = nav_ctx {
                 nav_ctx.focus.set_focus(Some(props.index.cloned()));
             }
         }
-    }));
+    });
 
-    props.attributes.push(onblur(move |_| {
+    props.attributes = props.attributes.onblur(move |_| {
         if focused() {
             if let Some(nav_ctx) = &mut nav_ctx {
                 nav_ctx.focus.clear_focus();
@@ -770,7 +770,7 @@ pub fn NavbarItem(mut props: NavbarItemProps) -> Element {
             ctx.focus.clear_focus();
             ctx.set_open_nav.call(None);
         }
-    }));
+    });
 
     let tabindex = if focused()
         || (nav_ctx.is_none() && ctx.focus.recent_focus_or_default() == props.index.cloned())

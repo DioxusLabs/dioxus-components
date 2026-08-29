@@ -6,8 +6,9 @@ members = ["primitives", "preview", "test-harness", "dioxus-attributes"]
 dioxus-primitives = { path = "primitives" }
 tracing = { version = "0.1", features = ["std"] }
 
-dioxus = "0.7.8"
-dioxus-rsx = "0.7.8"
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2cc82e63f3f44f92dfddbae8c6b4dde2d65d1e8" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2cc82e63f3f44f92dfddbae8c6b4dde2d65d1e8" }
+dioxus-ssr = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2cc82e63f3f44f92dfddbae8c6b4dde2d65d1e8" }
 
 [profile.release]
 opt-level = "z"

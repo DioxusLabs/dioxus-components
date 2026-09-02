@@ -1,7 +1,7 @@
 //! Defines the [`AlertDialogRoot`] component and its sub-components.
 
 use crate::use_global_escape_listener;
-use crate::{use_animated_open, use_id_or, use_unique_id, FOCUS_TRAP_JS};
+use crate::{use_animated_open, use_focus_trap, use_id_or, use_unique_id, FOCUS_TRAP_JS};
 use dioxus::document;
 use dioxus::prelude::*;
 
@@ -9,6 +9,7 @@ use dioxus::prelude::*;
 struct AlertDialogCtx {
     open: Memo<bool>,
     set_open: Callback<bool>,
+    inert_background: ReadSignal<bool>,
     labelledby: String,
     describedby: String,
 }
@@ -27,6 +28,12 @@ pub struct AlertDialogRootProps {
     /// Callback to handle changes in the open state of the dialog.
     #[props(default)]
     pub on_open_change: Callback<bool>,
+    /// Whether to mark the content outside of the alert dialog `inert` while it is open, which
+    /// takes it out of the accessibility tree and makes it unreachable by pointer and by
+    /// programmatic focus. Defaults to true; set it to false if the application manages `inert`
+    /// itself.
+    #[props(default = ReadSignal::new(Signal::new(true)))]
+    pub inert_background: ReadSignal<bool>,
     /// Additional attributes to extend the root element.
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
@@ -77,6 +84,14 @@ pub struct AlertDialogRootProps {
 ///
 /// The [`AlertDialogRoot`] component defines the following data attributes you can use to control styling:
 /// - `data-state`: Indicates if the alert dialog is open or closed. It can be either "open" or "closed".
+///
+/// ## Accessibility
+///
+/// While the alert dialog is open, the content outside of it is marked `inert`: it is removed from
+/// the accessibility tree and cannot be reached by a pointer or by a programmatic `focus()`. Every
+/// element marked this way also carries a `data-inert-by` attribute naming the dialogs that marked
+/// it, so stacked dialogs unwind independently, and `inert` the application had already set
+/// before the dialog opened is left alone. Set `inert_background` to false to opt out.
 #[component]
 pub fn AlertDialogRoot(props: AlertDialogRootProps) -> Element {
     let labelledby = use_unique_id().to_string();
@@ -90,6 +105,7 @@ pub fn AlertDialogRoot(props: AlertDialogRootProps) -> Element {
     use_context_provider(|| AlertDialogCtx {
         open,
         set_open,
+        inert_background: props.inert_background,
         labelledby,
         describedby,
     });
@@ -177,6 +193,7 @@ pub fn AlertDialogContent(props: AlertDialogContentProps) -> Element {
 
     let open = ctx.open;
     let set_open = ctx.set_open;
+    let inert_background = ctx.inert_background;
 
     // Add a escape key listener to the document when the dialog is open. We can't
     // just add this to the dialog itself because it might not be focused if the user
@@ -185,23 +202,8 @@ pub fn AlertDialogContent(props: AlertDialogContentProps) -> Element {
 
     let gen_id = use_unique_id();
     let id = use_id_or(gen_id, props.id);
-    use_effect(move || {
-        let eval = document::eval(
-            r#"let id = await dioxus.recv();
-            let is_open = await dioxus.recv();
-            let dialog = document.getElementById(id);
 
-            if (is_open) {
-                dialog.trap = window.createFocusTrap(dialog);
-            }
-            if (!is_open && dialog.trap) {
-                dialog.trap.remove();
-                dialog.trap = null;
-            }"#,
-        );
-        let _ = eval.send(id.to_string());
-        let _ = eval.send(open.cloned());
-    });
+    use_focus_trap(id, open, inert_background);
 
     rsx! {
         div {

@@ -241,6 +241,57 @@ fn use_outside_dismiss(
     });
 }
 
+/// Trap focus inside the element with the given `id` while `active` is true.
+///
+/// When `inert_background` is set, everything outside that element is marked `inert` for as long
+/// as the trap is installed. `aria-modal` alone leaves background content reachable by a pointer,
+/// by a programmatic `focus()` and — depending on the screen reader — by a browse mode cursor;
+/// `inert` closes all three. The trap is released when `active` goes false and when the component
+/// is unmounted.
+fn use_focus_trap(
+    id: impl Readable<Target = String> + Copy + 'static,
+    active: impl Readable<Target = bool> + Copy + 'static,
+    inert_background: impl Readable<Target = bool> + Copy + 'static,
+) {
+    // The dialog is attributed its marks by an id of our own rather than by the id of its
+    // element: that one comes from the caller, and the marker holds a space separated list, so a
+    // caller id containing a space could not be read back out of it.
+    let owner = use_unique_id();
+    use_effect_with_cleanup(move || {
+        let id = id.cloned();
+        // `null` when the caller opted out, which leaves the background alone.
+        let owner = inert_background.cloned().then(|| owner.cloned());
+        let eval = active.cloned().then(|| {
+            let eval = document::eval(
+                r#"const id = await dioxus.recv();
+                const owner = await dioxus.recv();
+                const dialog = document.getElementById(id);
+                if (dialog) {
+                    dialog.trap = window.createFocusTrap(dialog, { inertBackground: owner });
+                }
+                await dioxus.recv();
+                if (dialog && dialog.trap) {
+                    dialog.trap.remove();
+                    dialog.trap = null;
+                }
+                // The dialog may have been unmounted while it was open, in which case there is
+                // no trap left to unwind what it marked. Release it by owner instead.
+                if (owner) {
+                    window.releaseInertBackground?.(owner);
+                }"#,
+            );
+            let _ = eval.send(id);
+            let _ = eval.send(owner);
+            eval
+        });
+        move || {
+            if let Some(eval) = &eval {
+                let _ = eval.send(true);
+            }
+        }
+    });
+}
+
 fn use_animated_open(
     id: impl Readable<Target = String> + Copy + 'static,
     open: impl Readable<Target = bool> + Copy + 'static,

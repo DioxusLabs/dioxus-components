@@ -15,6 +15,7 @@ pub fn AlertDialog(props: AlertDialogRootProps) -> Element {
             id: props.id,
             default_open: props.default_open,
             open: props.open,
+            inert_background: props.inert_background,
             on_open_change: props.on_open_change,
             attributes: props.attributes,
             alert_dialog::AlertDialogContent {

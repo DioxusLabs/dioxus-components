@@ -29,3 +29,31 @@ test('test', async ({ page }) => {
   // Assert the dialog is closed after confirming
   await expect(dialog).toHaveCount(0);
 });
+
+test('alert dialog marks background content inert', async ({ page }) => {
+  await page.goto('http://127.0.0.1:8080/component/?name=alert_dialog&', { timeout: 20 * 60 * 1000 }); // Increase timeout to 20 minutes
+
+  // Is the trigger (which sits behind the dialog) inside an inert subtree?
+  const triggerIsInert = () => page.evaluate(() => {
+    const trigger = Array.from(document.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Show Alert Dialog'
+    );
+    return trigger ? trigger.closest('[inert]') !== null : null;
+  });
+
+  const trigger = page.getByRole('button', { name: 'Show Alert Dialog' });
+  await expect(trigger).toBeVisible();
+  await expect.poll(triggerIsInert).toBe(false);
+  await trigger.click();
+  await expect(page.getByRole('alertdialog')).toBeVisible();
+
+  await expect.poll(triggerIsInert).toBe(true);
+  await expect(page.locator('[data-inert-by]').first()).toBeAttached();
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+
+  await expect.poll(triggerIsInert).toBe(false);
+  await expect(page.locator('[data-inert-by]')).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});

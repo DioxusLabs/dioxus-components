@@ -17,6 +17,7 @@ pub fn Dialog(props: DialogRootProps) -> Element {
             class: Styles::dx_dialog_backdrop,
             id: props.id,
             is_modal: props.is_modal,
+            inert_background: props.inert_background,
             open: props.open,
             default_open: props.default_open,
             on_open_change: props.on_open_change,

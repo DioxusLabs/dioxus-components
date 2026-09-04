@@ -435,7 +435,7 @@ pub fn TabContent(props: TabContentProps) -> Element {
 
             tabindex: "0",
             "data-state": if selected() { "active" } else { "inactive" },
-            hidden: !selected(),
+            hidden: if !selected() { "true" },
             ..props.attributes,
 
             if selected() {

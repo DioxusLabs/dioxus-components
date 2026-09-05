@@ -14,8 +14,8 @@ dioxus-rsx = { version = "0.8.0-alpha.1", git = "https://github.com/hovinen/diox
 dioxus-ssr = { version = "0.8.0-alpha.1", git = "https://github.com/hovinen/dioxus", branch = "add-synthetic-form-event" }
 
 [patch.crates-io]
-blitz-dom = { git = "https://github.com/DioxusLabs/blitz" }
-blitz-traits = { git = "https://github.com/DioxusLabs/blitz" }
+blitz-dom = { git = "https://github.com/hovinen/blitz", branch = "support-setting-hidden-flag" }
+blitz-traits = { git = "https://github.com/hovinen/blitz", branch = "support-setting-hidden-flag" }
 
 [profile.release]
 opt-level = "z"

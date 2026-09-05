@@ -4,10 +4,18 @@ members = ["primitives", "preview", "test-harness", "dioxus-attributes"]
 
 [workspace.dependencies]
 dioxus-primitives = { path = "primitives" }
+dioxus-test = { path = "../dioxus-test" }
 tracing = { version = "0.1", features = ["std"] }
 
-dioxus = "0.7.8"
-dioxus-rsx = "0.7.8"
+dioxus = { version = "0.8.0-alpha.1", git = "https://github.com/hovinen/dioxus", branch = "add-synthetic-form-event" }
+dioxus-icons = { git = "https://github.com/hovinen/dioxus-icons", branch = "0.8-alpha.1" }
+dioxus-i18n = { git = "https://github.com/hovinen/dioxus-i18n", branch = "0.8-alpha.1" }
+dioxus-rsx = { version = "0.8.0-alpha.1", git = "https://github.com/hovinen/dioxus", branch = "add-synthetic-form-event" }
+dioxus-ssr = { version = "0.8.0-alpha.1", git = "https://github.com/hovinen/dioxus", branch = "add-synthetic-form-event" }
+
+[patch.crates-io]
+blitz-dom = { git = "https://github.com/hovinen/blitz", branch = "support-setting-hidden-flag" }
+blitz-traits = { git = "https://github.com/hovinen/blitz", branch = "support-setting-hidden-flag" }
 
 [profile.release]
 opt-level = "z"

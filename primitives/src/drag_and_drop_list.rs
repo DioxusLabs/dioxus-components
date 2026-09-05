@@ -23,7 +23,8 @@ fn sortable_item_key(children: &Element, index: usize) -> String {
     children
         .as_ref()
         .ok()
-        .and_then(|vnode| vnode.key.clone())
+        .and_then(|vnode| vnode.key())
+        .map(|key| key.to_string())
         .unwrap_or_else(|| index.to_string())
 }
 

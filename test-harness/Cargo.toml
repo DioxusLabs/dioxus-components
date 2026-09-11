@@ -7,7 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.7.9", features = [] }
+dioxus = { version = "=0.8.0-alpha.0", features = [] }
 dioxus-primitives = { path = "../primitives/", version = "0.0.1", default-features = false, features = ["router"] }
 
 [features]

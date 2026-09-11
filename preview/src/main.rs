@@ -1,3 +1,5 @@
+#![allow(unpredictable_function_pointer_comparisons)]
+
 use crate::components::{
     avatar::{AvatarImageSize, ImageAvatar},
     badge::{Badge, BadgeVariant, VerifiedIcon},
@@ -63,9 +65,14 @@ struct ComponentVariantDemoData {
     component: fn() -> Element,
 }
 
-#[cfg(not(feature = "server"))]
+#[cfg(all(not(feature = "server"), not(feature = "native")))]
 fn main() {
     dioxus::launch(App);
+}
+
+#[cfg(all(not(feature = "server"), feature = "native"))]
+fn main() {
+    dioxus_native::launch(App);
 }
 
 #[cfg(feature = "server")]

@@ -2,10 +2,11 @@
 name = "preview"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88.0"
+rust-version = "1.89.0"
 
 [dependencies]
 dioxus = { workspace = true, features = ["router"] }
+dioxus-native = { workspace = true, optional = true }
 dioxus-code = { version = "0.1.0", default-features = false, features = ["macro", "lang-css"] }
 dioxus-icons = "0.1.0"
 dioxus-primitives.workspace = true
@@ -32,4 +33,4 @@ web = ["dioxus/web", "dioxus-primitives/web"]
 desktop = ["dioxus/desktop"]
 fullstack = ["dioxus/fullstack"]
 server = ["dioxus/server", "dioxus/fullstack"]
-native = ["dioxus/native"]
+native = ["dep:dioxus-native"]

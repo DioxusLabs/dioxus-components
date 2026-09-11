@@ -7,6 +7,7 @@ dioxus-primitives = { path = "primitives" }
 tracing = { version = "0.1", features = ["std"] }
 
 dioxus = "0.7.8"
+dioxus-native = { git = "https://github.com/DioxusLabs/blitz", rev = "922938c6c8db76bc59ebbf0e8db89574354a3aff", features = ["prelude"] }
 dioxus-rsx = "0.7.8"
 
 [profile.release]

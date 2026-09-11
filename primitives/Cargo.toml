@@ -14,7 +14,7 @@ repository = "https://github.com/DioxusLabs/components"
 [dependencies]
 dioxus.workspace = true
 dioxus-attributes = { path = "../dioxus-attributes" }
-dioxus-sdk-time = "0.7.0"
+dioxus-sdk-time = { git = "https://github.com/ealmloff/dioxus-std", branch = "fix-time-dioxus-default-features" }
 time = { version = "0.3.44", features = ["std", "macros", "parsing", "local-offset"] }
 num-integer = "0.1.46"
 tracing.workspace = true

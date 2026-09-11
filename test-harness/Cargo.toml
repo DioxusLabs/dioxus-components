@@ -7,11 +7,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.7.9", features = [] }
+dioxus = { version = "0.7.9", default-features = false, features = ["lib", "launch"] }
 dioxus-primitives = { path = "../primitives/", version = "0.0.1", default-features = false, features = ["router"] }
 
 [features]
 default = ["web"]
-web = ["dioxus/web"]
+web = ["dioxus/web", "dioxus/devtools"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]

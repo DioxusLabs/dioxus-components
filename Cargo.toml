@@ -1,12 +1,17 @@
 [workspace]
 resolver = "3"
-members = ["primitives", "preview", "test-harness", "dioxus-attributes"]
+members = [
+    "primitives",
+    "preview",
+    "test-harness",
+    "dioxus-attributes",
+]
 
 [workspace.dependencies]
 dioxus-primitives = { path = "primitives" }
 tracing = { version = "0.1", features = ["std"] }
 
-dioxus = "0.7.8"
+dioxus = { version = "0.7.8", default-features = false, features = ["lib", "launch"] }
 dioxus-rsx = "0.7.8"
 
 [profile.release]

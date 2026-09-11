@@ -9,6 +9,16 @@ tracing = { version = "0.1", features = ["std"] }
 dioxus = "0.7.8"
 dioxus-rsx = "0.7.8"
 
+[patch.crates-io]
+dioxus = { path = "../selection/packages/dioxus" }
+dioxus-rsx = { path = "../selection/packages/rsx" }
+dioxus-ssr = { path = "../selection/packages/ssr" }
+
+[patch."https://github.com/ealmloff/dioxus"]
+dioxus = { path = "../selection/packages/dioxus" }
+dioxus-signals = { path = "../selection/packages/signals" }
+lazy-js-bundle = { path = "../selection/packages/lazy-js-bundle" }
+
 [profile.release]
 opt-level = "z"
 debug = false

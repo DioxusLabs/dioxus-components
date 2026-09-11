@@ -1,3 +1,5 @@
+#![allow(unpredictable_function_pointer_comparisons)]
+
 use crate::components::{
     avatar::{AvatarImageSize, ImageAvatar},
     badge::{Badge, BadgeVariant, VerifiedIcon},
@@ -11,6 +13,9 @@ use crate::components::{
         Item, ItemContent, ItemDescription, ItemMedia, ItemMediaVariant, ItemTitle, ItemVariant,
     },
     label::Label,
+    otp::{
+        OneTimePasswordGroup, OneTimePasswordInput, OneTimePasswordSeparator, OneTimePasswordSlot,
+    },
     progress::Progress,
     radio_group::{RadioGroup, RadioItem},
     slider::Slider,
@@ -24,8 +29,8 @@ use dioxus::prelude::{dioxus_router::LinkProps, *};
 use dioxus_code::{advanced::HighlightedSource, Code, CodeTheme, Theme};
 use dioxus_i18n::prelude::{use_init_i18n, I18nConfig};
 use dioxus_icons::lucide::{
-    ArrowRight, ArrowUpRight, Check, ChevronDown, ChevronLeft, Copy, ExternalLink, Mail, Menu,
-    Pause, Play, SkipBack, SkipForward, X,
+    ArrowRight, ArrowUpRight, Check, ChevronDown, ChevronLeft, Copy, ExternalLink, KeyRound, Mail,
+    Menu, Pause, Play, ShieldCheck, SkipBack, SkipForward, X,
 };
 use std::str::FromStr;
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
@@ -54,7 +59,6 @@ struct ComponentDemoData {
     variants: &'static [ComponentVariantDemoData],
 }
 
-#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, PartialEq)]
 struct ComponentVariantDemoData {
     name: &'static str,
@@ -1201,6 +1205,10 @@ const BLOCKS: &[MasonryEntry] = &[
         popout: false,
     },
     MasonryEntry {
+        component: BlockOtp,
+        popout: false,
+    },
+    MasonryEntry {
         component: BlockInbox,
         popout: false,
     },
@@ -1266,7 +1274,6 @@ fn WidgetMasonry() -> Element {
     }
 }
 
-#[allow(unpredictable_function_pointer_comparisons)]
 #[component]
 fn MasonryCard(component: fn() -> Element, #[props(default)] popout: bool) -> Element {
     let Comp = component;
@@ -1373,6 +1380,66 @@ fn BlockStats() -> Element {
         }
         p { style: "margin: 0.65rem 0 0; color: var(--secondary-color-5); font-size: 0.82rem;",
             "On track for the 36k Q2 target."
+        }
+    }
+}
+
+#[component]
+fn BlockOtp() -> Element {
+    let mut value = use_signal(String::new);
+    let mut last_complete = use_signal(String::new);
+    let is_complete = value.read().chars().count() == 6;
+
+    rsx! {
+        div { style: "display: grid; gap: 1rem;",
+            div { style: "display: grid; align-items: center; gap: 0.75rem; grid-template-columns: auto minmax(0, 1fr) auto;",
+                div { style: "display: flex; width: 2.25rem; height: 2.25rem; align-items: center; justify-content: center; border: 1px solid var(--primary-color-6); border-radius: 0.5rem; background: var(--primary-color-2); color: var(--highlight-color-tertiary);",
+                    ShieldCheck { size: 20, stroke_width: "1.75" }
+                }
+                div { style: "min-width: 0;",
+                    h3 { style: "margin: 0; color: var(--secondary-color-3); font-size: 1rem; font-weight: 660; line-height: 1.25;",
+                        "Verification"
+                    }
+                    p { style: "margin: 0; color: var(--secondary-color-5); font-size: 0.85rem; line-height: 1.4;",
+                        "Enter the 6-digit code"
+                    }
+                }
+                span {
+                    style: if is_complete {
+                        "display: inline-flex; min-width: 4.75rem; justify-content: center; padding: 0.25rem 0.5rem; border: 1px solid color-mix(in oklab, var(--secondary-success-color) 35%, var(--primary-color-6)); border-radius: 999px; background: color-mix(in oklab, var(--secondary-success-color) 14%, transparent); color: var(--secondary-success-color); font-size: 0.75rem; font-weight: 600; line-height: 1;"
+                    } else {
+                        "display: inline-flex; min-width: 4.75rem; justify-content: center; padding: 0.25rem 0.5rem; border: 1px solid var(--primary-color-6); border-radius: 999px; background: var(--primary-color-2); color: var(--secondary-color-5); font-size: 0.75rem; font-weight: 600; line-height: 1;"
+                    },
+                    if is_complete { "Complete" } else { "Pending" }
+                }
+            }
+
+            div { style: "display: grid; gap: 0.5rem; justify-items: start;",
+                label { r#for: "masonry-otp-input", style: "display: inline-flex; align-items: center; color: var(--secondary-color-4); font-size: 0.8rem; font-weight: 600; gap: 0.375rem; line-height: 1.25;",
+                    KeyRound { size: 14, stroke_width: "1.75" }
+                    "Security code"
+                }
+                OneTimePasswordInput {
+                    id: "masonry-otp-input",
+                    maxlength: 6usize,
+                    value: value(),
+                    validate: |s: String| s.chars().all(|c| c.is_ascii_digit()),
+                    on_value_change: move |v| value.set(v),
+                    on_complete: move |v| last_complete.set(v),
+                    aria_label: "Verification code",
+                    OneTimePasswordGroup {
+                        OneTimePasswordSlot { index: 0usize }
+                        OneTimePasswordSlot { index: 1usize }
+                        OneTimePasswordSlot { index: 2usize }
+                    }
+                    OneTimePasswordSeparator {}
+                    OneTimePasswordGroup {
+                        OneTimePasswordSlot { index: 3usize }
+                        OneTimePasswordSlot { index: 4usize }
+                        OneTimePasswordSlot { index: 5usize }
+                    }
+                }
+            }
         }
     }
 }

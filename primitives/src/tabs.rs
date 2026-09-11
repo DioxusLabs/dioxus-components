@@ -317,6 +317,7 @@ pub fn TabTrigger(props: TabTriggerProps) -> Element {
             onfocus: move |_| ctx.focus.set_focus(Some((props.index)())),
 
             onkeydown: move |event: Event<KeyboardData>| {
+                eprintln!("onkeydown: {event:?}");
                 let key = event.key();
                 let horizontal = (ctx.horizontal)();
                 let mut prevent_default = true;
@@ -435,12 +436,344 @@ pub fn TabContent(props: TabContentProps) -> Element {
 
             tabindex: "0",
             "data-state": if selected() { "active" } else { "inactive" },
-            hidden: !selected(),
+            hidden: if !selected() { "true" },
             ..props.attributes,
 
             if selected() {
                 {props.children}
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{TabContent, TabList, TabTrigger, Tabs};
+    use dioxus::{
+        html::{Key, Modifiers},
+        prelude::*,
+    };
+    use dioxus_test::{
+        by_role,
+        matchers::{contains_substring, has_focus, inner_html},
+        render, Result, Role,
+    };
+
+    #[tokio::test]
+    async fn arrow_right_moves_focus_to_next_tab() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Tabs {
+                    horizontal: true,
+                    TabList {
+                        TabTrigger {
+                            value: "first-tab".to_string(),
+                            index: 0usize,
+                            "First Tab"
+                        }
+                        TabTrigger {
+                            value: "second-tab".to_string(),
+                            index: 1usize,
+                            "Second Tab"
+                        }
+                        TabTrigger {
+                            value: "third-tab".to_string(),
+                            index: 2usize,
+                            "Third Tab"
+                        }
+                    }
+                    TabContent {
+                        index: 0usize,
+                        value: "first-tab".to_string(),
+                        "First tab content"
+                    }
+                    TabContent {
+                        index: 1usize,
+                        value: "second-tab".to_string(),
+                        "Second tab content"
+                    }
+                    TabContent {
+                        index: 2usize,
+                        value: "third-tab".to_string(),
+                        "Third tab content"
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester
+            .query(by_role(Role::Tab).having_name("First Tab"))
+            .focus()
+            .await?;
+
+        tester.key_down(Key::ArrowRight, Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::Tab).having_name("Second Tab"))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn arrow_right_on_the_last_tab_moves_focus_to_first_tab() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Tabs {
+                    horizontal: true,
+                    TabList {
+                        TabTrigger {
+                            value: "first-tab".to_string(),
+                            index: 0usize,
+                            "First Tab"
+                        }
+                        TabTrigger {
+                            value: "second-tab".to_string(),
+                            index: 1usize,
+                            "Second Tab"
+                        }
+                        TabTrigger {
+                            value: "third-tab".to_string(),
+                            index: 2usize,
+                            "Third Tab"
+                        }
+                    }
+                    TabContent {
+                        index: 0usize,
+                        value: "first-tab".to_string(),
+                        "First tab content"
+                    }
+                    TabContent {
+                        index: 1usize,
+                        value: "second-tab".to_string(),
+                        "Second tab content"
+                    }
+                    TabContent {
+                        index: 2usize,
+                        value: "third-tab".to_string(),
+                        "Third tab content"
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester
+            .query(by_role(Role::Tab).having_name("Third Tab"))
+            .focus()
+            .await?;
+
+        tester.key_down(Key::ArrowRight, Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::Tab).having_name("First Tab"))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn arrow_left_moves_focus_to_previous_tab() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Tabs {
+                    horizontal: true,
+                    TabList {
+                        TabTrigger {
+                            value: "first-tab".to_string(),
+                            index: 0usize,
+                            "First Tab"
+                        }
+                        TabTrigger {
+                            value: "second-tab".to_string(),
+                            index: 1usize,
+                            "Second Tab"
+                        }
+                        TabTrigger {
+                            value: "third-tab".to_string(),
+                            index: 2usize,
+                            "Third Tab"
+                        }
+                    }
+                    TabContent {
+                        index: 0usize,
+                        value: "first-tab".to_string(),
+                        "First tab content"
+                    }
+                    TabContent {
+                        index: 1usize,
+                        value: "second-tab".to_string(),
+                        "Second tab content"
+                    }
+                    TabContent {
+                        index: 2usize,
+                        value: "third-tab".to_string(),
+                        "Third tab content"
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester
+            .query(by_role(Role::Tab).having_name("Second Tab"))
+            .focus()
+            .await?;
+
+        tester.key_down(Key::ArrowLeft, Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::Tab).having_name("First Tab"))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn arrow_left_on_first_tab_moves_focus_to_last_tab() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Tabs {
+                    horizontal: true,
+                    TabList {
+                        TabTrigger {
+                            value: "first-tab".to_string(),
+                            index: 0usize,
+                            "First Tab"
+                        }
+                        TabTrigger {
+                            value: "second-tab".to_string(),
+                            index: 1usize,
+                            "Second Tab"
+                        }
+                        TabTrigger {
+                            value: "third-tab".to_string(),
+                            index: 2usize,
+                            "Third Tab"
+                        }
+                    }
+                    TabContent {
+                        index: 0usize,
+                        value: "first-tab".to_string(),
+                        "First tab content"
+                    }
+                    TabContent {
+                        index: 1usize,
+                        value: "second-tab".to_string(),
+                        "Second tab content"
+                    }
+                    TabContent {
+                        index: 2usize,
+                        value: "third-tab".to_string(),
+                        "Third tab content"
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester
+            .query(by_role(Role::Tab).having_name("First Tab"))
+            .focus()
+            .await?;
+
+        tester.key_down(Key::ArrowLeft, Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::Tab).having_name("Third Tab"))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn clicking_a_tab_opens_it() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Tabs {
+                    horizontal: true,
+                    TabList {
+                        TabTrigger {
+                            value: "first-tab".to_string(),
+                            index: 0usize,
+                            "First Tab"
+                        }
+                        TabTrigger {
+                            value: "second-tab".to_string(),
+                            index: 1usize,
+                            "Second Tab"
+                        }
+                    }
+                    TabContent {
+                        index: 0usize,
+                        value: "first-tab".to_string(),
+                        "First tab content"
+                    }
+                    TabContent {
+                        index: 1usize,
+                        value: "second-tab".to_string(),
+                        "Second tab content"
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester
+            .query(by_role(Role::Tab).having_name("Second Tab"))
+            .click()
+            .await?;
+
+        tester
+            .query(by_role(Role::TabPanel))
+            .expect(inner_html(contains_substring("Second tab content")))
+            .await
+    }
+
+    #[tokio::test]
+    async fn clicking_another_tab_switches_to_it() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Tabs {
+                    horizontal: true,
+                    TabList {
+                        TabTrigger {
+                            value: "first-tab".to_string(),
+                            index: 0usize,
+                            "First Tab"
+                        }
+                        TabTrigger {
+                            value: "second-tab".to_string(),
+                            index: 1usize,
+                            "Second Tab"
+                        }
+                    }
+                    TabContent {
+                        index: 0usize,
+                        value: "first-tab".to_string(),
+                        "First tab content"
+                    }
+                    TabContent {
+                        index: 1usize,
+                        value: "second-tab".to_string(),
+                        "Second tab content"
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester
+            .query(by_role(Role::Tab).having_name("Second Tab"))
+            .click()
+            .await?;
+
+        tester
+            .query(by_role(Role::Tab).having_name("First Tab"))
+            .click()
+            .await?;
+
+        tester
+            .query(by_role(Role::TabPanel))
+            .expect(inner_html(contains_substring("First tab content")))
+            .await
     }
 }

@@ -78,7 +78,11 @@ impl ToTokens for AttributeList {
             .map(|attr| {
                 let rendered = attr.rendered_as_dynamic_attr();
                 quote! {
-                    #rendered.into_iter().collect::<Vec<_>>()
+                    {
+                        // Unsizing coercion if it's Box<[Attribute; N]>, no-op if already Box<[Attribute]>.
+                        let __attrs: ::std::boxed::Box<[dioxus_core::Attribute]> = #rendered;
+                        __attrs.into_vec()
+                    }
                 }
             })
             .collect();

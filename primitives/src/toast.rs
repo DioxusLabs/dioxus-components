@@ -70,8 +70,8 @@ pub struct ToastProviderProps {
     pub max_toasts: ReadSignal<usize>,
 
     /// The callback to render a toast. Defaults to rendering the [`Toast`] component.
-    #[props(default = Callback::new(|props: ToastPropsWithOwner| rsx! { Toast { ..props } }))]
-    pub render_toast: Callback<ToastPropsWithOwner, Element>,
+    #[props(default = Callback::new(|props: ToastProps| rsx! { Toast { ..props } }))]
+    pub render_toast: Callback<ToastProps, Element>,
 
     /// Additional attributes to apply to the toast container element.
     #[props(extends = GlobalAttributes)]
@@ -267,24 +267,25 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                         ToastListItem {
                             key: "{toast.id}",
                             {
-                                props.render_toast.call(ToastProps::builder().id(toast.id)
-                                    .index(index)
-                                    .title(toast.title.clone())
-                                    .description(toast.description.clone())
-                                    .toast_type(toast.toast_type)
-                                    .permanent(toast.permanent)
-                                    .on_close({
+                                props.render_toast.call(ToastProps {
+                                    id: toast.id,
+                                    index,
+                                    title: toast.title.clone(),
+                                    description: toast.description.clone(),
+                                    toast_type: toast.toast_type,
+                                    permanent: toast.permanent,
+                                    on_close: {
                                         let toast_id = toast.id;
                                         let remove_toast = ctx.remove_toast;
-                                        move |_| {
+                                        Callback::new(move |_| {
                                             remove_toast.call(toast_id);
-                                        }
-                                    })
+                                        })
+                                    },
                                     // Only pass duration to non-permanent toasts
-                                    .duration(if toast.permanent { None } else { toast.duration })
-                                    .attributes(vec![])
-                                    .build()
-                                )
+                                    duration: if toast.permanent { None } else { toast.duration },
+                                    attributes: vec![],
+                                    children: None,
+                                })
                             }
                         }
                     }

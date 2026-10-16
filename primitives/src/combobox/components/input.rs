@@ -49,7 +49,7 @@ pub fn ComboboxInput(props: ComboboxInputProps) -> Element {
     });
 
     let onkeydown = move |event: KeyboardEvent| match event.key() {
-        Key::ArrowDown => {
+        Key::Named(NamedKey::ArrowDown) => {
             if !open() {
                 ctx.open_with_empty_query_and_focus_first();
             } else {
@@ -58,7 +58,7 @@ pub fn ComboboxInput(props: ComboboxInputProps) -> Element {
             event.prevent_default();
             event.stop_propagation();
         }
-        Key::ArrowUp => {
+        Key::Named(NamedKey::ArrowUp) => {
             if !open() {
                 ctx.open_with_empty_query_and_focus_last();
             } else {
@@ -67,22 +67,22 @@ pub fn ComboboxInput(props: ComboboxInputProps) -> Element {
             event.prevent_default();
             event.stop_propagation();
         }
-        Key::Home if open() => {
+        Key::Named(NamedKey::Home) if open() => {
             ctx.focus_first_visible();
             event.prevent_default();
             event.stop_propagation();
         }
-        Key::End if open() => {
+        Key::Named(NamedKey::End) if open() => {
             ctx.focus_last_visible();
             event.prevent_default();
             event.stop_propagation();
         }
-        Key::Enter if open() => {
+        Key::Named(NamedKey::Enter) if open() => {
             ctx.select_focused();
             event.prevent_default();
             event.stop_propagation();
         }
-        Key::Escape if open() => {
+        Key::Named(NamedKey::Escape) if open() => {
             ctx.set_open(false);
             event.prevent_default();
             event.stop_propagation();

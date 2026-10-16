@@ -1,7 +1,6 @@
 //! Text search and matching algorithms for the select component.
 
 use crate::selectable::OptionState;
-use core::f32;
 use std::collections::HashMap;
 
 /// Find the best matching option based on typeahead input

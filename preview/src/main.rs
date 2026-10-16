@@ -1,3 +1,7 @@
+// `#[component]` derives `PartialEq` for `MasonryCard`'s `fn() -> Element` prop, and an
+// `#[allow]` on the function doesn't reach that generated props struct.
+#![allow(unpredictable_function_pointer_comparisons)]
+
 use crate::components::{
     avatar::{AvatarImageSize, ImageAvatar},
     badge::{Badge, BadgeVariant, VerifiedIcon},
@@ -1266,7 +1270,6 @@ fn WidgetMasonry() -> Element {
     }
 }
 
-#[allow(unpredictable_function_pointer_comparisons)]
 #[component]
 fn MasonryCard(component: fn() -> Element, #[props(default)] popout: bool) -> Element {
     let Comp = component;

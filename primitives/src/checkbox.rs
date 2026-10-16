@@ -166,7 +166,7 @@ pub fn Checkbox(props: CheckboxProps) -> Element {
 
             // Aria says only spacebar can change state of checkboxes.
             onkeydown: move |e| {
-                if e.key() == Key::Enter {
+                if e.key() == Key::Named(NamedKey::Enter) {
                     e.prevent_default();
                 }
             },

@@ -730,7 +730,7 @@ fn DateSegment<T: Clone + Copy + Integer + FromStr + Display + 'static>(
                 event.prevent_default();
                 event.stop_propagation();
             }
-            Key::Backspace => {
+            Key::Named(NamedKey::Backspace) => {
                 let mut text = text_value();
                 if event.modifiers().ctrl() || event.modifiers().meta() {
                     text.clear();
@@ -739,23 +739,23 @@ fn DateSegment<T: Clone + Copy + Integer + FromStr + Display + 'static>(
                 }
                 set_value(text);
             }
-            Key::Delete => {
+            Key::Named(NamedKey::Delete) => {
                 let mut text = text_value();
                 text.remove(0);
                 set_value(text);
             }
-            Key::ArrowLeft => {
+            Key::Named(NamedKey::ArrowLeft) => {
                 ctx.focus.focus_prev();
             }
-            Key::ArrowRight => {
+            Key::Named(NamedKey::ArrowRight) => {
                 ctx.focus.focus_next();
             }
-            Key::Enter => {
+            Key::Named(NamedKey::Enter) => {
                 ctx.focus.focus_next();
                 event.prevent_default();
                 event.stop_propagation();
             }
-            Key::ArrowUp => {
+            Key::Named(NamedKey::ArrowUp) => {
                 let value = match (props.value)() {
                     Some(mut value) => {
                         value.inc();
@@ -765,7 +765,7 @@ fn DateSegment<T: Clone + Copy + Integer + FromStr + Display + 'static>(
                 };
                 props.on_value_change.call(Some(value));
             }
-            Key::ArrowDown => {
+            Key::Named(NamedKey::ArrowDown) => {
                 let value = match (props.value)() {
                     Some(mut value) => {
                         value.dec();

@@ -321,12 +321,12 @@ pub fn TabTrigger(props: TabTriggerProps) -> Element {
                 let horizontal = (ctx.horizontal)();
                 let mut prevent_default = true;
                 match key {
-                    Key::ArrowUp if !horizontal => ctx.focus.focus_prev(),
-                    Key::ArrowDown if !horizontal => ctx.focus.focus_next(),
-                    Key::ArrowLeft if horizontal => ctx.focus.focus_prev(),
-                    Key::ArrowRight if horizontal => ctx.focus.focus_next(),
-                    Key::Home => ctx.focus.focus_first(),
-                    Key::End => ctx.focus.focus_last(),
+                    Key::Named(NamedKey::ArrowUp) if !horizontal => ctx.focus.focus_prev(),
+                    Key::Named(NamedKey::ArrowDown) if !horizontal => ctx.focus.focus_next(),
+                    Key::Named(NamedKey::ArrowLeft) if horizontal => ctx.focus.focus_prev(),
+                    Key::Named(NamedKey::ArrowRight) if horizontal => ctx.focus.focus_next(),
+                    Key::Named(NamedKey::Home) => ctx.focus.focus_first(),
+                    Key::Named(NamedKey::End) => ctx.focus.focus_last(),
                     _ => prevent_default = false,
                 };
                 if prevent_default {

@@ -79,7 +79,7 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
             },
             onkeydown: move |event| {
                 match event.key() {
-                    Key::ArrowUp => {
+                    Key::Named(NamedKey::ArrowUp) => {
                         ctx.set_open(true);
                         ctx.selectable
                             .initial_focus
@@ -87,7 +87,7 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
                         event.prevent_default();
                         event.stop_propagation();
                     }
-                    Key::ArrowDown => {
+                    Key::Named(NamedKey::ArrowDown) => {
                         ctx.set_open(true);
                         ctx.selectable
                             .initial_focus

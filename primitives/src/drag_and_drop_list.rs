@@ -404,6 +404,7 @@ pub fn use_drag_and_drop_list_items() -> Vec<DragAndDropListRenderItem> {
         .map(|(index, item)| {
             // Propagate any `key:` the caller set on the item's root element
             // through to the keyed sortable item fragment.
+
             DragAndDropListRenderItem {
                 index,
                 key: item.key,
@@ -583,7 +584,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
         let key = event.key();
 
         match key {
-            Key::ArrowUp => {
+            Key::Named(NamedKey::ArrowUp) => {
                 event.prevent_default();
                 if ctx.is_dragging() {
                     ctx.move_up(index);
@@ -592,7 +593,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                     ctx.focus_prev();
                 }
             }
-            Key::ArrowDown => {
+            Key::Named(NamedKey::ArrowDown) => {
                 event.prevent_default();
                 if ctx.is_dragging() {
                     ctx.move_down(index);
@@ -601,7 +602,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                     ctx.focus_next();
                 }
             }
-            Key::Enter => {
+            Key::Named(NamedKey::Enter) => {
                 event.prevent_default();
                 ctx.toggle_drag(index);
             }
@@ -609,7 +610,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                 event.prevent_default();
                 ctx.toggle_drag(index);
             }
-            Key::Escape => {
+            Key::Named(NamedKey::Escape) => {
                 event.prevent_default();
                 if ctx.is_dragging() {
                     let pos = ctx.drag_from().unwrap_or(index) + 1;
@@ -619,19 +620,19 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                     ));
                 }
             }
-            Key::Delete | Key::Backspace => {
+            Key::Named(NamedKey::Delete) | Key::Named(NamedKey::Backspace) => {
                 event.prevent_default();
                 if !ctx.is_dragging() {
                     ctx.remove(index);
                 }
             }
-            Key::Home => {
+            Key::Named(NamedKey::Home) => {
                 event.prevent_default();
                 if !ctx.is_dragging() {
                     ctx.set_focus(Some(0));
                 }
             }
-            Key::End => {
+            Key::Named(NamedKey::End) => {
                 event.prevent_default();
                 if !ctx.is_dragging() {
                     ctx.set_focus(ctx.item_count().checked_sub(1));

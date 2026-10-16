@@ -70,8 +70,8 @@ pub struct ToastProviderProps {
     pub max_toasts: ReadSignal<usize>,
 
     /// The callback to render a toast. Defaults to rendering the [`Toast`] component.
-    #[props(default = Callback::new(|props: ToastPropsWithOwner| rsx! { Toast { ..props } }))]
-    pub render_toast: Callback<ToastPropsWithOwner, Element>,
+    #[props(default = Callback::new(|props: ToastProps| rsx! { Toast { ..props } }))]
+    pub render_toast: Callback<ToastProps, Element>,
 
     /// Additional attributes to apply to the toast container element.
     #[props(extends = GlobalAttributes)]
@@ -266,25 +266,11 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                     for (index, toast) in toast_list.read().iter().rev().enumerate() {
                         ToastListItem {
                             key: "{toast.id}",
-                            {
-                                props.render_toast.call(ToastProps::builder().id(toast.id)
-                                    .index(index)
-                                    .title(toast.title.clone())
-                                    .description(toast.description.clone())
-                                    .toast_type(toast.toast_type)
-                                    .permanent(toast.permanent)
-                                    .on_close({
-                                        let toast_id = toast.id;
-                                        let remove_toast = ctx.remove_toast;
-                                        move |_| {
-                                            remove_toast.call(toast_id);
-                                        }
-                                    })
-                                    // Only pass duration to non-permanent toasts
-                                    .duration(if toast.permanent { None } else { toast.duration })
-                                    .attributes(vec![])
-                                    .build()
-                                )
+                            RenderToast {
+                                toast: toast.clone(),
+                                index,
+                                render_toast: props.render_toast,
+                                remove_toast: ctx.remove_toast,
                             }
                         }
                     }
@@ -295,6 +281,39 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
         // Portal output at the end of the document
         PortalOut { portal }
     }
+}
+
+// Renders one toast through `render_toast`. This is its own component so that `on_close` is
+// created once per toast with `use_callback` and dropped with the toast, rather than created
+// in `ToastProvider`'s render, where every re-render would add a callback that lives as long as
+// the provider.
+#[component]
+fn RenderToast(
+    toast: ToastRecord,
+    index: usize,
+    render_toast: Callback<ToastProps, Element>,
+    remove_toast: Callback<usize>,
+) -> Element {
+    let toast_id = toast.id;
+    let on_close = use_callback(move |_| remove_toast.call(toast_id));
+
+    render_toast.call(ToastProps {
+        id: toast.id,
+        index,
+        title: toast.title,
+        description: toast.description,
+        toast_type: toast.toast_type,
+        permanent: toast.permanent,
+        on_close,
+        // Only pass duration to non-permanent toasts
+        duration: if toast.permanent {
+            None
+        } else {
+            toast.duration
+        },
+        attributes: vec![],
+        children: None,
+    })
 }
 
 /// The ordered list containing rendered toasts.
@@ -519,8 +538,8 @@ pub fn Toast(props: ToastProps) -> Element {
 
             "data-type": props.toast_type.as_str(),
             "data-permanent": props.permanent,
-            "data-toast-even": (props.index % 2 == 0).then_some("true"),
-            "data-toast-odd": (props.index % 2 == 1).then_some("true"),
+            "data-toast-even": props.index.is_multiple_of(2).then_some("true"),
+            "data-toast-odd": (!props.index.is_multiple_of(2)).then_some("true"),
             "data-top": (props.index == 0).then_some("true"),
             style: "--toast-index: {props.index}",
             ..props.attributes,
@@ -737,5 +756,127 @@ pub fn consume_toast() -> Toasts {
     Toasts {
         add_toast,
         remove_toast,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dioxus::html::{
+        geometry::{ClientPoint, ElementPoint, PagePoint, ScreenPoint},
+        input_data::{MouseButton, MouseButtonSet},
+        HasMouseData, InteractionElementOffset, InteractionLocation, ModifiersInteraction,
+        PointerInteraction,
+    };
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    // dioxus-html's `SerializedMouseData` needs its `serialize` feature, so tests click with this
+    struct TestClick;
+
+    impl InteractionLocation for TestClick {
+        fn client_coordinates(&self) -> ClientPoint {
+            ClientPoint::default()
+        }
+        fn screen_coordinates(&self) -> ScreenPoint {
+            ScreenPoint::default()
+        }
+        fn page_coordinates(&self) -> PagePoint {
+            PagePoint::default()
+        }
+    }
+
+    impl InteractionElementOffset for TestClick {
+        fn element_coordinates(&self) -> ElementPoint {
+            ElementPoint::default()
+        }
+    }
+
+    impl ModifiersInteraction for TestClick {
+        fn modifiers(&self) -> Modifiers {
+            Modifiers::empty()
+        }
+    }
+
+    impl PointerInteraction for TestClick {
+        fn trigger_button(&self) -> Option<MouseButton> {
+            Some(MouseButton::Primary)
+        }
+        fn held_buttons(&self) -> MouseButtonSet {
+            MouseButtonSet::empty()
+        }
+    }
+
+    impl HasMouseData for TestClick {
+        fn as_any(&self) -> &dyn std::any::Any {
+            self
+        }
+    }
+
+    thread_local! {
+        static RENDERED: RefCell<Vec<ToastProps>> = const { RefCell::new(Vec::new()) };
+    }
+
+    fn rendered_toast(title: &str) -> ToastProps {
+        RENDERED.with(|rendered| {
+            rendered
+                .borrow()
+                .iter()
+                .rev()
+                .find(|props| props.title == title)
+                .cloned()
+                .unwrap_or_else(|| panic!("toast {title:?} was not rendered"))
+        })
+    }
+
+    #[component]
+    fn TriggerToasts() -> Element {
+        let toast_api = use_toast();
+        use_hook(move || {
+            for title in ["first", "second"] {
+                toast_api.info(title.to_string(), ToastOptions::new().permanent(true));
+            }
+        });
+        rsx! {}
+    }
+
+    fn render(dom: &mut VirtualDom) -> String {
+        dom.mark_all_dirty();
+        dom.render_immediate_to_vec();
+        dioxus_ssr::render(dom)
+    }
+
+    #[test]
+    fn on_close_is_stable_across_renders_and_removes_its_toast() {
+        RENDERED.with(|rendered| rendered.borrow_mut().clear());
+        let mut dom = VirtualDom::new(|| {
+            rsx! {
+                ToastProvider {
+                    render_toast: Callback::new(|props: ToastProps| {
+                        RENDERED.with(|rendered| rendered.borrow_mut().push(props.clone()));
+                        rsx! { span { "{props.title}" } }
+                    }),
+                    TriggerToasts {}
+                }
+            }
+        });
+        dom.rebuild_in_place();
+        let html = render(&mut dom);
+        assert!(html.contains("first") && html.contains("second"));
+
+        // Re-rendering the provider must reuse each toast's callback rather than create a new one
+        let first = rendered_toast("first");
+        render(&mut dom);
+        assert!(rendered_toast("first").on_close == first.on_close);
+        assert!(rendered_toast("second").on_close != first.on_close);
+
+        dom.in_runtime(|| {
+            first
+                .on_close
+                .call(Event::new(Rc::new(MouseData::new(TestClick)), false));
+        });
+        let html = render(&mut dom);
+        assert!(!html.contains("first"));
+        assert!(html.contains("second"));
     }
 }

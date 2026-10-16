@@ -114,28 +114,28 @@ pub fn SelectList(props: SelectListProps) -> Element {
 
                 ctx.add_to_typeahead_buffer(&new_text);
             }
-            Key::ArrowUp => {
+            Key::Named(NamedKey::ArrowUp) => {
                 arrow_key_navigation(event);
                 ctx.selectable.collection.focus_prev();
             }
-            Key::End => {
+            Key::Named(NamedKey::End) => {
                 arrow_key_navigation(event);
                 ctx.selectable.collection.focus_last();
             }
-            Key::ArrowDown => {
+            Key::Named(NamedKey::ArrowDown) => {
                 arrow_key_navigation(event);
                 ctx.selectable.collection.focus_next();
             }
-            Key::Home => {
+            Key::Named(NamedKey::Home) => {
                 arrow_key_navigation(event);
                 ctx.selectable.collection.focus_first();
             }
-            Key::Enter => {
+            Key::Named(NamedKey::Enter) => {
                 ctx.select_current_item();
                 event.prevent_default();
                 event.stop_propagation();
             }
-            Key::Escape => {
+            Key::Named(NamedKey::Escape) => {
                 ctx.set_open(false);
                 event.prevent_default();
                 event.stop_propagation();

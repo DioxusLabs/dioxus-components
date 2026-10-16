@@ -196,30 +196,30 @@ pub fn ToolbarButton(props: ToolbarButtonProps) -> Element {
                 let horizontal = (ctx.horizontal)();
                 let mut prevent_default = true;
                 match key {
-                    Key::ArrowUp if !horizontal => {
+                    Key::Named(NamedKey::ArrowUp) if !horizontal => {
                         let index = (props.index)();
                         if index > 0 {
                             ctx.set_focus(Some(index - 1));
                         }
                     }
-                    Key::ArrowDown if !horizontal => {
+                    Key::Named(NamedKey::ArrowDown) if !horizontal => {
                         let index = (props.index)();
                         ctx.set_focus(Some(index + 1));
                     }
-                    Key::ArrowLeft if horizontal => {
+                    Key::Named(NamedKey::ArrowLeft) if horizontal => {
                         let index = (props.index)();
                         if index > 0 {
                             ctx.set_focus(Some(index - 1));
                         }
                     }
-                    Key::ArrowRight if horizontal => {
+                    Key::Named(NamedKey::ArrowRight) if horizontal => {
                         let index = (props.index)();
                         ctx.set_focus(Some(index + 1));
                     }
-                    Key::Home => {
+                    Key::Named(NamedKey::Home) => {
                         ctx.set_focus(Some(0));
                     }
-                    Key::End => {
+                    Key::Named(NamedKey::End) => {
                         ctx.set_focus(Some(100));
                     }
                     _ => prevent_default = false,

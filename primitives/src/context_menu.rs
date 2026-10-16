@@ -163,7 +163,7 @@ pub fn ContextMenu(props: ContextMenuProps) -> Element {
 
     // Handle escape key to close the menu
     let handle_keydown = move |event: Event<KeyboardData>| {
-        if open() && event.key() == Key::Escape {
+        if open() && event.key() == Key::Named(NamedKey::Escape) {
             event.prevent_default();
             set_open.call(false);
             ctx.focus.clear_focus();
@@ -418,17 +418,17 @@ pub fn ContextMenuContent(props: ContextMenuContentProps) -> Element {
 
     let onkeydown = move |event: Event<KeyboardData>| {
         match event.key() {
-            Key::Escape => ctx.focus.clear_focus(),
-            Key::ArrowDown => {
+            Key::Named(NamedKey::Escape) => ctx.focus.clear_focus(),
+            Key::Named(NamedKey::ArrowDown) => {
                 ctx.focus.focus_next();
             }
-            Key::ArrowUp => {
+            Key::Named(NamedKey::ArrowUp) => {
                 if open() {
                     ctx.focus.focus_prev();
                 }
             }
-            Key::Home => ctx.focus.focus_first(),
-            Key::End => ctx.focus.focus_last(),
+            Key::Named(NamedKey::Home) => ctx.focus.focus_first(),
+            Key::Named(NamedKey::End) => ctx.focus.focus_last(),
             _ => return,
         }
         event.prevent_default();
@@ -616,7 +616,9 @@ pub fn ContextMenuItem(props: ContextMenuItemProps) -> Element {
     };
 
     let handle_keydown = move |event: Event<KeyboardData>| {
-        if event.key() == Key::Enter || event.key() == Key::Character(" ".to_string()) {
+        if event.key() == Key::Named(NamedKey::Enter)
+            || event.key() == Key::Character(" ".to_string())
+        {
             select();
             event.prevent_default();
             event.stop_propagation();

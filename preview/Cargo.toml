@@ -6,6 +6,7 @@ rust-version = "1.92.0"
 
 [dependencies]
 dioxus = { workspace = true, features = ["router"] }
+dioxus-native = { workspace = true, optional = true }
 dioxus-code = { workspace = true, features = ["macro", "lang-css"] }
 dioxus-icons.workspace = true
 dioxus-primitives.workspace = true
@@ -32,4 +33,4 @@ web = ["dioxus/web", "dioxus-primitives/web"]
 desktop = ["dioxus/desktop"]
 fullstack = ["dioxus/fullstack"]
 server = ["dioxus/server", "dioxus/fullstack"]
-native = ["dioxus/native"]
+native = ["dep:dioxus-native"]

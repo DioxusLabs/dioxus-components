@@ -218,10 +218,8 @@ pub fn SidebarProvider(
             );
             let mut eval = document::eval(&js_code);
 
-            loop {
-                if eval.recv::<bool>().await.is_ok() {
-                    ctx.toggle();
-                }
+            while eval.recv::<bool>().await.is_ok() {
+                ctx.toggle();
             }
         });
     });

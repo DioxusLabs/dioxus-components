@@ -20,7 +20,7 @@ jobs:
   build:
     uses: DioxusLabs/dioxus-ci/.github/workflows/web-build.yml@v0.1.0
     with:
-      working-directory: preview
+      working-directory: preview-web
       ssg: true
       features: fullstack
       base-path: ${{ github.event.repository.name }}

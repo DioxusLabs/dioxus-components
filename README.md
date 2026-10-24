@@ -49,9 +49,11 @@ This will create a `components` folder in your project (if it doesn't already ex
 
 ### Project structure
 
-This repository contains two main crates:
+This repository contains these main crates:
 - `dioxus-primitives`: The core unstyled component library.
-- `preview`: A Dioxus application that showcases the components from `dioxus-primitives` with shadcn-styled versions.
+- `preview`: A library containing the Dioxus application that showcases the components from `dioxus-primitives` with shadcn-styled versions.
+- `preview-web`: The binary that launches the preview with Dioxus (web, desktop and fullstack).
+- `preview-native`: The binary that launches the preview with the pinned Blitz native renderer.
 
 ### Adding new components
 
@@ -93,19 +95,19 @@ npx playwright test
 To test your changes, you can run the preview application. For a desktop build, use:
 
 ```sh
-dx serve -p preview --desktop
+dx serve -p preview-web --desktop
 ```
 
 or for the web build:
 
 ```sh
-dx serve -p preview --web
+dx serve -p preview-web --web
 ```
 
 To test against the pinned Blitz native renderer, use the platform flag for your operating system:
 
 ```sh
-dx serve -p preview --linux --renderer native --features native
+dx serve -p preview-native --linux
 ```
 
 Replace `--linux` with `--macos` or `--windows` as appropriate.

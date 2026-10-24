@@ -8,6 +8,8 @@ on:
       - /**
       - preview/**/*.rs
       - preview/**/Cargo.toml
+      - preview-web/**
+      - preview-native/**
       - primitives/**/*.rs
       - primitives/**/Cargo.toml
       - .github/**
@@ -21,6 +23,8 @@ on:
       - /**
       - preview/**/*.rs
       - preview/**/Cargo.toml
+      - preview-web/**
+      - preview-native/**
       - primitives/**/*.rs
       - primitives/**/Cargo.toml
       - .github/**

@@ -6029,7 +6029,6 @@ dependencies = [
  "dioxus-code",
  "dioxus-i18n",
  "dioxus-icons",
- "dioxus-native",
  "dioxus-primitives",
  "dioxus-ssr",
  "palette",
@@ -6039,6 +6038,23 @@ dependencies = [
  "time",
  "tracing",
  "unic-langid",
+]
+
+[[package]]
+name = "preview-native"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
+ "dioxus-native",
+ "preview",
+]
+
+[[package]]
+name = "preview-web"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
+ "preview",
 ]
 
 [[package]]

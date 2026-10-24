@@ -1,6 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["primitives", "preview", "test-harness", "dioxus-attributes"]
+members = [
+    "primitives",
+    "preview",
+    "preview-web",
+    "preview-native",
+    "test-harness",
+    "dioxus-attributes",
+]
 
 [workspace.dependencies]
 dioxus = "=0.8.0-alpha.3"

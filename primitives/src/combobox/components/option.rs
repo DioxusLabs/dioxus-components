@@ -58,6 +58,7 @@ pub fn ComboboxOption<T: PartialEq + Clone + 'static>(props: ComboboxOptionProps
     let visible = move || ctx.is_visible(index());
     let option = use_selectable_option(
         ctx.selectable,
+        None,
         SelectableOptionConfig {
             id: props.id,
             index,

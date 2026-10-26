@@ -1,11 +1,9 @@
 use dioxus::prelude::*;
 use dioxus_icons::lucide::{Check, ChevronDown};
 use dioxus_primitives::select::{
-    self, SelectGroupLabelProps, SelectMultiProps, SelectOptionProps, SelectProps,
+    self, SelectGroupLabelProps, SelectGroupProps, SelectMultiProps, SelectOptionProps, SelectProps,
 };
 use dioxus_primitives::{dioxus_attributes::attributes, merge_attributes};
-
-pub use dioxus_primitives::select::SelectGroup;
 
 #[css_module("/src/components/select/style.css")]
 struct Styles;
@@ -76,6 +74,22 @@ pub fn SelectMulti<T: Clone + PartialEq + 'static>(props: SelectMultiProps<T>) -
                 class: Styles::dx_select_list,
                 {props.children}
             }
+        }
+    }
+}
+
+#[component]
+pub fn SelectGroup(props: SelectGroupProps) -> Element {
+    let base = attributes!(div {class: Styles::dx_select_group});
+    let merged = merge_attributes(vec![base, props.attributes]);
+
+    rsx! {
+        select::SelectGroup {
+            id: props.id,
+            disabled: props.disabled,
+
+            attributes: merged,
+            {props.children}
         }
     }
 }

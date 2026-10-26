@@ -46,6 +46,12 @@ pub(crate) struct SelectableContext {
 }
 
 #[derive(Clone, Copy)]
+pub(crate) struct SelectableGroupContext {
+    /// If the group is disabled
+    pub disabled: ReadSignal<bool>,
+}
+
+#[derive(Clone, Copy)]
 pub(crate) struct SelectableOption<T: Clone + PartialEq + 'static> {
     pub(crate) id: Memo<String>,
     pub(crate) disabled: Memo<bool>,
@@ -228,6 +234,7 @@ pub(crate) fn use_selectable_root(
 
 pub(crate) fn use_selectable_option<T: Clone + PartialEq + 'static>(
     selectable: SelectableContext,
+    group: Option<SelectableGroupContext>,
     option: SelectableOptionConfig<T>,
 ) -> SelectableOption<T> {
     let SelectableOptionConfig {
@@ -240,7 +247,11 @@ pub(crate) fn use_selectable_option<T: Clone + PartialEq + 'static>(
     } = option;
     let disabled = {
         let root_disabled = selectable.disabled;
-        use_memo(move || root_disabled.cloned() || option_disabled.cloned())
+        use_memo(move || {
+            root_disabled.cloned()
+                || option_disabled.cloned()
+                || group.map(|v| v.disabled.cloned()).unwrap_or(false)
+        })
     };
     let id = use_listbox_option(
         id,

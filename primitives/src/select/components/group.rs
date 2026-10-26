@@ -1,6 +1,9 @@
 //! SelectGroup and SelectGroupLabel component implementations.
 
-use crate::{listbox::ListboxContext, use_effect, use_id_or, use_unique_id};
+use crate::{
+    listbox::ListboxContext, selectable::SelectableGroupContext, use_effect, use_id_or,
+    use_unique_id,
+};
 use dioxus::prelude::*;
 
 use super::super::context::{SelectContext, SelectGroupContext};
@@ -72,11 +75,16 @@ pub struct SelectGroupProps {
 #[component]
 pub fn SelectGroup(props: SelectGroupProps) -> Element {
     let ctx = use_context::<SelectContext>();
-    let disabled = ctx.selectable.disabled.cloned() || props.disabled.cloned();
+    let disabled = use_memo(move || ctx.selectable.disabled.cloned() || props.disabled.cloned());
 
     let labeled_by = use_signal(|| None);
 
-    use_context_provider(|| SelectGroupContext { labeled_by });
+    use_context_provider(|| SelectGroupContext {
+        labeled_by,
+        selectable: SelectableGroupContext {
+            disabled: disabled.into(),
+        },
+    });
     let render = use_context::<ListboxContext>().render;
 
     rsx! {
@@ -87,6 +95,8 @@ pub fn SelectGroup(props: SelectGroupProps) -> Element {
                 // ARIA attributes
                 aria_disabled: disabled,
                 aria_labelledby: labeled_by,
+
+                "data-disabled": disabled,
 
                 ..props.attributes,
                 {props.children}

@@ -880,3 +880,193 @@ mod tests {
         assert!(html.contains("second"));
     }
 }
+
+#[cfg(test)]
+mod dioxus_test_tests {
+    use crate::toast::{use_toast, ToastOptions, ToastProvider};
+    use dioxus::prelude::*;
+    use dioxus_test::{
+        by_role,
+        matchers::{contains_substring, eq, inner_html, is_empty, len},
+        render, Result, Role,
+    };
+    use std::time::Duration;
+
+    #[tokio::test]
+    async fn toast_appears_when_triggered() -> Result<()> {
+        #[component]
+        pub fn TestComponent() -> Element {
+            rsx! {
+                ToastProvider { ToastButton {} }
+            }
+        }
+        #[component]
+        fn ToastButton() -> Element {
+            let toast_api = use_toast();
+            rsx! {
+                button {
+                    onclick: move |_| {
+                        toast_api
+                            .info(
+                                "Custom Toast".to_string(),
+                                ToastOptions::new()
+                                    .description("Arbitrary toast description")
+                                    .duration(Duration::from_secs(60))
+                                    .permanent(false),
+                            );
+                    },
+                    "Info (60s)"
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester
+            .query(by_role(Role::Button).having_name(eq("Info (60s)")))
+            .click()
+            .await?;
+
+        tester
+            .query(by_role(Role::Alert))
+            .expect(inner_html(contains_substring(
+                "Arbitrary toast description",
+            )))
+            .await
+    }
+
+    #[tokio::test]
+    async fn toast_disappears_when_closed() -> Result<()> {
+        #[component]
+        pub fn TestComponent() -> Element {
+            rsx! {
+                ToastProvider { ToastButton {} }
+            }
+        }
+        #[component]
+        fn ToastButton() -> Element {
+            let toast_api = use_toast();
+            rsx! {
+                button {
+                    onclick: move |_| {
+                        toast_api
+                            .info(
+                                "Custom Toast".to_string(),
+                                ToastOptions::new()
+                                    .description("Arbitrary toast description")
+                                    .duration(Duration::from_secs(60))
+                                    .permanent(false),
+                            );
+                    },
+                    "Info (60s)"
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester
+            .query(by_role(Role::Button).having_name(eq("Info (60s)")))
+            .click()
+            .await?;
+
+        tester
+            .query(by_role(Role::Button).having_name(eq("close")))
+            .click()
+            .await?;
+
+        tester
+            .query_all(by_role(Role::Alert))
+            .expect(is_empty())
+            .await
+    }
+
+    #[tokio::test]
+    async fn two_toasts_can_open() -> Result<()> {
+        #[component]
+        pub fn TestComponent() -> Element {
+            rsx! {
+                ToastProvider { ToastButton {} }
+            }
+        }
+        #[component]
+        fn ToastButton() -> Element {
+            let toast_api = use_toast();
+            rsx! {
+                button {
+                    onclick: move |_| {
+                        toast_api
+                            .info(
+                                "Custom Toast".to_string(),
+                                ToastOptions::new()
+                                    .description("Arbitrary toast description")
+                                    .duration(Duration::from_secs(60))
+                                    .permanent(false),
+                            );
+                    },
+                    "Info (60s)"
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester
+            .query(by_role(Role::Button).having_name(eq("Info (60s)")))
+            .click()
+            .await?;
+        tester
+            .query(by_role(Role::Button).having_name(eq("Info (60s)")))
+            .click()
+            .await?;
+
+        tester
+            .query_all(by_role(Role::Alert))
+            .expect(len(eq(2)))
+            .await
+    }
+
+    #[tokio::test]
+    async fn one_toast_is_left_after_two_opened_and_one_closed() -> Result<()> {
+        #[component]
+        pub fn TestComponent() -> Element {
+            rsx! {
+                ToastProvider { ToastButton {} }
+            }
+        }
+        #[component]
+        fn ToastButton() -> Element {
+            let toast_api = use_toast();
+            rsx! {
+                button {
+                    onclick: move |_| {
+                        toast_api
+                            .info(
+                                "Custom Toast".to_string(),
+                                ToastOptions::new()
+                                    .description("Arbitrary toast description")
+                                    .duration(Duration::from_secs(60))
+                                    .permanent(false),
+                            );
+                    },
+                    "Info (60s)"
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester
+            .query(by_role(Role::Button).having_name(eq("Info (60s)")))
+            .click()
+            .await?;
+        tester
+            .query(by_role(Role::Button).having_name(eq("Info (60s)")))
+            .click()
+            .await?;
+        tester
+            .query(by_role(Role::Button).having_name(eq("close")))
+            .click()
+            .await?;
+
+        tester
+            .query_all(by_role(Role::Alert))
+            .expect(len(eq(1)))
+            .await
+    }
+}

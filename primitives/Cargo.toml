@@ -26,6 +26,8 @@ lazy-js-bundle.workspace = true
 
 [dev-dependencies]
 dioxus-ssr.workspace = true
+dioxus-test.workspace = true
+tokio = { version = "1.48", features = ["time", "macros", "rt"] }
 
 [features]
 default = ["router"]

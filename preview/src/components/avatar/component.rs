@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use dioxus_primitives::dioxus_attributes::attributes;
 use dioxus_primitives::avatar::{self, AvatarState};
+use dioxus_primitives::dioxus_attributes::attributes;
 use dioxus_primitives::merge_attributes;
 
 #[css_module("/src/components/avatar/style.css")]
@@ -77,9 +77,7 @@ pub fn Avatar(props: AvatarProps) -> Element {
         props.size.to_class(),
         props.shape.to_class()
     );
-    let base = attributes!(span {
-        class
-    });
+    let base = attributes!(span { class });
     let merged = merge_attributes(vec![base, props.attributes]);
 
     rsx! {
@@ -202,5 +200,59 @@ pub fn ImageAvatar(props: ImageAvatarProps) -> Element {
                 {props.children}
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::components::avatar::ImageAvatar;
+    use dioxus::prelude::*;
+    use dioxus_test::{
+        by_label, by_role,
+        matchers::{attribute, eq, inner_html, some},
+        render, Result, Role,
+    };
+
+    #[tokio::test]
+    async fn avatar_with_valid_image_shows_image() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                ImageAvatar {
+                    src: "https://example.com/avatar-image.png",
+                    alt: "Example avatar",
+                    "EA"
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester
+            .query(by_role(Role::Image).having_name(eq("Example avatar")))
+            .expect(attribute(
+                "src",
+                some(eq("https://example.com/avatar-image.png")),
+            ))
+            .await
+    }
+
+    #[tokio::test]
+    async fn avatar_with_invalid_image_url_has_replacement_text() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                ImageAvatar {
+                    src: "https://invalid-url.example/image.jpg",
+                    alt: "Error avatar",
+                    "EA"
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester
+            .query(by_label(eq("Error avatar")))
+            .expect(inner_html(eq("EA")))
+            .await
     }
 }

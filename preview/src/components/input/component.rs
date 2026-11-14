@@ -55,3 +55,45 @@ pub fn Input(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::components::input::Input;
+    use dioxus::prelude::*;
+    use dioxus_test::{
+        by_testid,
+        matchers::{eq, inner_html},
+        render, Result,
+    };
+
+    #[tokio::test]
+    async fn input_reacts_to_entered_text() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            let mut text = use_signal(|| String::new());
+            rsx! {
+                Input {
+                    "data-testid": "input-component",
+                    oninput: move |e: Event<FormData>| {
+                        text.set(e.value());
+                    }
+                }
+                div {
+                    "data-testid": "input-text",
+                    {text}
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester
+            .query(by_testid("input-component"))
+            .input("Some text")
+            .await?;
+
+        tester
+            .query(by_testid("input-text"))
+            .expect(inner_html(eq("Some text")))
+            .await
+    }
+}

@@ -368,10 +368,10 @@ pub fn PopoverTrigger(props: PopoverTriggerProps) -> Element {
     use_effect(use_reactive!(|id_attribute| {
         if let Some(id_attribute) = id_attribute {
             match &id_attribute.value {
-                dioxus_core::AttributeValue::Text(val) => id.set(val.to_string()),
-                dioxus_core::AttributeValue::Float(val) => id.set(val.to_string()),
-                dioxus_core::AttributeValue::Int(val) => id.set(val.to_string()),
-                dioxus_core::AttributeValue::Bool(val) => id.set(val.to_string()),
+                dioxus::core::AttributeValue::Text(val) => id.set(val.to_string()),
+                dioxus::core::AttributeValue::Float(val) => id.set(val.to_string()),
+                dioxus::core::AttributeValue::Int(val) => id.set(val.to_string()),
+                dioxus::core::AttributeValue::Bool(val) => id.set(val.to_string()),
                 _ => {}
             }
         }

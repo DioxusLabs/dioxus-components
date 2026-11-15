@@ -9,8 +9,8 @@ use crate::{
     },
     use_controlled, use_effect, Controlled,
 };
+use dioxus::core::Task;
 use dioxus::prelude::*;
-use dioxus_core::Task;
 
 use super::super::context::SelectContext;
 

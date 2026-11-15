@@ -4,12 +4,12 @@ use crate::{
     calendar::{
         weekday_abbreviation, AvailableRanges, CalendarProps, DateRange, RangeCalendarProps,
     },
-    dioxus_core::Properties,
     focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
     popover::*,
     use_unique_id, LocalDateExt as _,
 };
 
+use dioxus::core::Properties;
 use dioxus::prelude::*;
 use num_integer::Integer;
 use std::{fmt::Display, str::FromStr};

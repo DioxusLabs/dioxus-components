@@ -5,10 +5,10 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use dioxus::core::AttributeValue::Text;
 use dioxus::core::{current_scope_id, use_drop};
 use dioxus::prelude::*;
 use dioxus::prelude::{asset, manganis, Asset};
-use dioxus_core::AttributeValue::Text;
 use time::OffsetDateTime;
 
 pub use dioxus_attributes;
@@ -133,7 +133,7 @@ pub fn use_controlled<T: Clone + PartialEq + 'static>(
 
 /// Run some cleanup code when the component is unmounted if the effect was run.
 fn use_effect_cleanup<F: FnOnce() + 'static>(#[allow(unused)] cleanup: F) {
-    client!(crate::dioxus_core::use_drop(cleanup))
+    client!(dioxus::core::use_drop(cleanup))
 }
 
 /// Run some cleanup code when the component is unmounted if the effect was run.
@@ -145,7 +145,7 @@ fn use_effect_with_cleanup<F: FnMut() -> C + 'static, C: FnOnce() + 'static>(mut
         }
         cleanup.set(Some(effect()));
     });
-    client!(crate::dioxus_core::use_drop(move || {
+    client!(dioxus::core::use_drop(move || {
         if let Some(cleanup) = cleanup.take() {
             cleanup();
         }

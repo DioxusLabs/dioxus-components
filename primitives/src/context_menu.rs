@@ -6,8 +6,8 @@ use crate::{
     use_animated_open, use_controlled, use_effect_with_cleanup, use_id_or, use_outside_dismiss,
     use_unique_id,
 };
+use dioxus::core::Task;
 use dioxus::prelude::*;
-use dioxus_core::Task;
 use dioxus_sdk_time::sleep;
 use std::time::Duration;
 

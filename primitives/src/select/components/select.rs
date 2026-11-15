@@ -345,3 +345,1387 @@ pub fn SelectMulti<T: Clone + PartialEq + 'static>(props: SelectMultiProps<T>) -
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Select, SelectMulti};
+    use crate::select::{SelectList, SelectOption, SelectTrigger, SelectValue};
+    use dioxus::prelude::*;
+    use dioxus_test::{
+        by_role,
+        matchers::{attribute, contains_substring, eq, has_focus, inner_html, len, not, some},
+        render, Result, Role,
+    };
+
+    #[tokio::test]
+    async fn clicking_the_trigger_opens_the_menu() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester.query(by_role(Role::Button)).click().await?;
+
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(attribute("data-state", some(eq("open"))))
+            .await
+    }
+
+    #[tokio::test]
+    async fn opening_the_menu_moves_focus_to_the_menu() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester.query(by_role(Role::Button)).click().await?;
+
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn arrow_down_in_the_menu_focuses_the_first_option() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Apple")))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn arrow_down_on_an_option_focuses_the_next_option() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Apple")))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Banana")))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn arrow_up_on_an_option_focuses_the_previous_option() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Banana")))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::ArrowUp), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Apple")))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn enter_on_an_option_closes_the_menu() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Apple")))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::Enter), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBox))
+            .expect_no_matching_element()
+            .await
+    }
+
+    #[tokio::test]
+    async fn enter_on_an_option_displays_it_in_the_trigger() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Apple")))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::Enter), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::Button))
+            .expect(inner_html(contains_substring("Apple")))
+            .await
+    }
+
+    #[tokio::test]
+    async fn typeahead_focuses_the_matching_option() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Character("B".into()), Modifiers::empty())?;
+        tester.key_down(Key::Character("a".into()), Modifiers::empty())?;
+        tester.key_down(Key::Character("n".into()), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Banana")))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn escape_closes_the_menu() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::Escape), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBox))
+            .expect_no_matching_element()
+            .await
+    }
+
+    #[tokio::test]
+    async fn tab_in_the_menu_closes_the_menu() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::Tab), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBox))
+            .expect_no_matching_element()
+            .await
+    }
+
+    #[tokio::test]
+    async fn tab_on_an_option_closes_the_menu() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Apple")))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::Tab), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBox))
+            .expect_no_matching_element()
+            .await
+    }
+
+    #[tokio::test]
+    async fn no_option_is_selected_initially() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query_all(by_role(Role::ListBoxOption))
+            .expect(len(eq(2)))
+            .await?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).selected(true))
+            .expect_no_matching_element()
+            .immediately()
+    }
+
+    #[tokio::test]
+    async fn an_option_chosen_earlier_is_marked_selected_when_the_menu_reopens() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Apple")))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::Enter), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect_no_matching_element()
+            .await?;
+
+        tester.query(by_role(Role::Button)).click().await?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Apple")))
+            .expect(attribute("aria-selected", some(eq("true"))))
+            .await
+    }
+
+    #[tokio::test]
+    async fn arrow_down_on_the_trigger_opens_the_menu_and_focuses_the_first_option() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).focus().await?;
+
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Apple")))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn arrow_up_on_the_trigger_opens_the_menu_and_focuses_the_last_option() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).focus().await?;
+
+        tester.key_down(Key::Named(NamedKey::ArrowUp), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Banana")))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn disabled_option_is_marked_aria_disabled() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "orange",
+                            text_value: "Orange",
+                            disabled: true,
+                            "Orange"
+                        }
+                        SelectOption::<String> {
+                            index: 3usize,
+                            value: "orangeade",
+                            text_value: "Orangeade",
+                            "Orangeade"
+                        }
+                        SelectOption::<String> {
+                            index: 4usize,
+                            value: "other",
+                            text_value: "Other",
+                            "Other"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester.query(by_role(Role::Button)).click().await?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Orange")))
+            .expect(attribute("aria-disabled", some(eq("true"))))
+            .await
+    }
+
+    #[tokio::test]
+    async fn arrow_down_skips_disabled_option() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "orange",
+                            text_value: "Orange",
+                            disabled: true,
+                            "Orange"
+                        }
+                        SelectOption::<String> {
+                            index: 3usize,
+                            value: "orangeade",
+                            text_value: "Orangeade",
+                            "Orangeade"
+                        }
+                        SelectOption::<String> {
+                            index: 4usize,
+                            value: "other",
+                            text_value: "Other",
+                            "Other"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Banana")))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Orangeade")))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn typeahead_skips_disabled_options() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                Select::<String> {
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "apple",
+                            text_value: "Apple",
+                            "Apple"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "banana",
+                            text_value: "Banana",
+                            "Banana"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "orange",
+                            text_value: "Orange",
+                            disabled: true,
+                            "Orange"
+                        }
+                        SelectOption::<String> {
+                            index: 3usize,
+                            value: "orangeade",
+                            text_value: "Orangeade",
+                            "Orangeade"
+                        }
+                        SelectOption::<String> {
+                            index: 4usize,
+                            value: "other",
+                            text_value: "Other",
+                            "Other"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Character("O".into()), Modifiers::empty())?;
+        tester.key_down(Key::Character("r".into()), Modifiers::empty())?;
+        tester.key_down(Key::Character("a".into()), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Orangeade")))
+            .expect(has_focus())
+            .await
+    }
+
+    #[tokio::test]
+    async fn multi_select_shows_default_values_in_the_trigger() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester
+            .query(by_role(Role::Button))
+            .expect(inner_html(contains_substring("Pepperoni, Mushroom")))
+            .await
+    }
+
+    #[tokio::test]
+    async fn multi_select_marks_default_values_as_selected() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester.query(by_role(Role::Button)).click().await?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Pepperoni")))
+            .expect(attribute("aria-selected", some(eq("true"))))
+            .await
+    }
+
+    #[tokio::test]
+    async fn multi_select_marks_other_options_as_not_selected() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester.query(by_role(Role::Button)).click().await?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Onion")))
+            .expect(attribute("aria-selected", some(eq("false"))))
+            .await
+    }
+
+    #[tokio::test]
+    async fn multi_select_menu_is_aria_multiselectable() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+
+        tester.query(by_role(Role::Button)).click().await?;
+
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(attribute("aria-multiselectable", some(eq("true"))))
+            .await
+    }
+
+    #[tokio::test]
+    async fn space_on_a_selected_option_deselects_it() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Pepperoni")))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Character(" ".into()), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Pepperoni")))
+            .expect(attribute("aria-selected", some(eq("false"))))
+            .await
+    }
+
+    #[tokio::test]
+    async fn space_on_an_option_leaves_the_menu_open() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Pepperoni")))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Character(" ".into()), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(attribute("data-state", some(eq("open"))))
+            .await
+    }
+
+    #[tokio::test]
+    async fn enter_on_an_unselected_option_selects_it() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Onion")))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::Enter), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Onion")))
+            .expect(attribute("aria-selected", some(eq("true"))))
+            .await
+    }
+
+    #[tokio::test]
+    async fn enter_on_an_option_leaves_the_menu_open() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Onion")))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::Enter), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(attribute("data-state", some(eq("open"))))
+            .await
+    }
+
+    #[tokio::test]
+    async fn escape_closes_the_multi_select_menu() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+
+        tester.key_down(Key::Named(NamedKey::Escape), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::ListBox))
+            .expect_no_matching_element()
+            .await
+    }
+
+    #[tokio::test]
+    async fn trigger_shows_options_selected_while_menu_was_open() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Pepperoni")))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Character(" ".into()), Modifiers::empty())?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Onion")))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::Enter), Modifiers::empty())?;
+
+        tester.key_down(Key::Named(NamedKey::Escape), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::Button))
+            .expect(inner_html(contains_substring("Onion")))
+            .await
+    }
+
+    #[tokio::test]
+    async fn trigger_omits_options_deselected_while_menu_was_open() -> Result<()> {
+        #[component]
+        fn TestComponent() -> Element {
+            rsx! {
+                SelectMulti::<String> {
+                    default_values: vec!["pepperoni".to_string(), "mushroom".to_string()],
+                    SelectTrigger {
+                        SelectValue {}
+                    }
+                    SelectList {
+                        SelectOption::<String> {
+                            index: 0usize,
+                            value: "pepperoni",
+                            text_value: "Pepperoni",
+                            "Pepperoni"
+                        }
+                        SelectOption::<String> {
+                            index: 1usize,
+                            value: "mushroom",
+                            text_value: "Mushroom",
+                            "Mushroom"
+                        }
+                        SelectOption::<String> {
+                            index: 2usize,
+                            value: "onion",
+                            text_value: "Onion",
+                            "Onion"
+                        }
+                    }
+                }
+            }
+        }
+        let tester = render(TestComponent);
+        tester.query(by_role(Role::Button)).click().await?;
+        tester
+            .query(by_role(Role::ListBox))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Pepperoni")))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Character(" ".into()), Modifiers::empty())?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester.key_down(Key::Named(NamedKey::ArrowDown), Modifiers::empty())?;
+        tester
+            .query(by_role(Role::ListBoxOption).having_name(eq("Onion")))
+            .expect(has_focus())
+            .await?;
+        tester.key_down(Key::Named(NamedKey::Enter), Modifiers::empty())?;
+
+        tester.key_down(Key::Named(NamedKey::Escape), Modifiers::empty())?;
+
+        tester
+            .query(by_role(Role::Button))
+            .expect(inner_html(not(contains_substring("Pepperoni"))))
+            .await
+    }
+}

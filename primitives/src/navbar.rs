@@ -145,11 +145,11 @@ pub fn Navbar(props: NavbarProps) -> Element {
                 },
                 onkeydown: move |event: Event<KeyboardData>| {
                     match event.key() {
-                        Key::Escape => ctx.set_open_nav.call(None),
-                        Key::ArrowLeft => ctx.focus.focus_prev(),
-                        Key::ArrowRight => ctx.focus.focus_next(),
-                        Key::Home => ctx.focus.focus_first(),
-                        Key::End => ctx.focus.focus_last(),
+                        Key::Named(NamedKey::Escape) => ctx.set_open_nav.call(None),
+                        Key::Named(NamedKey::ArrowLeft) => ctx.focus.focus_prev(),
+                        Key::Named(NamedKey::ArrowRight) => ctx.focus.focus_next(),
+                        Key::Named(NamedKey::Home) => ctx.focus.focus_first(),
+                        Key::Named(NamedKey::End) => ctx.focus.focus_last(),
                         _ => return,
                     }
                     event.prevent_default();
@@ -317,10 +317,10 @@ pub fn NavbarNav(props: NavbarNavProps) -> Element {
             },
             onkeydown: move |event: Event<KeyboardData>| {
                 match event.key() {
-                    Key::Enter if !disabled() => {
+                    Key::Named(NamedKey::Enter) if !disabled() => {
                         ctx.set_open_nav.call((!is_open()).then(&*props.index));
                     }
-                    Key::ArrowDown if !disabled() => {
+                    Key::Named(NamedKey::ArrowDown) if !disabled() => {
                         if !is_open() {
                             nav_ctx.initial_focus.set(Some(CollectionPlacement::First));
                             ctx.set_open_nav.call(Some(props.index.cloned()));
@@ -328,7 +328,7 @@ pub fn NavbarNav(props: NavbarNavProps) -> Element {
                             nav_ctx.focus_next();
                         }
                     },
-                    Key::ArrowUp if !disabled() => {
+                    Key::Named(NamedKey::ArrowUp) if !disabled() => {
                         if is_open() {
                             nav_ctx.focus_prev();
                         } else {
@@ -713,7 +713,7 @@ pub struct NavbarItemProps {
 /// The [`NavbarItem`] component defines the following data attributes you can use to control styling:
 /// - `data-disabled`: Indicates if the item is disabled. Values are `true` or `false`.
 #[component]
-pub fn NavbarItem(mut props: NavbarItemProps) -> Element {
+pub fn NavbarItem(props: NavbarItemProps) -> Element {
     let mut ctx: NavbarContext = use_context();
     let mut nav_ctx: Option<NavbarNavContext> = try_use_context();
 
@@ -737,40 +737,42 @@ pub fn NavbarItem(mut props: NavbarItemProps) -> Element {
     let mut onmounted =
         use_item(collection_item(collection, props.index).disabled(disabled)).onmounted();
 
-    props.attributes.push(onkeydown({
-        let value = props.value.clone();
-        let to = props.to.clone();
-        move |event: Event<KeyboardData>| {
-            if event.key() == Key::Enter || event.key() == Key::Character(" ".to_string()) {
-                if !disabled() {
-                    props.on_select.call(value.clone());
-                    ctx.set_open_nav.call(None);
-                    let navigator = navigator();
-                    navigator.push(to.clone());
+    let attributes = props
+        .attributes
+        .onkeydown({
+            let value = props.value.clone();
+            let to = props.to.clone();
+            move |event: Event<KeyboardData>| {
+                if event.key() == Key::Named(NamedKey::Enter)
+                    || event.key() == Key::Character(" ".to_string())
+                {
+                    if !disabled() {
+                        props.on_select.call(value.clone());
+                        ctx.set_open_nav.call(None);
+                        let navigator = navigator();
+                        navigator.push(to.clone());
+                    }
+                    event.prevent_default();
+                    event.stop_propagation();
                 }
-                event.prevent_default();
-                event.stop_propagation();
             }
-        }
-    }));
-
-    props.attributes.push(onpointerdown(move |_| {
-        if !disabled() {
-            if let Some(mut nav_ctx) = nav_ctx {
-                nav_ctx.focus.set_focus(Some(props.index.cloned()));
+        })
+        .onpointerdown(move |_| {
+            if !disabled() {
+                if let Some(mut nav_ctx) = nav_ctx {
+                    nav_ctx.focus.set_focus(Some(props.index.cloned()));
+                }
             }
-        }
-    }));
-
-    props.attributes.push(onblur(move |_| {
-        if focused() {
-            if let Some(nav_ctx) = &mut nav_ctx {
-                nav_ctx.focus.clear_focus();
+        })
+        .onblur(move |_| {
+            if focused() {
+                if let Some(nav_ctx) = &mut nav_ctx {
+                    nav_ctx.focus.clear_focus();
+                }
+                ctx.focus.clear_focus();
+                ctx.set_open_nav.call(None);
             }
-            ctx.focus.clear_focus();
-            ctx.set_open_nav.call(None);
-        }
-    }));
+        });
 
     let tabindex = if focused()
         || (nav_ctx.is_none() && ctx.focus.recent_focus_or_default() == props.index.cloned())
@@ -812,7 +814,7 @@ pub fn NavbarItem(mut props: NavbarItemProps) -> Element {
                 }
             },
 
-            attributes: props.attributes,
+            attributes,
             {props.children}
         }
     }

@@ -1,7 +1,6 @@
 //! Defines the [`Accordion`] component and its sub-components.
 
 use crate::collection::{collection_item, use_item, CollectionOptions, CollectionState};
-use crate::dioxus_elements::Key;
 use crate::{use_animated_open, use_id_or, use_unique_id};
 use dioxus::prelude::*;
 
@@ -459,12 +458,12 @@ pub fn AccordionTrigger(props: AccordionTriggerProps) -> Element {
                 let mut prevent_default = true;
 
                 match key {
-                    Key::ArrowUp if !horizontal => ctx.focus.focus_prev(),
-                    Key::ArrowDown if !horizontal => ctx.focus.focus_next(),
-                    Key::ArrowLeft if horizontal => ctx.focus.focus_prev(),
-                    Key::ArrowRight if horizontal => ctx.focus.focus_next(),
-                    Key::Home => ctx.focus.focus_first(),
-                    Key::End => ctx.focus.focus_last(),
+                    Key::Named(NamedKey::ArrowUp) if !horizontal => ctx.focus.focus_prev(),
+                    Key::Named(NamedKey::ArrowDown) if !horizontal => ctx.focus.focus_next(),
+                    Key::Named(NamedKey::ArrowLeft) if horizontal => ctx.focus.focus_prev(),
+                    Key::Named(NamedKey::ArrowRight) if horizontal => ctx.focus.focus_next(),
+                    Key::Named(NamedKey::Home) => ctx.focus.focus_first(),
+                    Key::Named(NamedKey::End) => ctx.focus.focus_last(),
                     _ => prevent_default = false,
                 };
 

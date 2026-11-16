@@ -23,8 +23,25 @@ fn sortable_item_key(children: &Element, index: usize) -> String {
     children
         .as_ref()
         .ok()
-        .and_then(|vnode| vnode.key.clone())
+        .and_then(|vnode| vnode.key().map(str::to_owned))
         .unwrap_or_else(|| index.to_string())
+}
+
+#[cfg(test)]
+mod key_tests {
+    use super::*;
+
+    #[test]
+    fn preserves_explicit_key() {
+        let key = "item";
+        assert_eq!(sortable_item_key(&rsx! { div { key: "{key}" } }, 2), "item");
+    }
+
+    #[test]
+    fn falls_back_to_index_without_key() {
+        assert_eq!(sortable_item_key(&rsx! { div {} }, 2), "2");
+        assert_eq!(sortable_item_key(&rsx! {}, 3), "3");
+    }
 }
 
 #[derive(Clone, PartialEq)]
@@ -404,6 +421,7 @@ pub fn use_drag_and_drop_list_items() -> Vec<DragAndDropListRenderItem> {
         .map(|(index, item)| {
             // Propagate any `key:` the caller set on the item's root element
             // through to the keyed sortable item fragment.
+
             DragAndDropListRenderItem {
                 index,
                 key: item.key,
@@ -583,7 +601,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
         let key = event.key();
 
         match key {
-            Key::ArrowUp => {
+            Key::Named(NamedKey::ArrowUp) => {
                 event.prevent_default();
                 if ctx.is_dragging() {
                     ctx.move_up(index);
@@ -592,7 +610,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                     ctx.focus_prev();
                 }
             }
-            Key::ArrowDown => {
+            Key::Named(NamedKey::ArrowDown) => {
                 event.prevent_default();
                 if ctx.is_dragging() {
                     ctx.move_down(index);
@@ -601,7 +619,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                     ctx.focus_next();
                 }
             }
-            Key::Enter => {
+            Key::Named(NamedKey::Enter) => {
                 event.prevent_default();
                 ctx.toggle_drag(index);
             }
@@ -609,7 +627,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                 event.prevent_default();
                 ctx.toggle_drag(index);
             }
-            Key::Escape => {
+            Key::Named(NamedKey::Escape) => {
                 event.prevent_default();
                 if ctx.is_dragging() {
                     let pos = ctx.drag_from().unwrap_or(index) + 1;
@@ -619,19 +637,19 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                     ));
                 }
             }
-            Key::Delete | Key::Backspace => {
+            Key::Named(NamedKey::Delete) | Key::Named(NamedKey::Backspace) => {
                 event.prevent_default();
                 if !ctx.is_dragging() {
                     ctx.remove(index);
                 }
             }
-            Key::Home => {
+            Key::Named(NamedKey::Home) => {
                 event.prevent_default();
                 if !ctx.is_dragging() {
                     ctx.set_focus(Some(0));
                 }
             }
-            Key::End => {
+            Key::Named(NamedKey::End) => {
                 event.prevent_default();
                 if !ctx.is_dragging() {
                     ctx.set_focus(ctx.item_count().checked_sub(1));

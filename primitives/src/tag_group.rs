@@ -861,7 +861,7 @@ fn tag_option_on_keydown(
     let mut prevent_default = false;
 
     match key {
-        Key::Escape if (ctx.escape_clears_selection)() => {
+        Key::Named(NamedKey::Escape) if (ctx.escape_clears_selection)() => {
             state.clear_selection.call(());
             prevent_default = true;
         }
@@ -869,26 +869,26 @@ fn tag_option_on_keydown(
             state.toggle_value(value.clone());
             prevent_default = true;
         }
-        Key::Enter => {
+        Key::Named(NamedKey::Enter) => {
             state.toggle_value(value.clone());
             prevent_default = true;
         }
-        Key::Backspace | Key::Delete if removable => {
+        Key::Named(NamedKey::Backspace) | Key::Named(NamedKey::Delete) if removable => {
             prevent_default = state.remove_focused_from_keyboard(&id);
         }
-        Key::ArrowUp | Key::ArrowLeft => {
+        Key::Named(NamedKey::ArrowUp) | Key::Named(NamedKey::ArrowLeft) => {
             state.focus.focus_prev();
             prevent_default = true;
         }
-        Key::ArrowDown | Key::ArrowRight => {
+        Key::Named(NamedKey::ArrowDown) | Key::Named(NamedKey::ArrowRight) => {
             state.focus.focus_next();
             prevent_default = true;
         }
-        Key::Home => {
+        Key::Named(NamedKey::Home) => {
             state.focus.focus_first();
             prevent_default = true;
         }
-        Key::End => {
+        Key::Named(NamedKey::End) => {
             state.focus.focus_last();
             prevent_default = true;
         }

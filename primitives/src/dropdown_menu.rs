@@ -125,21 +125,21 @@ pub fn DropdownMenu(props: DropdownMenuProps) -> Element {
             return;
         }
         match event.key() {
-            Key::Enter => {
+            Key::Named(NamedKey::Enter) => {
                 let new_open = !(ctx.open)();
                 ctx.set_open.call(new_open);
             }
-            Key::Escape => ctx.set_open.call(false),
-            Key::ArrowDown => {
+            Key::Named(NamedKey::Escape) => ctx.set_open.call(false),
+            Key::Named(NamedKey::ArrowDown) => {
                 ctx.focus.focus_next();
             }
-            Key::ArrowUp => {
+            Key::Named(NamedKey::ArrowUp) => {
                 if open() {
                     ctx.focus.focus_prev();
                 }
             }
-            Key::Home => ctx.focus.focus_first(),
-            Key::End => ctx.focus.focus_last(),
+            Key::Named(NamedKey::Home) => ctx.focus.focus_first(),
+            Key::Named(NamedKey::End) => ctx.focus.focus_last(),
             _ => return,
         }
         event.prevent_default();
@@ -455,7 +455,7 @@ pub fn DropdownMenuItem<T: Clone + PartialEq + 'static>(
             },
 
             onkeydown: move |event: Event<KeyboardData>| {
-                if event.key() == Key::Enter || event.key() == Key::Character(" ".to_string()) {
+                if event.key() == Key::Named(NamedKey::Enter) || event.key() == Key::Character(" ".to_string()) {
                     if !disabled() {
                         props.on_select.call((props.value)());
                         ctx.set_open.call(false);

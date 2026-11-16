@@ -181,7 +181,7 @@ pub fn TooltipTrigger(props: TooltipTriggerProps) -> Element {
 
     // Handle keyboard events
     let handle_keydown = move |event: Event<KeyboardData>| {
-        if event.key() == Key::Escape && (ctx.open)() {
+        if event.key() == Key::Named(NamedKey::Escape) && (ctx.open)() {
             event.prevent_default();
             ctx.set_open.call(false);
         }

@@ -23,8 +23,25 @@ fn sortable_item_key(children: &Element, index: usize) -> String {
     children
         .as_ref()
         .ok()
-        .and_then(|vnode| vnode.key.clone())
+        .and_then(|vnode| vnode.key().map(str::to_owned))
         .unwrap_or_else(|| index.to_string())
+}
+
+#[cfg(test)]
+mod key_tests {
+    use super::*;
+
+    #[test]
+    fn preserves_explicit_key() {
+        let key = "item";
+        assert_eq!(sortable_item_key(&rsx! { div { key: "{key}" } }, 2), "item");
+    }
+
+    #[test]
+    fn falls_back_to_index_without_key() {
+        assert_eq!(sortable_item_key(&rsx! { div {} }, 2), "2");
+        assert_eq!(sortable_item_key(&rsx! {}, 3), "3");
+    }
 }
 
 #[derive(Clone, PartialEq)]

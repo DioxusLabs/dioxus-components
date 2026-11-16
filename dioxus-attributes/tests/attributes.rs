@@ -29,3 +29,9 @@ fn builds_owned_attributes_and_spreads() {
     assert!(html.contains("data-state=\"open\""));
     assert!(html.contains("title=\"Additional\""));
 }
+
+#[test]
+fn builds_empty_attributes() {
+    let attributes: Vec<Attribute> = attributes!(div {});
+    assert!(attributes.is_empty());
+}

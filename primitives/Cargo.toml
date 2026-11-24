@@ -25,15 +25,13 @@ palette = "0.7.6"
 lazy-js-bundle.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-blitz-dom = { version = "=0.3.0-beta.4", default-features = false, optional = true }
-dioxus-native = { version = "=0.8.0-alpha.3", optional = true }
-dioxus-native-dom = { version = "=0.8.0-alpha.3", optional = true }
+dioxus-native = { workspace = true, optional = true }
 
 [dev-dependencies]
 dioxus-ssr.workspace = true
 
 [features]
 default = ["router"]
-native = ["dep:blitz-dom", "dep:dioxus-native", "dep:dioxus-native-dom"]
+native = ["dep:dioxus-native"]
 router = ["dioxus/router"]
 web = ["time/wasm-bindgen"]

@@ -6,7 +6,6 @@ pub(crate) type ElementRef = Signal<Option<Rc<MountedData>>>;
 #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
 mod native {
     use super::*;
-    use blitz_dom::{BaseDocument, NodeId};
     use dioxus::html::PlatformEventData;
     use dioxus_core::{AttributeValue, ListenerCallback};
     use dioxus_native::winit::{
@@ -15,7 +14,7 @@ mod native {
         keyboard::{Key, NamedKey},
         window::Window,
     };
-    use dioxus_native_dom::NodeHandle;
+    use dioxus_native::{NodeHandle, NodeId};
     use std::cell::Cell;
     use std::sync::Arc;
 
@@ -36,17 +35,6 @@ mod native {
                 }
             }
         });
-    }
-
-    fn contains(doc: &BaseDocument, root: NodeId, target: Option<NodeId>) -> bool {
-        let mut target = target;
-        while let Some(id) = target {
-            if id == root {
-                return true;
-            }
-            target = doc.get_node(id).and_then(|node| node.parent);
-        }
-        false
     }
 
     pub(super) fn use_outside_dismiss(
@@ -96,6 +84,15 @@ mod native {
             let Some(root) = doc.get_element_by_id(&id.cloned()) else {
                 return;
             };
+            let contains = |mut target: Option<NodeId>| {
+                while let Some(id) = target {
+                    if id == root {
+                        return true;
+                    }
+                    target = doc.get_node(id).and_then(|node| node.parent);
+                }
+                false
+            };
 
             let outside = match event {
                 WindowEvent::PointerButton {
@@ -114,14 +111,14 @@ mod native {
                         )
                     };
                     let hit = doc.element_from_point(x, y);
-                    !contains(&doc, root, hit)
+                    !contains(hit)
                 }
                 WindowEvent::RedrawRequested => {
                     let focus = doc.get_focussed_node_id();
                     last_focus
                         .replace(Some(focus))
                         .is_some_and(|last| last != focus)
-                        && !contains(&doc, root, focus)
+                        && !contains(focus)
                 }
                 _ => false,
             };

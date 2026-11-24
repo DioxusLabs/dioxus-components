@@ -439,6 +439,7 @@ impl DragAndDropContext {
 #[cfg(all(test, feature = "native", not(target_arch = "wasm32")))]
 mod native_tests {
     use super::*;
+    use dioxus_native_dom::{DioxusDocument, DocumentConfig};
 
     fn with_drag(test: fn(&mut DragAndDropContext)) {
         fn app(test: fn(&mut DragAndDropContext)) -> Element {
@@ -506,6 +507,36 @@ mod native_tests {
             assert!(!ctx.is_dragging());
             assert!(ctx.native_drag(1).is_none());
         });
+    }
+
+    #[test]
+    fn clipped_instructions_do_not_intercept_item_hits() {
+        fn app() -> Element {
+            rsx! {
+                DragAndDropList { items: Vec::new(), style: "position:relative;",
+                    DragAndDropInstructions {}
+                    DragAndDropListItems { aria_label: "Sortable list", style: "margin:0;padding:0;",
+                        DragAndDropListItem { index: 0, style: "height:44px;list-style:none;",
+                            "Drag me"
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut native = DioxusDocument::new(VirtualDom::new(app), DocumentConfig::default());
+        native.initial_build();
+        let mut doc = native.inner.borrow_mut();
+        let mut viewport = doc.get_viewport();
+        viewport.window_size = (600, 400);
+        doc.set_viewport(viewport);
+        doc.resolve(0.0);
+
+        let row = doc.query_selector("li").unwrap().unwrap();
+        let rect = doc.get_client_bounding_rect(row).unwrap();
+        let x = rect.x as f32 + 18.0;
+        let y = rect.y as f32 + 22.0;
+        assert_eq!(doc.element_from_point(x, y), Some(row));
     }
 }
 
@@ -724,7 +755,7 @@ pub fn DragAndDropInstructions(props: DragAndDropInstructionsProps) -> Element {
     rsx! {
         div {
             id: "dnd-instructions",
-            style: "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);",
+            style: "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);pointer-events:none;",
             ..props.attributes,
             "Press Enter to start reordering. Use Arrow keys to change position. Press Enter to confirm or Escape to cancel."
         }
@@ -742,7 +773,7 @@ pub fn DragAndDropLiveRegion(props: DragAndDropLiveRegionProps) -> Element {
             role: "status",
             aria_live: "assertive",
             aria_atomic: "true",
-            style: "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);",
+            style: "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);pointer-events:none;",
             ..props.attributes,
             "{announcement}"
         }

@@ -53,12 +53,21 @@ async function startMouseDrag(
   page: import("@playwright/test").Page,
   list: import("@playwright/test").Locator,
 ) {
-  const { start, end } = await dragPoints(list);
+  const { start } = await dragPoints(list);
+  const items = getItems(list);
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
-  await page.mouse.move(end.x, end.y, { steps: 6 });
-  await expect(getItems(list).nth(2)).toHaveAttribute("aria-grabbed", "true");
-  await expect(list.locator('[data-position="after"]')).toHaveCount(1);
+  await page.mouse.move(start.x + 8, start.y);
+  await expect(items.nth(2)).toHaveAttribute("aria-grabbed", "true");
+  const target = (await items.nth(3).boundingBox())!;
+  const end = {
+    x: target.x + target.width / 2,
+    y: target.y + target.height * 0.75,
+  };
+  await page.mouse.move(end.x, end.y);
+  await expect(
+    items.nth(3).locator('xpath=following-sibling::*[1][@data-position="after"]'),
+  ).toHaveCount(1);
   return { start, end };
 }
 
@@ -254,6 +263,13 @@ test.describe("Drag and drop lifecycle", () => {
   test("mouse release to the side commits the last hovered slot", async ({
     page,
   }) => {
+    const lifetimeWarnings: string[] = [];
+    page.on("console", (message) => {
+      const text = message.text();
+      if (text.includes("A Copy Value created") && text.includes("drag_and_drop_list.rs")) {
+        lifetimeWarnings.push(text);
+      }
+    });
     const list = await loadMainList(page);
     const items = getItems(list);
     const sourceTitle = await itemText(items.nth(2));
@@ -264,6 +280,11 @@ test.describe("Drag and drop lifecycle", () => {
     await page.mouse.up();
 
     await expect.poll(() => itemText(items.nth(3))).toBe(sourceTitle);
+    await expect.poll(() => itemText(items.nth(2))).not.toBe(sourceTitle);
+    await startMouseDrag(page, list);
+    await page.mouse.up();
+    await expect.poll(() => itemText(items.nth(2))).toBe(sourceTitle);
+    expect(lifetimeWarnings).toEqual([]);
   });
 
   test("cancelled mouse drag does not reorder the list", async ({ page }) => {

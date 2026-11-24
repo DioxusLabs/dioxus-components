@@ -1,5 +1,6 @@
 //! Defines the [`DragAndDropList`] component and its sub-components.
 use crate::collection::{collection_item, use_collection_provider, use_item, CollectionState};
+use dioxus::core::{current_scope_id, ScopeId};
 use dioxus::html::{geometry::ClientPoint, input_data::MouseButton};
 use dioxus::prelude::*;
 use std::rc::Rc;
@@ -121,6 +122,13 @@ enum PointerUpdate {
     Cancel(i32),
 }
 
+#[derive(Clone)]
+struct MountedItem {
+    scope: ScopeId,
+    index: usize,
+    element: Rc<MountedData>,
+}
+
 /// Context provided by [`DragAndDropList`] to its descendants.
 /// Use `use_context::<DragAndDropContext>()` to access list-level operations.
 #[derive(Clone, Copy)]
@@ -130,7 +138,7 @@ pub struct DragAndDropContext {
     focus: CollectionState,
     announcement: Signal<String>,
     pointer_drag: Signal<Option<(i32, PointerDrag)>>,
-    mounted_items: Signal<Vec<(Signal<usize>, Rc<MountedData>)>>,
+    mounted_items: Signal<Vec<MountedItem>>,
 }
 
 impl DragAndDropContext {
@@ -370,8 +378,8 @@ impl DragAndDropContext {
         }
 
         let items = self.mounted_items.peek().clone();
-        for (index, mounted) in items {
-            let Ok(rect) = mounted.get_client_rect().await else {
+        for item in items {
+            let Ok(rect) = item.element.get_client_rect().await else {
                 continue;
             };
             if !matches!(self.pointer_drag(pointer_id), Some(PointerDrag::Dragging)) {
@@ -379,7 +387,7 @@ impl DragAndDropContext {
             }
             if rect.contains(position.cast_unit()) {
                 self.drag_over(
-                    *index.peek(),
+                    item.index,
                     if position.y < rect.center().y {
                         DropPosition::Before
                     } else {
@@ -834,6 +842,8 @@ pub struct DragAndDropListRenderItem {
 #[component]
 pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     let mut ctx: DragAndDropContext = use_context();
+    let scope = current_scope_id();
+    let mut mounted_items = ctx.mounted_items;
 
     let index = props.index;
     let mut item_ctx = use_context_provider(move || DragAndDropItemContext {
@@ -841,6 +851,13 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     });
     if *item_ctx.index.peek() != index {
         item_ctx.index.set(index);
+        if let Some(item) = mounted_items
+            .write()
+            .iter_mut()
+            .find(|item| item.scope == scope)
+        {
+            item.index = index;
+        }
     }
     let index_signal = item_ctx.index;
 
@@ -848,10 +865,9 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     let item = use_item(collection_item(ctx.focus, index_signal).key(move || item_key.clone()));
     let mut collection_onmounted = item.onmounted();
     let mut item_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
-    let mut mounted_items = ctx.mounted_items;
     use_drop(move || {
         if let Ok(mut items) = mounted_items.try_write() {
-            items.retain(|(item, _)| *item != index_signal);
+            items.retain(|item| item.scope != scope);
         }
     });
 
@@ -937,8 +953,9 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
             "data-drop-at-origin": if ctx.drag_from().is_some_and(|from| from == index) && ctx.drop_to() == Some(index) { "true" },
             "data-focus-visible": if ctx.is_focused(index) { "true" },
             onmounted: move |event| {
-                mounted_items.write().push((index_signal, event.data()));
-                item_ref.set(Some(event.data()));
+                let element = event.data();
+                mounted_items.write().push(MountedItem { scope, index, element: element.clone() });
+                item_ref.set(Some(element));
                 collection_onmounted(event);
             },
             onfocus: move |_| {

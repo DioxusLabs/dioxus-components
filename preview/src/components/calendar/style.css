@@ -94,8 +94,9 @@
 .dx-calendar-grid {
     --dx-calendar-day-size: 2rem;
     --dx-calendar-inline-padding: 0.625rem;
+
     width: calc(7 * var(--dx-calendar-day-size) + 2 * var(--dx-calendar-inline-padding));
-    padding: 0.375rem var(--dx-calendar-inline-padding);
+    padding: 0.3125rem var(--dx-calendar-inline-padding);
     border-collapse: separate;
     border-spacing: 0 0.375rem;
     table-layout: fixed;
@@ -107,7 +108,7 @@
 }
 
 .dx-calendar-grid-day-header {
-    padding: 0 0 0.25rem;
+    padding: 0 0 0.375rem;
     font-weight: 300;
     text-align: center;
 }

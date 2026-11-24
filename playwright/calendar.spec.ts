@@ -25,6 +25,23 @@ test("Calendar keeps weekday headers aligned with compact day columns", async ({
   }
 });
 
+test("Calendar preserves the demo's vertical grid spacing", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "Uses Chromium's original text metrics");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("http://127.0.0.1:8080/component/?name=calendar&");
+
+  const grid = page.locator("#component-preview-frame").first().locator("table");
+  await expect(grid.locator("tbody tr")).toHaveCount(6);
+  const offsets = await grid.evaluate(async (table) => {
+    await document.fonts.ready;
+    const top = table.getBoundingClientRect().top;
+    return Array.from(table.querySelectorAll("tbody tr td:first-child button"), (day) =>
+      Math.round(day.getBoundingClientRect().top - top),
+    );
+  });
+  expect(offsets).toEqual([37, 75, 113, 151, 189, 227]);
+});
+
 test("test", async ({ page }) => {
   await page.goto("http://127.0.0.1:8080/component/?name=calendar&", {
     timeout: 20 * 60 * 1000,

@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 fn main() {
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let out_dir = std::path::PathBuf::from(out_dir);
-    println!("cargo:rerun-if-changed=src/components");
+    println!("cargo:rerun-if-changed=src/components/mod.rs");
     // Process all markdown files in each component folder.
     for folder in std::fs::read_dir("src/components").unwrap().flatten() {
         if !folder.file_type().unwrap().is_dir() {

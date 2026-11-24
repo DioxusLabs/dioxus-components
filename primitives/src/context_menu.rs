@@ -2,6 +2,7 @@
 
 use crate::{
     collection::{collection_item, use_collection_provider, use_item, CollectionState},
+    overlay_platform,
     selectable::{pointer_select_cancel, pointer_select_commit, pointer_select_start},
     use_animated_open, use_controlled, use_effect_with_cleanup, use_id_or, use_outside_dismiss,
     use_unique_id,
@@ -24,6 +25,9 @@ const LONG_PRESS_MOVE_TOLERANCE_SQ: f64 = 100.0;
 /// there — it would double-count the pan offset and shift the menu by 2× the
 /// pan distance.
 async fn visual_viewport_offset() -> (f64, f64) {
+    if overlay_platform::is_native() {
+        return (0.0, 0.0);
+    }
     let mut eval = dioxus::document::eval(
         "const vv = window.visualViewport; \
          const ua = navigator.userAgent; \
@@ -454,7 +458,7 @@ pub fn ContextMenuContent(props: ContextMenuContentProps) -> Element {
 
     let render = use_animated_open(id, open);
 
-    use_outside_dismiss(ctx.root_id, move || {
+    use_outside_dismiss(ctx.root_id, open, menu_ref, move || {
         ctx.focus.clear_focus();
         ctx.set_open.call(false);
     });
@@ -463,8 +467,9 @@ pub fn ContextMenuContent(props: ContextMenuContentProps) -> Element {
     // click target as soon as the page scrolls. Native context menus block
     // scroll while open; match that by suppressing wheel/touchmove outside
     // the menu without mutating page-level overflow styles.
+    let native = overlay_platform::is_native();
     use_effect_with_cleanup(move || {
-        if !open() {
+        if native || !open() {
             return Box::new(|| {}) as Box<dyn FnOnce()>;
         }
         let root = ctx.root_id;

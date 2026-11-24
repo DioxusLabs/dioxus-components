@@ -2167,8 +2167,11 @@ dependencies = [
 name = "dioxus-primitives"
 version = "0.0.1"
 dependencies = [
+ "blitz-dom",
  "dioxus",
  "dioxus-attributes",
+ "dioxus-native",
+ "dioxus-native-dom",
  "dioxus-sdk-time",
  "dioxus-ssr",
  "lazy-js-bundle",

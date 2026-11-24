@@ -1,7 +1,7 @@
 //! Defines the [`AlertDialogRoot`] component and its sub-components.
 
 use crate::use_global_escape_listener;
-use crate::{use_animated_open, use_id_or, use_unique_id, FOCUS_TRAP_JS};
+use crate::{overlay_platform, use_animated_open, use_id_or, use_unique_id, FOCUS_TRAP_JS};
 use dioxus::document;
 use dioxus::prelude::*;
 
@@ -97,11 +97,14 @@ pub fn AlertDialogRoot(props: AlertDialogRootProps) -> Element {
     let id = use_unique_id();
     let id = use_id_or(id, props.id);
     let render_element = use_animated_open(id, open);
+    let native = overlay_platform::is_native();
 
     rsx! {
-        document::Script {
-            src: FOCUS_TRAP_JS,
-            defer: true
+        if !native {
+            document::Script {
+                src: FOCUS_TRAP_JS,
+                defer: true
+            }
         }
         if render_element() {
             div {
@@ -185,7 +188,14 @@ pub fn AlertDialogContent(props: AlertDialogContentProps) -> Element {
 
     let gen_id = use_unique_id();
     let id = use_id_or(gen_id, props.id);
+    let reference = use_signal(|| None);
+    let native = overlay_platform::is_native();
+    let trap_active = move || open();
+    overlay_platform::use_focus_trap(reference, trap_active);
     use_effect(move || {
+        if native {
+            return;
+        }
         let eval = document::eval(
             r#"let id = await dioxus.recv();
             let is_open = await dioxus.recv();
@@ -203,6 +213,8 @@ pub fn AlertDialogContent(props: AlertDialogContentProps) -> Element {
         let _ = eval.send(open.cloned());
     });
 
+    let attributes =
+        overlay_platform::add_element_listeners(props.attributes, reference, trap_active);
     rsx! {
         div {
             id,
@@ -211,7 +223,7 @@ pub fn AlertDialogContent(props: AlertDialogContentProps) -> Element {
             aria_labelledby: ctx.labelledby.clone(),
             aria_describedby: ctx.describedby.clone(),
             class: props.class.clone().unwrap_or_else(|| "dx-alert-dialog".to_string()),
-            ..props.attributes,
+            ..attributes,
             {props.children}
         }
     }

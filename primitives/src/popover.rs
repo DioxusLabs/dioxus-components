@@ -4,8 +4,8 @@ use dioxus::document;
 use dioxus::prelude::*;
 
 use crate::{
-    use_animated_open, use_controlled, use_global_escape_listener, use_id_or, use_outside_dismiss,
-    use_unique_id, ContentAlign, ContentSide, FOCUS_TRAP_JS,
+    overlay_platform, use_animated_open, use_controlled, use_global_escape_listener, use_id_or,
+    use_outside_dismiss, use_unique_id, ContentAlign, ContentSide, FOCUS_TRAP_JS,
 };
 
 #[derive(Clone, Copy)]
@@ -214,9 +214,10 @@ pub fn PopoverContent(props: PopoverContentProps) -> Element {
     let id = use_id_or(gen_id, props.id);
 
     let render = use_animated_open(id, ctx.open);
+    let native = overlay_platform::is_native();
 
     use_effect(move || {
-        if !render() {
+        if native || !render() {
             return;
         }
         let is_modal = is_modal();
@@ -243,9 +244,11 @@ pub fn PopoverContent(props: PopoverContentProps) -> Element {
     });
 
     rsx! {
-        document::Script {
-            src: FOCUS_TRAP_JS,
-            defer: true
+        if !native {
+            document::Script {
+                src: FOCUS_TRAP_JS,
+                defer: true
+            }
         }
         if render() {
             PopoverContentRendered {
@@ -281,8 +284,12 @@ pub fn PopoverContentRendered(
     // is highlighting text or interacting with another element.
     use_global_escape_listener(move || set_open.call(false));
 
-    use_outside_dismiss(ctx.root_id, move || set_open.call(false));
+    let reference = use_signal(|| None);
+    let trap_active = move || open() && (ctx.is_modal)();
+    use_outside_dismiss(ctx.root_id, open, reference, move || set_open.call(false));
+    overlay_platform::use_focus_trap(reference, trap_active);
 
+    let attributes = overlay_platform::add_element_listeners(attributes, reference, trap_active);
     rsx! {
         div {
             id,

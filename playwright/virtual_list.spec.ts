@@ -199,3 +199,41 @@ test("virtual list virtualizes rows and updates on scroll", async ({ page }) => 
     expect(hasScrolledContent).toBe(true);
   }).toPass({ timeout: 15000 });
 });
+
+test("variable-height rows fill the list after its viewport grows", async ({ page }) => {
+  await page.goto("http://127.0.0.1:8080/component/block/?name=virtual_list&variant=random_heights");
+
+  const container = page.getByRole("list");
+  const rows = container.getByRole("listitem");
+  await expect(rows.first()).toBeVisible();
+  const initialRows = await rows.count();
+
+  await container.evaluate((el) => {
+    el.style.maxHeight = "160px";
+  });
+  await expect.poll(() => rows.count()).toBeLessThan(initialRows);
+  const smallViewportRows = await rows.count();
+
+  await container.evaluate((el) => {
+    el.style.maxHeight = "560px";
+  });
+  await expect.poll(() => rows.count()).toBeGreaterThan(smallViewportRows);
+
+  await container.evaluate((el) => {
+    el.scrollTop = 6000;
+  });
+  await expect(async () => {
+    const visible = await container.evaluate((el) => {
+      const viewport = el.getBoundingClientRect();
+      return Array.from(el.querySelectorAll("[data-virtual-index]")).flatMap((row) => {
+        const rect = row.getBoundingClientRect();
+        return rect.bottom > viewport.top && rect.top < viewport.bottom
+          ? [{ index: Number(row.getAttribute("data-virtual-index")), height: rect.height }]
+          : [];
+      });
+    });
+    expect(visible.length).toBeGreaterThan(1);
+    expect(visible[0].index).toBeGreaterThan(20);
+    expect(new Set(visible.map((row) => Math.round(row.height))).size).toBeGreaterThan(1);
+  }).toPass();
+});

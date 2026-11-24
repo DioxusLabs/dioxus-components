@@ -18,6 +18,6 @@ concurrency:
 
 jobs:
   publish:
-    uses: DioxusLabs/dioxus-ci/.github/workflows/pages-publish.yml@v0.1.0
+    uses: DioxusLabs/dioxus-ci/.github/workflows/pages-publish.yml@60c40430ef69c6d7b92439bc43e281689db1bde7
     with:
       pages-url-base: https://dioxuslabs.github.io

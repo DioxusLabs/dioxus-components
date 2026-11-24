@@ -4,8 +4,8 @@ use crate::{
     calendar::{
         weekday_abbreviation, AvailableRanges, CalendarProps, DateRange, RangeCalendarProps,
     },
+    collection::{collection_item, use_collection_provider, use_item, CollectionState},
     dioxus_core::Properties,
-    focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
     popover::*,
     use_unique_id, LocalDateExt as _,
 };
@@ -24,7 +24,7 @@ struct BaseDatePickerContext {
 
     // Configuration
     disabled: ReadSignal<bool>,
-    focus: FocusState,
+    focus: CollectionState,
     enabled_date_range: DateRange,
     available_ranges: Memo<AvailableRanges>,
 }
@@ -134,7 +134,7 @@ pub struct DatePickerProps {
 #[component]
 pub fn DatePicker(props: DatePickerProps) -> Element {
     let open = use_signal(|| false);
-    let focus = use_focus_provider(props.roving_loop);
+    let focus = use_collection_provider(props.roving_loop);
     let available_ranges = use_memo(move || AvailableRanges::new(&props.disabled_ranges.read()));
 
     // Create context provider for child components
@@ -268,7 +268,7 @@ pub struct DateRangePickerProps {
 #[component]
 pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
     let open = use_signal(|| false);
-    let focus = use_focus_provider(props.roving_loop);
+    let focus = use_collection_provider(props.roving_loop);
 
     let available_ranges = use_memo(move || AvailableRanges::new(&props.disabled_ranges.read()));
 
@@ -780,7 +780,8 @@ fn DateSegment<T: Clone + Copy + Integer + FromStr + Display + 'static>(
     };
 
     let disabled = move || (ctx.disabled)();
-    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
+    let onmounted =
+        use_item(collection_item(ctx.focus, props.index).disabled(disabled)).onmounted();
 
     let span_id = use_unique_id();
     let id = use_memo(move || format!("span-{span_id}"));

@@ -1,7 +1,7 @@
 //! SelectOption and SelectItemIndicator component implementations.
 
 use crate::{
-    focus::use_focus_control_disabled,
+    collection::{collection_item, use_item},
     listbox::{ListboxContext, ListboxItemIndicator},
     selectable::{
         pointer_select_cancel, pointer_select_commit, pointer_select_start, use_selectable_option,
@@ -117,10 +117,13 @@ pub fn SelectOption<T: PartialEq + Clone + 'static>(props: SelectOptionProps<T>)
         },
     );
 
-    let onmounted =
-        use_focus_control_disabled(ctx.selectable.focus_state, props.index, move || {
-            option.disabled.cloned()
-        });
+    let item = use_item(
+        collection_item(ctx.selectable.collection, props.index)
+            .key(move || Some(option.id.cloned()))
+            .disabled(move || option.disabled.cloned())
+            .selected(move || (option.selected)()),
+    );
+    let onmounted = item.onmounted();
 
     let render = use_context::<ListboxContext>().render;
 
@@ -151,7 +154,7 @@ pub fn SelectOption<T: PartialEq + Clone + 'static>(props: SelectOptionProps<T>)
                 },
                 onblur: move |_| {
                     if (option.focused)() {
-                        ctx.selectable.focus_state.blur();
+                        ctx.selectable.collection.clear_focus();
                         ctx.set_open(false);
                     }
                 },

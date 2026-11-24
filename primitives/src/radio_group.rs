@@ -3,7 +3,9 @@
 use std::collections::HashMap;
 
 use crate::{
-    focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
+    collection::{
+        collection_item, use_collection_provider_with, use_item, CollectionOptions, CollectionState,
+    },
     use_controlled, use_effect_with_cleanup,
 };
 use dioxus::prelude::*;
@@ -18,10 +20,9 @@ struct RadioGroupCtx {
     // Keyboard nav data
     // A map of tabindex -> value in the enabled radio items
     values: Signal<HashMap<usize, String>>,
-    focus: FocusState,
+    focus: CollectionState,
 
     horizontal: ReadSignal<bool>,
-    roving_loop: ReadSignal<bool>,
 }
 
 impl RadioGroupCtx {
@@ -52,7 +53,7 @@ impl RadioGroupCtx {
     }
 
     fn select_focused_value(&mut self) {
-        if let Some(current_focus) = self.focus.current_focus() {
+        if let Some(current_focus) = self.focus.focused_index() {
             let value = { self.values.read().get(&current_focus).cloned() };
             if let Some(value) = value {
                 self.set_value(value.clone());
@@ -156,7 +157,14 @@ pub fn RadioGroup(props: RadioGroupProps) -> Element {
     let (value, set_value) =
         use_controlled(props.value, props.default_value, props.on_value_change);
 
-    let focus = use_focus_provider(props.roving_loop);
+    // Native radio-group semantics: when nothing is selected, every radio stays
+    // in the tab order until one is focused or checked.
+    let focus = use_collection_provider_with(
+        props.roving_loop,
+        CollectionOptions {
+            tabbable_when_empty: true,
+        },
+    );
     let mut ctx = use_context_provider(|| RadioGroupCtx {
         value,
         set_value,
@@ -165,7 +173,6 @@ pub fn RadioGroup(props: RadioGroupProps) -> Element {
         values: Signal::new(Default::default()),
         focus,
         horizontal: props.horizontal,
-        roving_loop: props.roving_loop,
     });
 
     rsx! {
@@ -270,28 +277,13 @@ pub fn RadioItem(props: RadioItemProps) -> Element {
     let value = (props.value)().clone();
     let checked = use_memo(move || (ctx.value)() == value);
 
-    // Tab index for roving index
-    let tab_index = use_memo(move || {
-        if !(ctx.roving_loop)() {
-            return "0";
-        }
-
-        if checked() {
-            return "0";
-        }
-        let current_focus = ctx.focus.current_focus();
-        if let Some(current_focus) = current_focus {
-            if current_focus == (props.index)() {
-                return "0";
-            }
-        } else if (ctx.value)().is_empty() {
-            return "0";
-        }
-
-        "-1"
-    });
-
-    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
+    let item = use_item(
+        collection_item(ctx.focus, props.index)
+            .disabled(disabled)
+            .selected(move || checked.cloned()),
+    );
+    let tab_index = item.tabindex;
+    let onmounted = item.onmounted();
 
     rsx! {
         button {

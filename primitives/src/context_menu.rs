@@ -1,7 +1,7 @@
 //! Defines the [`ContextMenu`] component and its subcomponents, which provide a context menu interface.
 
 use crate::{
-    focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
+    collection::{collection_item, use_collection_provider, use_item, CollectionState},
     selectable::{pointer_select_cancel, pointer_select_commit, pointer_select_start},
     use_animated_open, use_controlled, use_effect_with_cleanup, use_id_or, use_outside_dismiss,
     use_unique_id,
@@ -44,7 +44,7 @@ struct ContextMenuCtx {
     position: Signal<(i32, i32)>,
 
     // Focus state
-    focus: FocusState,
+    focus: CollectionState,
 
     // Id on the root wrapper — covers both trigger and content, so
     // `use_outside_dismiss` treats them as "inside".
@@ -143,7 +143,7 @@ pub fn ContextMenu(props: ContextMenuProps) -> Element {
     let root_id = use_unique_id();
     let long_press_just_fired = use_signal(|| false);
 
-    let focus = use_focus_provider(props.roving_loop);
+    let focus = use_collection_provider(props.roving_loop);
     let mut ctx = use_context_provider(|| ContextMenuCtx {
         open,
         set_open,
@@ -166,7 +166,7 @@ pub fn ContextMenu(props: ContextMenuProps) -> Element {
         if open() && event.key() == Key::Named(NamedKey::Escape) {
             event.prevent_default();
             set_open.call(false);
-            ctx.focus.blur();
+            ctx.focus.clear_focus();
         }
     };
 
@@ -418,7 +418,7 @@ pub fn ContextMenuContent(props: ContextMenuContentProps) -> Element {
 
     let onkeydown = move |event: Event<KeyboardData>| {
         match event.key() {
-            Key::Named(NamedKey::Escape) => ctx.focus.blur(),
+            Key::Named(NamedKey::Escape) => ctx.focus.clear_focus(),
             Key::Named(NamedKey::ArrowDown) => {
                 ctx.focus.focus_next();
             }
@@ -455,7 +455,7 @@ pub fn ContextMenuContent(props: ContextMenuContentProps) -> Element {
     let render = use_animated_open(id, open);
 
     use_outside_dismiss(ctx.root_id, move || {
-        ctx.focus.blur();
+        ctx.focus.clear_focus();
         ctx.set_open.call(false);
     });
 
@@ -501,7 +501,7 @@ pub fn ContextMenuContent(props: ContextMenuContentProps) -> Element {
                 onkeydown,
                 onblur: move |_| {
                     if focused() {
-                        ctx.focus.blur();
+                        ctx.focus.clear_focus();
                     }
                 },
                 onmounted: move |evt| menu_ref.set(Some(evt.data())),
@@ -594,9 +594,10 @@ pub fn ContextMenuItem(props: ContextMenuItemProps) -> Element {
     let mut ctx: ContextMenuCtx = use_context();
 
     let disabled = move || (props.disabled)() || (ctx.disabled)();
-    let focused = move || ctx.focus.is_focused(props.index.cloned());
+    let item = use_item(collection_item(ctx.focus, props.index).disabled(disabled));
+    let focused = move || item.focused();
 
-    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
+    let onmounted = item.onmounted();
 
     let tab_index = use_memo(move || if focused() { "0" } else { "-1" });
 
@@ -609,7 +610,7 @@ pub fn ContextMenuItem(props: ContextMenuItemProps) -> Element {
     let mut select = move || {
         if !disabled() {
             props.on_select.call((value)());
-            ctx.focus.blur();
+            ctx.focus.clear_focus();
             ctx.set_open.call(false);
         }
     };
@@ -644,7 +645,7 @@ pub fn ContextMenuItem(props: ContextMenuItemProps) -> Element {
             onkeydown: handle_keydown,
             onblur: move |_| {
                 if focused() {
-                    ctx.focus.blur();
+                    ctx.focus.clear_focus();
                 }
             },
             onmounted,

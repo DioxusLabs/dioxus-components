@@ -77,7 +77,8 @@ impl ToTokens for AttributeList {
             .map(|attr| {
                 let rendered = attr.rendered_as_dynamic_attr();
                 quote! {
-                    __attrs.extend(#rendered);
+                    let __rendered: Box<[dioxus_core::Attribute]> = #rendered;
+                    __attrs.extend(__rendered.into_vec());
                 }
             })
             .collect();
@@ -103,5 +104,15 @@ impl ToTokens for AttributeList {
         };
 
         tokens.extend(output);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_missing_element_name() {
+        assert!(syn::parse_str::<AttributeList>("{ class: \"test\" }").is_err());
     }
 }

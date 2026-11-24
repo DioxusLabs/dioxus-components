@@ -75,7 +75,7 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
             type: "button",
 
             onclick: move |_| {
-                ctx.selectable.toggle_open();
+                ctx.set_open(!open());
             },
             onkeydown: move |event| {
                 match event.key() {
@@ -83,7 +83,7 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
                         ctx.set_open(true);
                         ctx.selectable
                             .initial_focus
-                            .set(ctx.selectable.focus_state.last_enabled_index());
+                            .set(ctx.selectable.collection.last_available_index());
                         event.prevent_default();
                         event.stop_propagation();
                     }
@@ -91,7 +91,7 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
                         ctx.set_open(true);
                         ctx.selectable
                             .initial_focus
-                            .set(ctx.selectable.focus_state.first_enabled_index());
+                            .set(ctx.selectable.collection.first_available_index());
                         event.prevent_default();
                         event.stop_propagation();
                     }

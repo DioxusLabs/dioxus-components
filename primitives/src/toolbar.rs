@@ -1,7 +1,7 @@
 //! Defines the [`Toolbar`] component and its sub-components, which provide a container to group related buttons and controls with keyboard navigation.
 
+use crate::collection::{collection_item, use_collection_provider, use_item, CollectionState};
 use dioxus::prelude::*;
-use std::rc::Rc;
 
 #[derive(Clone, Copy)]
 struct ToolbarCtx {
@@ -9,7 +9,7 @@ struct ToolbarCtx {
     disabled: ReadSignal<bool>,
 
     // Focus management
-    focused_index: Signal<Option<usize>>,
+    focus: CollectionState,
 
     // Orientation
     horizontal: ReadSignal<bool>,
@@ -17,11 +17,7 @@ struct ToolbarCtx {
 
 impl ToolbarCtx {
     fn set_focus(&mut self, index: Option<usize>) {
-        self.focused_index.set(index);
-    }
-
-    fn is_focused(&self, index: usize) -> bool {
-        (self.focused_index)() == Some(index)
+        self.focus.set_focus(index);
     }
 
     fn orientation(&self) -> &'static str {
@@ -92,9 +88,10 @@ pub struct ToolbarProps {
 /// - `data-disabled`: Indicates if the toolbar is disabled. Values are `true` or `false`.
 #[component]
 pub fn Toolbar(props: ToolbarProps) -> Element {
+    let focus = use_collection_provider(ReadSignal::new(Signal::new(false)));
     let mut ctx = use_context_provider(|| ToolbarCtx {
         disabled: props.disabled,
-        focused_index: Signal::new(None),
+        focus,
         horizontal: props.horizontal,
     });
 
@@ -105,7 +102,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
             "data-disabled": (props.disabled)(),
             aria_label: props.aria_label,
 
-            onfocusout: move |_| ctx.set_focus(None),
+            onfocusout: move |_| ctx.focus.clear_focus(),
             ..props.attributes,
 
             {props.children}
@@ -174,31 +171,18 @@ pub struct ToolbarButtonProps {
 pub fn ToolbarButton(props: ToolbarButtonProps) -> Element {
     let mut ctx: ToolbarCtx = use_context();
 
-    // Handle button ref for focus management
-    let mut button_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
-
-    // Check if this button is focused
-    let is_focused = use_memo(move || ctx.is_focused((props.index)()));
-
-    // Set focus when needed
-    use_effect(move || {
-        if is_focused() {
-            if let Some(md) = button_ref() {
-                spawn(async move {
-                    let _ = md.set_focus(true).await;
-                });
-            }
-        }
-    });
+    let disabled = move || (ctx.disabled)() || (props.disabled)();
+    let onmounted =
+        use_item(collection_item(ctx.focus, props.index).disabled(disabled)).onmounted();
 
     rsx! {
         button {
             type: "button",
             tabindex: "0",
-            disabled: (ctx.disabled)() || (props.disabled)(),
-            "data-disabled": (ctx.disabled)() || (props.disabled)(),
+            disabled: disabled(),
+            "data-disabled": disabled(),
 
-            onmounted: move |data: Event<MountedData>| button_ref.set(Some(data.data())),
+            onmounted,
             onfocus: move |_| ctx.set_focus(Some((props.index)())),
 
             onclick: move |_| {

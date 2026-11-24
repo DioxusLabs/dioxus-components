@@ -1,7 +1,7 @@
 //! Defines the [`ToggleGroup`] component and its sub-components, which manage a group of toggle buttons with single or multiple selection.
 
 use crate::{
-    focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
+    collection::{collection_item, use_collection_provider, use_item, CollectionState},
     toggle::Toggle,
     use_controlled,
 };
@@ -20,7 +20,7 @@ struct ToggleGroupCtx {
     allow_multiple_pressed: ReadSignal<bool>,
 
     // Focus state
-    focus: FocusState,
+    focus: CollectionState,
 
     horizontal: ReadSignal<bool>,
     roving_loop: ReadSignal<bool>,
@@ -71,10 +71,6 @@ impl ToggleGroupCtx {
         }
 
         self.focus.focus_prev();
-    }
-
-    fn is_roving_loop(&self) -> bool {
-        (self.roving_loop)()
     }
 }
 
@@ -150,7 +146,7 @@ pub fn ToggleGroup(props: ToggleGroupProps) -> Element {
         props.on_pressed_change,
     );
 
-    let focus = use_focus_provider(props.roving_loop);
+    let focus = use_collection_provider(props.roving_loop);
     let mut ctx = use_context_provider(|| ToggleGroupCtx {
         pressed,
         set_pressed,
@@ -164,7 +160,7 @@ pub fn ToggleGroup(props: ToggleGroupProps) -> Element {
 
     rsx! {
         div {
-            onfocusout: move |_| ctx.focus.set_focus(None),
+            onfocusout: move |_| ctx.focus.clear_focus(),
 
             "data-orientation": ctx.orientation(),
             "data-allow-multiple-pressed": ctx.allow_multiple_pressed,
@@ -233,20 +229,10 @@ pub fn ToggleItem(props: ToggleItemProps) -> Element {
         pressed.set(is_pressed);
     });
 
-    // Tab index for roving index
-    let tab_index = use_memo(move || {
-        if !ctx.is_roving_loop() {
-            return "0";
-        }
-
-        match ctx.focus.recent_focus_or_default() == props.index.cloned() {
-            true => "0",
-            false => "-1",
-        }
-    });
-
     let disabled = move || (ctx.disabled)() || (props.disabled)();
-    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
+    let item = use_item(collection_item(ctx.focus, props.index).disabled(disabled));
+    let tab_index = item.tabindex;
+    let onmounted = item.onmounted();
 
     rsx! {
         Toggle {

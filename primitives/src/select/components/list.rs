@@ -72,7 +72,7 @@ pub fn SelectList(props: SelectListProps) -> Element {
 
     let open = ctx.selectable.open;
     let mut listbox_ref: Signal<Option<std::rc::Rc<MountedData>>> = use_signal(|| None);
-    let focused = move || open() && !ctx.selectable.focus_state.any_focused();
+    let focused = move || open() && !ctx.selectable.collection.any_focused();
 
     use_effect(move || {
         let Some(listbox_ref) = listbox_ref() else {
@@ -116,19 +116,19 @@ pub fn SelectList(props: SelectListProps) -> Element {
             }
             Key::Named(NamedKey::ArrowUp) => {
                 arrow_key_navigation(event);
-                ctx.selectable.focus_state.focus_prev();
+                ctx.selectable.collection.focus_prev();
             }
             Key::Named(NamedKey::End) => {
                 arrow_key_navigation(event);
-                ctx.selectable.focus_state.focus_last();
+                ctx.selectable.collection.focus_last();
             }
             Key::Named(NamedKey::ArrowDown) => {
                 arrow_key_navigation(event);
-                ctx.selectable.focus_state.focus_next();
+                ctx.selectable.collection.focus_next();
             }
             Key::Named(NamedKey::Home) => {
                 arrow_key_navigation(event);
-                ctx.selectable.focus_state.focus_first();
+                ctx.selectable.collection.focus_first();
             }
             Key::Named(NamedKey::Enter) => {
                 ctx.select_current_item();

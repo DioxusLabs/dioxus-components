@@ -20,7 +20,7 @@ pub(super) struct ComboboxContext {
 impl ComboboxContext {
     pub fn set_open(&mut self, open: bool) {
         if open {
-            self.selectable.focus_state.set_focus(None);
+            self.selectable.collection.clear_focus();
         }
         self.selectable.set_open(open);
     }
@@ -40,7 +40,7 @@ impl ComboboxContext {
             .options
             .read()
             .iter()
-            .find(|option| option.tab_index == tab_index)
+            .find(|option| option.index == tab_index)
             .is_some_and(predicate)
     }
 

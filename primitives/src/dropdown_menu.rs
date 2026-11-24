@@ -3,7 +3,7 @@
 use std::rc::Rc;
 
 use crate::{
-    focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
+    collection::{collection_item, use_collection_provider, use_item, CollectionState},
     merge_attributes, use_animated_open, use_controlled, use_id_or, use_unique_id,
 };
 use dioxus::prelude::*;
@@ -17,7 +17,7 @@ struct DropdownMenuContext {
     disabled: ReadSignal<bool>,
 
     // Focus state
-    focus: FocusState,
+    focus: CollectionState,
 
     // Unique ID for the trigger button
     trigger_id: Signal<String>,
@@ -103,7 +103,7 @@ pub fn DropdownMenu(props: DropdownMenuProps) -> Element {
 
     let disabled = props.disabled;
     let trigger_id = use_unique_id();
-    let focus = use_focus_provider(props.roving_loop);
+    let focus = use_collection_provider(props.roving_loop);
     let mut ctx = use_context_provider(|| DropdownMenuContext {
         open,
         set_open,
@@ -254,7 +254,7 @@ pub fn DropdownMenuTrigger(props: DropdownMenuTriggerProps) -> Element {
         },
         onblur: move |_| {
             if !ctx.focus.any_focused() {
-                ctx.focus.blur();
+                ctx.focus.clear_focus();
                 ctx.set_open.call(false);
             }
         },
@@ -436,9 +436,9 @@ pub fn DropdownMenuItem<T: Clone + PartialEq + 'static>(
     let mut ctx: DropdownMenuContext = use_context();
 
     let disabled = move || (ctx.disabled)() || (props.disabled)();
-    let focused = move || ctx.focus.is_focused((props.index)());
-
-    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
+    let item = use_item(collection_item(ctx.focus, props.index).disabled(disabled));
+    let focused = move || item.focused();
+    let onmounted = item.onmounted();
 
     rsx! {
         div {
@@ -469,7 +469,7 @@ pub fn DropdownMenuItem<T: Clone + PartialEq + 'static>(
 
             onblur: move |_| {
                 if focused() {
-                    ctx.focus.blur();
+                    ctx.focus.clear_focus();
                 }
             },
 

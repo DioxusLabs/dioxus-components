@@ -80,6 +80,9 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
         drag_and_drop_list::DragAndDropListItem {
             class: Styles::dx_dnd_list_item,
             index: props.index,
+            // Forward the stable item key so the primitive tracks focus by
+            // identity across reorders and removals instead of losing it.
+            item_key: props.item_key.clone(),
             attributes: props.attributes,
             {props.children}
         }
@@ -102,6 +105,7 @@ pub fn DragAndDropListItems(props: DragAndDropListItemsProps) -> Element {
                     }
                     DragAndDropListItem {
                         index: item.index,
+                        item_key: item.key.clone(),
                         {item.children}
                     }
                     DragAndDropDropIndicator {

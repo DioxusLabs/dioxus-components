@@ -20,6 +20,7 @@ pub mod avatar;
 pub mod calendar;
 pub mod checkbox;
 pub mod collapsible;
+mod collection;
 pub mod color_picker;
 pub mod combobox;
 pub mod context_menu;
@@ -27,7 +28,6 @@ pub mod date_picker;
 pub mod dialog;
 pub mod drag_and_drop_list;
 pub mod dropdown_menu;
-mod focus;
 pub mod hover_card;
 pub mod label;
 mod listbox;
@@ -48,6 +48,7 @@ pub mod separator;
 pub mod slider;
 pub mod switch;
 pub mod tabs;
+pub mod tag_group;
 pub mod toast;
 pub mod toggle;
 pub mod toggle_group;
@@ -251,9 +252,8 @@ fn use_animated_open(
     let mut show_in_dom = use_signal(|| false);
 
     use_effect(move || {
-        let open = open.cloned();
-        if open {
-            show_in_dom.set(open);
+        if open.cloned() {
+            show_in_dom.set(true);
         } else {
             spawn(async move {
                 let id = id.cloned();
@@ -261,7 +261,7 @@ fn use_animated_open(
                     "const id = await dioxus.recv();
                     const element = document.getElementById(id);
                     if (element && element.getAnimations().length > 0) {
-                        Promise.all(element.getAnimations().map((animation) => animation.finished)).then(() => {
+                        Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => {}))).then(() => {
                             dioxus.send(true);
                         });
                     } else {
@@ -270,7 +270,11 @@ fn use_animated_open(
                 );
                 let _ = eval.send(id);
                 _ = eval.recv::<bool>().await;
-                show_in_dom.set(open);
+                // The element may have been reopened while we waited for the exit
+                // animation. Only hide it if it is still closed.
+                if !open.cloned() {
+                    show_in_dom.set(false);
+                }
             });
         }
     });

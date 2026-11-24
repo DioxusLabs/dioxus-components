@@ -63,7 +63,7 @@ pub(crate) fn use_listbox_container(
         }
 
         if let Some(index) = selectable.initial_focus.cloned() {
-            selectable.focus_state.set_focus(Some(index));
+            selectable.collection.set_focus(Some(index));
             selectable.initial_focus.set(None);
         }
     });
@@ -77,7 +77,6 @@ pub(crate) fn use_listbox_option<T: Clone + PartialEq + 'static>(
     value: ReadSignal<T>,
     text_value: ReadSignal<Option<String>>,
     options: Signal<Vec<OptionState>>,
-    disabled: impl Fn() -> bool + Copy + 'static,
     component_name: &'static str,
 ) -> Memo<String> {
     let generated_id = use_unique_id();
@@ -88,30 +87,27 @@ pub(crate) fn use_listbox_option<T: Clone + PartialEq + 'static>(
 
     use_effect(move || {
         let option_id = id();
-        let stale_id = previous_id
-            .peek()
-            .as_ref()
-            .filter(|stale_id| *stale_id != &option_id)
-            .cloned();
+        let option_index = index();
+        let stale_id = previous_id.peek().clone();
         if let Some(stale_id) = stale_id {
-            remove_option(options, &stale_id);
+            if stale_id != option_id {
+                remove_option(options, &stale_id);
+            }
         }
-        let registered_id = option_id.clone();
         sync_option(
             options,
             OptionState {
-                tab_index: index(),
+                id: option_id.clone(),
+                index: option_index,
                 value: RcPartialEqValue::new(value.cloned()),
                 text_value: text_value.cloned(),
-                id: registered_id,
-                disabled: disabled(),
             },
         );
         previous_id.set(Some(option_id));
     });
 
     use_effect_cleanup(move || {
-        if let Some(option_id) = previous_id.peek().as_ref() {
+        if let Some(option_id) = previous_id.peek().as_deref() {
             remove_option(options, option_id);
         }
     });

@@ -3,9 +3,9 @@
 use dioxus::prelude::*;
 
 use crate::{
-    focus::{
-        use_deferred_focus, use_focus_control, use_focus_controlled_item_disabled,
-        use_focus_entry_disabled, use_focus_provider, FocusPlacement, FocusState,
+    collection::{
+        collection_item, use_collection_provider, use_deferred_collection_focus, use_item,
+        CollectionPlacement, CollectionState,
     },
     use_animated_open, use_id_or, use_unique_id,
 };
@@ -18,7 +18,7 @@ struct MenubarContext {
     disabled: ReadSignal<bool>,
 
     // Focus state
-    focus: FocusState,
+    focus: CollectionState,
 }
 
 /// The props for the [`Menubar`] component.
@@ -111,7 +111,7 @@ pub fn Menubar(props: MenubarProps) -> Element {
     let mut open_menu = use_signal(|| None);
     let set_open_menu = use_callback(move |idx| open_menu.set(idx));
 
-    let focus = use_focus_provider(props.roving_loop);
+    let focus = use_collection_provider(props.roving_loop);
     let mut ctx = use_context_provider(|| MenubarContext {
         open_menu,
         set_open_menu,
@@ -119,7 +119,7 @@ pub fn Menubar(props: MenubarProps) -> Element {
         focus,
     });
     use_effect(move || {
-        let index = ctx.focus.current_focus();
+        let index = ctx.focus.focused_index();
         if ctx.open_menu.peek().is_some() {
             ctx.set_open_menu.call(index);
         }
@@ -130,7 +130,7 @@ pub fn Menubar(props: MenubarProps) -> Element {
             role: "menubar",
             "data-disabled": (props.disabled)(),
             tabindex: (!ctx.focus.any_focused()).then_some("0"),
-            // If the menu receives focus, focus the most recently focused menu item
+            // If the menu receives focus, focus the most recently focused menu item.
             onfocus: move |_| {
                 ctx.focus.set_focus(Some(ctx.focus.recent_focus_or_default()));
             },
@@ -145,10 +145,10 @@ pub fn Menubar(props: MenubarProps) -> Element {
 #[derive(Clone, Copy)]
 struct MenubarMenuContext {
     index: ReadSignal<usize>,
-    focus: FocusState,
+    focus: CollectionState,
     is_open: Memo<bool>,
     disabled: ReadSignal<bool>,
-    initial_focus: Signal<Option<FocusPlacement>>,
+    initial_focus: Signal<Option<CollectionPlacement>>,
 }
 
 impl MenubarMenuContext {
@@ -253,8 +253,10 @@ pub struct MenubarMenuProps {
 pub fn MenubarMenu(props: MenubarMenuProps) -> Element {
     let mut ctx: MenubarContext = use_context();
     let is_open = use_memo(move || (ctx.open_menu)() == Some(props.index.cloned()));
-    let focus = use_focus_provider(ctx.focus.roving_loop);
+    let focus = use_collection_provider(ctx.focus.loop_signal());
     let initial_focus = use_signal(|| None);
+    let disabled = move || (ctx.disabled)() || (props.disabled)();
+
     let mut menu_ctx = use_context_provider(|| MenubarMenuContext {
         index: props.index,
         focus,
@@ -265,13 +267,10 @@ pub fn MenubarMenu(props: MenubarMenuProps) -> Element {
 
     use_effect(move || {
         if !is_open() {
-            menu_ctx.focus.blur();
+            menu_ctx.focus.clear_focus();
             menu_ctx.initial_focus.set(None);
         }
     });
-
-    let disabled = move || (ctx.disabled)() || (props.disabled)();
-    use_focus_entry_disabled(ctx.focus, menu_ctx.index, disabled);
 
     rsx! {
         div {
@@ -289,7 +288,7 @@ pub fn MenubarMenu(props: MenubarMenuProps) -> Element {
                     Key::Named(NamedKey::ArrowRight) => ctx.focus.focus_next(),
                     Key::Named(NamedKey::ArrowDown) if !disabled() => {
                         if !is_open() {
-                            menu_ctx.initial_focus.set(Some(FocusPlacement::First));
+                            menu_ctx.initial_focus.set(Some(CollectionPlacement::First));
                             ctx.set_open_menu.call(Some(props.index.cloned()));
                         } else {
                             menu_ctx.focus_next();
@@ -299,7 +298,7 @@ pub fn MenubarMenu(props: MenubarMenuProps) -> Element {
                         if is_open() {
                             menu_ctx.focus_prev();
                         } else {
-                            menu_ctx.initial_focus.set(Some(FocusPlacement::Last));
+                            menu_ctx.initial_focus.set(Some(CollectionPlacement::Last));
                             ctx.set_open_menu.call(Some(props.index.cloned()));
                         }
                     },
@@ -393,13 +392,14 @@ pub struct MenubarTriggerProps {
 pub fn MenubarTrigger(props: MenubarTriggerProps) -> Element {
     let mut ctx: MenubarContext = use_context();
     let menu_ctx: MenubarMenuContext = use_context();
-    let onmounted = use_focus_control(ctx.focus, menu_ctx.index);
     let disabled = move || (ctx.disabled)() || (menu_ctx.disabled)();
+    // The menu's trigger is the focusable element, so it registers the menu in
+    // the parent menubar collection.
+    let item = use_item(collection_item(ctx.focus, menu_ctx.index).disabled(disabled));
+    let onmounted = item.onmounted();
     let is_open = menu_ctx.is_open;
     let index = menu_ctx.index;
-    let is_focused = move || {
-        ctx.focus.current_focus() == Some(menu_ctx.index.cloned()) && !menu_ctx.focus.any_focused()
-    };
+    let is_focused = move || item.focused() && !menu_ctx.focus.any_focused();
 
     rsx! {
         button {
@@ -418,7 +418,7 @@ pub fn MenubarTrigger(props: MenubarTriggerProps) -> Element {
             },
             onblur: move |_| {
                 if is_focused() {
-                    ctx.focus.set_focus(None);
+                    ctx.focus.clear_focus();
                     ctx.set_open_menu.call(None);
                 }
             },
@@ -519,7 +519,7 @@ pub fn MenubarContent(props: MenubarContentProps) -> Element {
     let id = use_id_or(unique_id, props.id);
 
     let render = use_animated_open(id, menu_ctx.is_open);
-    use_deferred_focus(menu_ctx.focus, menu_ctx.initial_focus, render);
+    use_deferred_collection_focus(menu_ctx.focus, menu_ctx.initial_focus, render);
 
     rsx! {
         if render() {
@@ -634,9 +634,10 @@ pub fn MenubarItem(props: MenubarItemProps) -> Element {
     let mut menu_ctx: MenubarMenuContext = use_context();
 
     let disabled = move || (ctx.disabled)() || (props.disabled)();
-    let focused = move || menu_ctx.focus.is_focused(props.index.cloned()) && (menu_ctx.is_open)();
+    let item = use_item(collection_item(menu_ctx.focus, props.index).disabled(disabled));
+    let focused = move || item.focused() && (menu_ctx.is_open)();
 
-    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
+    let onmounted = item.onmounted();
 
     rsx! {
         div {
@@ -672,8 +673,8 @@ pub fn MenubarItem(props: MenubarItemProps) -> Element {
 
             onblur: move |_| {
                 if focused() {
-                    menu_ctx.focus.blur();
-                    ctx.focus.set_focus(None);
+                    menu_ctx.focus.clear_focus();
+                    ctx.focus.clear_focus();
                     ctx.set_open_menu.call(None);
                 }
             },

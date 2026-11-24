@@ -132,7 +132,7 @@ pub fn ComboboxInput(props: ComboboxInputProps) -> Element {
                 };
                 set_query.call(next_query);
                 if was_open {
-                    ctx.selectable.focus_state.set_focus(None);
+                    ctx.selectable.collection.clear_focus();
                 } else {
                     ctx.set_open(true);
                 }

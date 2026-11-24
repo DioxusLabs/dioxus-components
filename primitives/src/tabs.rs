@@ -1,7 +1,7 @@
 //! Defines the [`Tabs`] component and its sub-components.
 
 use crate::{
-    focus::{use_focus_controlled_item_disabled, use_focus_provider, FocusState},
+    collection::{collection_item, use_collection_provider, use_item, CollectionState},
     use_controlled, use_id_or, use_unique_id,
 };
 use dioxus::prelude::*;
@@ -14,11 +14,10 @@ struct TabsContext {
     disabled: ReadSignal<bool>,
 
     // Focus state
-    focus: FocusState,
+    focus: CollectionState,
 
     // Orientation
     horizontal: ReadSignal<bool>,
-    roving_loop: ReadSignal<bool>,
 
     // ARIA attributes
     tab_content_ids: Signal<Vec<String>>,
@@ -111,7 +110,7 @@ pub fn Tabs(props: TabsProps) -> Element {
     let (value, set_value) =
         use_controlled(props.value, props.default_value, props.on_value_change);
 
-    let focus = use_focus_provider(props.roving_loop);
+    let focus = use_collection_provider(props.roving_loop);
     let mut ctx = use_context_provider(|| TabsContext {
         value: value.into(),
         set_value,
@@ -120,7 +119,6 @@ pub fn Tabs(props: TabsProps) -> Element {
         focus,
 
         horizontal: props.horizontal,
-        roving_loop: props.roving_loop,
         tab_content_ids: Signal::new(Vec::new()),
     });
 
@@ -129,7 +127,7 @@ pub fn Tabs(props: TabsProps) -> Element {
             "data-orientation": if (props.horizontal)() { "horizontal" } else { "vertical" },
             "data-disabled": (props.disabled)(),
 
-            onfocusout: move |_| ctx.focus.blur(),
+            onfocusout: move |_| ctx.focus.clear_focus(),
             ..props.attributes,
 
             {props.children}
@@ -285,22 +283,14 @@ pub fn TabTrigger(props: TabTriggerProps) -> Element {
     let value = props.value.clone();
     let selected = use_memo(move || (ctx.value)() == value);
 
-    let tab_index = use_memo(move || {
-        if !(ctx.roving_loop)() {
-            return "0";
-        }
-
-        if selected() {
-            return "0";
-        }
-        if ctx.focus.is_focused(props.index.cloned()) {
-            return "0";
-        }
-        "-1"
-    });
-
     let disabled = move || (ctx.disabled)() || (props.disabled)();
-    let onmounted = use_focus_controlled_item_disabled(props.index, disabled);
+    let item = use_item(
+        collection_item(ctx.focus, props.index)
+            .disabled(disabled)
+            .selected(move || selected.cloned()),
+    );
+    let onmounted = item.onmounted();
+    let tab_index = item.tabindex;
 
     rsx! {
         button {

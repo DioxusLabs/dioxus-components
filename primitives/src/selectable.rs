@@ -4,7 +4,7 @@ use dioxus::html::input_data::MouseButton;
 use dioxus::prelude::*;
 
 use crate::{
-    focus::{use_focus_entry_disabled, use_focus_provider, FocusState},
+    collection::{use_collection_provider, CollectionState},
     listbox::{use_listbox_option, ListboxOptionContext},
     selection, use_controlled, Controlled,
 };
@@ -40,7 +40,7 @@ pub(crate) struct SelectableContext {
     pub(crate) selection_mode: SelectionMode,
     pub(crate) options: Signal<Vec<OptionState>>,
     pub(crate) list_id: Signal<Option<String>>,
-    pub(crate) focus_state: FocusState,
+    pub(crate) collection: CollectionState,
     pub(crate) initial_focus: Signal<Option<usize>>,
     pub(crate) disabled: ReadSignal<bool>,
 }
@@ -70,10 +70,6 @@ impl SelectableContext {
         self.set_open.call(open);
     }
 
-    pub(crate) fn toggle_open(&mut self) {
-        self.set_open(!self.open.cloned());
-    }
-
     pub(crate) fn selected_text(&self) -> Option<String> {
         let values = self.values.read();
         let options = self.options.read();
@@ -89,32 +85,24 @@ impl SelectableContext {
     }
 
     pub(crate) fn focused_option_id(&self) -> Option<String> {
-        let index = self.focus_state.current_focus()?;
-        if !self.focus_state.is_enabled(index) {
-            return None;
-        }
-        self.options
-            .read()
-            .iter()
-            .find(|option| option.tab_index == index && !option.disabled)
-            .map(|option| option.id.clone())
+        self.collection.focused_key()
     }
 
     pub(crate) fn select_focused(&mut self) {
         if !self.open.cloned() {
             return;
         }
-        let Some(index) = self.focus_state.current_focus() else {
+        let Some(index) = self.collection.focused_index() else {
             return;
         };
-        if !self.focus_state.is_enabled(index) {
+        if !self.collection.is_available(index) {
             return;
         }
         let value = self
             .options
             .read()
             .iter()
-            .find(|option| option.tab_index == index && !option.disabled)
+            .find(|option| option.index == index)
             .map(|option| option.value.clone());
         if let Some(value) = value {
             self.select_value(value);
@@ -126,8 +114,8 @@ impl SelectableContext {
             .options
             .read()
             .iter()
-            .filter(|option| !option.disabled && predicate(option))
-            .map(|option| option.tab_index)
+            .filter(|option| self.collection.is_available(option.index) && predicate(option))
+            .map(|option| option.index)
             .collect();
         indices.sort_unstable();
         indices.dedup();
@@ -149,23 +137,33 @@ impl SelectableContext {
     }
 
     pub(crate) fn focus_next_where(&mut self, predicate: impl Fn(&OptionState) -> bool) {
-        let indices = self.matching_enabled_indices(predicate);
-        self.focus_state.focus_next_from_current(&indices);
+        let options = self.options;
+        self.collection.focus_next_matching(move |index| {
+            options
+                .read()
+                .iter()
+                .any(|option| option.index == index && predicate(option))
+        });
     }
 
     pub(crate) fn focus_prev_where(&mut self, predicate: impl Fn(&OptionState) -> bool) {
-        let indices = self.matching_enabled_indices(predicate);
-        self.focus_state.focus_prev_from_current(&indices);
+        let options = self.options;
+        self.collection.focus_prev_matching(move |index| {
+            options
+                .read()
+                .iter()
+                .any(|option| option.index == index && predicate(option))
+        });
     }
 
     pub(crate) fn focus_first_where(&mut self, predicate: impl Fn(&OptionState) -> bool) {
         let index = self.first_matching_enabled_index(predicate);
-        self.focus_state.set_focus(index);
+        self.collection.set_focus(index);
     }
 
     pub(crate) fn focus_last_where(&mut self, predicate: impl Fn(&OptionState) -> bool) {
         let index = self.last_matching_enabled_index(predicate);
-        self.focus_state.set_focus(index);
+        self.collection.set_focus(index);
     }
 
     pub(crate) fn select_value(&mut self, value: RcPartialEqValue) {
@@ -211,7 +209,7 @@ pub(crate) fn use_selectable_root(
     let (open, set_open) = use_controlled(open.value, open.default.cloned(), open.on_change);
     let options: Signal<Vec<OptionState>> = use_signal(Vec::default);
     let list_id = use_signal(|| None);
-    let focus_state = use_focus_provider(roving_loop);
+    let collection = use_collection_provider(roving_loop);
     let initial_focus = use_signal(|| None);
 
     SelectableContext {
@@ -222,7 +220,7 @@ pub(crate) fn use_selectable_root(
         selection_mode,
         options,
         list_id,
-        focus_state,
+        collection,
         initial_focus,
         disabled,
     }
@@ -250,12 +248,10 @@ pub(crate) fn use_selectable_option<T: Clone + PartialEq + 'static>(
         value,
         text_value,
         selectable.options,
-        move || disabled.cloned(),
         component_name,
     );
-    use_focus_entry_disabled(selectable.focus_state, index, move || disabled.cloned());
     let selected = use_memo(move || selectable.is_selected(&RcPartialEqValue::new(value.cloned())));
-    let focused = use_memo(move || selectable.focus_state.is_focused(index()));
+    let focused = use_memo(move || selectable.collection.is_focused(index()));
     let down_pos: Signal<Option<(f64, f64)>> = use_signal(|| None);
 
     use_context_provider(|| ListboxOptionContext {

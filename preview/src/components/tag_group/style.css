@@ -1,0 +1,83 @@
+.dx-tag-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dx-tag-group-label {
+  padding: 4px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.dx-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.dx-tag {
+  display: flex;
+  max-width: fit-content;
+  align-items: center;
+  border: 1px solid var(--primary-color-6);
+  border-radius: 9999px;
+  cursor: default;
+  font-size: 0.75rem;
+  gap: 0.25rem;
+  padding-block: 0.125rem;
+  padding-inline: 0.75rem;
+}
+
+.dx-tag[data-selected="true"] {
+  border-color: var(--focused-border-color);
+  background-color: var(--focused-border-color);
+}
+
+.dx-tag[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.dx-tag:focus-visible {
+  box-shadow: 0 0 0 2px var(--focused-border-color);
+}
+
+.dx-remove-button {
+  display: flex;
+  overflow: visible;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-style: none;
+  border-radius: 6px;
+  margin-left: 0.25rem;
+  background-color: transparent;
+  color: var(--secondary-color-6);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    transform 80ms ease;
+}
+
+.dx-remove-button:hover {
+  background-color: var(--light, var(--primary-color-5)) var(--dark, var(--primary-color-6));
+  color: var(--secondary-color-2);
+}
+
+.dx-remove-button:active {
+  transform: scale(0.92);
+}
+
+.dx-remove-button:focus-visible {
+  outline: 2px solid var(--focused-border-color);
+  outline-offset: 2px;
+}
+
+.dx-tag-group-empty {
+  padding: 4px 0;
+  font-size: 0.875rem;
+  text-align: center;
+}

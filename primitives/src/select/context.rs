@@ -83,11 +83,11 @@ impl SelectContext {
         let keyboard = self.adaptive_keyboard.read();
 
         if let Some(best_match_index) =
-            super::text_search::best_match(&keyboard, &typeahead, &options)
+            super::text_search::best_match(&keyboard, &typeahead, &options, |index| {
+                self.selectable.collection.is_available(index)
+            })
         {
-            self.selectable
-                .focus_state
-                .set_focus(Some(best_match_index));
+            self.selectable.collection.set_focus(Some(best_match_index));
         }
     }
 }

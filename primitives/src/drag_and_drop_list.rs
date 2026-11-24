@@ -1,6 +1,6 @@
 //! Defines the [`DragAndDropList`] component and its sub-components.
+use crate::collection::{collection_item, use_collection_provider, use_item, CollectionState};
 use dioxus::prelude::*;
-use std::rc::Rc;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum DropPosition {
@@ -15,6 +15,46 @@ impl From<std::cmp::Ordering> for DropPosition {
             std::cmp::Ordering::Less => Self::Before,
             std::cmp::Ordering::Equal => Self::Undefined,
             std::cmp::Ordering::Greater => Self::After,
+        }
+    }
+}
+
+fn sortable_item_key(children: &Element, index: usize) -> String {
+    children
+        .as_ref()
+        .ok()
+        .and_then(|vnode| vnode.key().map(str::to_owned))
+        .unwrap_or_else(|| index.to_string())
+}
+
+#[cfg(test)]
+mod key_tests {
+    use super::*;
+
+    #[test]
+    fn preserves_explicit_key() {
+        let key = "item";
+        assert_eq!(sortable_item_key(&rsx! { div { key: "{key}" } }, 2), "item");
+    }
+
+    #[test]
+    fn falls_back_to_index_without_key() {
+        assert_eq!(sortable_item_key(&rsx! { div {} }, 2), "2");
+        assert_eq!(sortable_item_key(&rsx! {}, 3), "3");
+    }
+}
+
+#[derive(Clone, PartialEq)]
+struct SortableListItem {
+    key: String,
+    children: Element,
+}
+
+impl SortableListItem {
+    fn new(children: Element, index: usize) -> Self {
+        Self {
+            key: sortable_item_key(&children, index),
+            children,
         }
     }
 }
@@ -71,8 +111,8 @@ enum DragState {
 #[derive(Clone, Copy)]
 pub struct DragAndDropContext {
     drag: Signal<DragState>,
-    list_items: Signal<Vec<Element>>,
-    focused_index: Signal<Option<usize>>,
+    list_items: Signal<Vec<SortableListItem>>,
+    focus: CollectionState,
     announcement: Signal<String>,
 }
 
@@ -142,8 +182,8 @@ impl DragAndDropContext {
             return;
         };
         let mut list = (self.list_items)();
-        let element = list.remove(from);
-        list.insert(to, element);
+        let item = list.remove(from);
+        list.insert(to, item);
         self.list_items.set(list);
         self.drag.set(DragState::Dropped { from, to });
     }
@@ -151,11 +191,14 @@ impl DragAndDropContext {
     /// Remove the item at the given index from the list.
     pub fn remove(&mut self, index: usize) {
         let mut list = (self.list_items)();
-        if list.remove(index).is_ok() {
+        if index < list.len() {
+            list.remove(index);
             let new_len = list.len();
+            let focus_target = new_len.checked_sub(1).map(|last| index.min(last));
+            let focus_id =
+                focus_target.and_then(|index| list.get(index).map(|item| item.key.clone()));
             self.list_items.set(list);
-            self.focused_index
-                .set(new_len.checked_sub(1).map(|last| index.min(last)));
+            self.focus.set_focus_key(focus_id);
             self.announcement.set(format!(
                 "Removed item from position {}. {} items remaining",
                 index + 1,
@@ -173,28 +216,24 @@ impl DragAndDropContext {
     }
 
     fn is_focused(&self, index: usize) -> bool {
-        (self.focused_index)().is_some_and(|focus| focus == index)
+        self.focus.is_focused(index)
     }
 
-    fn set_focus(&mut self, id: Option<usize>) {
-        self.focused_index.set(id);
+    fn set_focus(&mut self, index: Option<usize>) {
+        // Every sortable item carries a key, so resolve focus by key to stay
+        // stable across reordering. An out-of-bounds (or `None`) index yields no
+        // key, which clears focus rather than pointing at an invalid slot.
+        let id =
+            index.and_then(|index| (self.list_items)().get(index).map(|item| item.key.clone()));
+        self.focus.set_focus_key(id);
     }
 
     fn focus_next(&mut self) {
-        let Some(index) = (self.focused_index)() else {
-            return;
-        };
-        let len = (self.list_items)().len();
-        self.focused_index.set(Some((index + 1) % len));
+        self.focus.focus_next();
     }
 
     fn focus_prev(&mut self) {
-        let Some(index) = (self.focused_index)() else {
-            return;
-        };
-        let len = (self.list_items)().len();
-        self.focused_index
-            .set(Some(index.checked_sub(1).unwrap_or(len - 1)));
+        self.focus.focus_prev();
     }
 
     fn move_up(&mut self, index: usize) {
@@ -330,13 +369,22 @@ pub struct DragAndDropLiveRegionProps {
 #[component]
 pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
     let drag = use_signal(|| DragState::Idle);
-    let list_items = use_signal(|| props.items.clone());
+    let list_items = use_signal(|| {
+        props
+            .items
+            .iter()
+            .cloned()
+            .enumerate()
+            .map(|(index, item)| SortableListItem::new(item, index))
+            .collect()
+    });
     let announcement = use_signal(String::new);
+    let focus = use_collection_provider(ReadSignal::new(Signal::new(true)));
 
     use_context_provider(move || DragAndDropContext {
         drag,
         list_items,
-        focused_index: Signal::new(None),
+        focus,
         announcement,
     });
 
@@ -370,18 +418,14 @@ pub fn use_drag_and_drop_list_items() -> Vec<DragAndDropListRenderItem> {
     (ctx.list_items)()
         .into_iter()
         .enumerate()
-        .map(|(index, children)| {
+        .map(|(index, item)| {
             // Propagate any `key:` the caller set on the item's root element
             // through to the keyed sortable item fragment.
-            let key = children
-                .as_ref()
-                .ok()
-                .and_then(|vnode| vnode.key().map(str::to_owned))
-                .unwrap_or_else(|| index.to_string());
+
             DragAndDropListRenderItem {
                 index,
-                key,
-                children,
+                key: item.key,
+                children: item.children,
             }
         })
         .collect()
@@ -402,6 +446,7 @@ pub fn DragAndDropListItems(props: DragAndDropListItemsProps) -> Element {
                     }
                     DragAndDropListItem {
                         index: item.index,
+                        item_key: item.key.clone(),
                         {item.children}
                     }
                     DragAndDropDropIndicator {
@@ -472,6 +517,11 @@ pub struct DragAndDropListItemProps {
     /// The index of the item in the list
     pub index: usize,
 
+    /// Stable identity for this item. Pass the same value as the item's
+    /// `key:` when manually rendering sortable items.
+    #[props(default)]
+    pub item_key: Option<String>,
+
     /// Additional attributes to apply to the list item element.
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
@@ -540,17 +590,12 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     if *item_ctx.index.peek() != index {
         item_ctx.index.set(index);
     }
+    let index_signal = item_ctx.index;
 
-    let mut item_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
-    use_effect(move || {
-        if ctx.is_focused(index) {
-            if let Some(md) = item_ref() {
-                spawn(async move {
-                    let _ = md.set_focus(true).await;
-                });
-            }
-        }
-    });
+    let item_key = props.item_key.clone();
+    let item = use_item(collection_item(ctx.focus, index_signal).key(move || item_key.clone()));
+    let mut collection_onmounted = item.onmounted();
+    let mut item_ref: Signal<Option<std::rc::Rc<MountedData>>> = use_signal(|| None);
 
     let onkeydown = move |event: Event<KeyboardData>| {
         let key = event.key();
@@ -614,13 +659,11 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
         };
     };
 
-    let is_tab_reachable = ctx.is_focused(index) || ((ctx.focused_index)().is_none() && index == 0);
-
     rsx! {
         li {
             aria_roledescription: "sortable item",
             draggable: "true",
-            tabindex: if is_tab_reachable { "0" } else { "-1" },
+            tabindex: item.tabindex,
             aria_grabbed: if ctx.drag_from().is_some_and(|from| from == index) { "true" } else { "false" },
             "data-is-grabbing": if ctx.drag_from().is_some_and(|from| from == index) { "true" },
             // Set when the drop target has returned to this item's starting slot —
@@ -629,7 +672,10 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
             // hooks off this attribute to surface the "stays here" state.
             "data-drop-at-origin": if ctx.drag_from().is_some_and(|from| from == index) && ctx.drop_to() == Some(index) { "true" },
             "data-focus-visible": if ctx.is_focused(index) { "true" },
-            onmounted: move |data| item_ref.set(Some(data.data())),
+            onmounted: move |event| {
+                item_ref.set(Some(event.data()));
+                collection_onmounted(event);
+            },
             onfocus: move |_| {
                 if !ctx.is_dragging() {
                     ctx.set_focus(Some(index));

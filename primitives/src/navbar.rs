@@ -1,9 +1,9 @@
 //! Defines the [`Navbar`] component and its sub-components.
 
 use crate::{
-    focus::{
-        use_deferred_focus, use_focus_control, use_focus_controlled_item_disabled,
-        use_focus_entry_disabled, use_focus_provider, FocusPlacement, FocusState,
+    collection::{
+        collection_item, use_collection_provider, use_deferred_collection_focus, use_item,
+        CollectionPlacement, CollectionState,
     },
     use_animated_open, use_id_or, use_unique_id,
 };
@@ -17,7 +17,7 @@ struct NavbarContext {
     disabled: ReadSignal<bool>,
 
     // Focus state
-    focus: FocusState,
+    focus: CollectionState,
 }
 
 /// The props for the [`Navbar`] component.
@@ -111,7 +111,7 @@ pub fn Navbar(props: NavbarProps) -> Element {
     let mut open_nav = use_signal(|| None);
     let set_open_nav = use_callback(move |idx| open_nav.set(idx));
 
-    let focus = use_focus_provider(props.roving_loop);
+    let focus = use_collection_provider(props.roving_loop);
     let mut ctx = use_context_provider(|| NavbarContext {
         open_nav,
         set_open_nav,
@@ -119,7 +119,7 @@ pub fn Navbar(props: NavbarProps) -> Element {
         focus,
     });
     use_effect(move || {
-        let index = ctx.focus.current_focus();
+        let index = ctx.focus.focused_index();
         if ctx.open_nav.peek().is_some() {
             ctx.set_open_nav.call(index);
         }
@@ -139,7 +139,7 @@ pub fn Navbar(props: NavbarProps) -> Element {
                 role: "menubar",
                 "data-disabled": (props.disabled)(),
                 tabindex: (!ctx.focus.any_focused()).then_some("0"),
-                // If the menu receives focus, focus the most recently focused menu item
+                // If the menu receives focus, focus the most recently focused menu item.
                 onfocus: move |_| {
                     ctx.focus.set_focus(Some(ctx.focus.recent_focus_or_default()));
                 },
@@ -166,10 +166,10 @@ pub fn Navbar(props: NavbarProps) -> Element {
 #[derive(Clone, Copy)]
 struct NavbarNavContext {
     index: ReadSignal<usize>,
-    focus: FocusState,
+    focus: CollectionState,
     is_open: Memo<bool>,
     disabled: ReadSignal<bool>,
-    initial_focus: Signal<Option<FocusPlacement>>,
+    initial_focus: Signal<Option<CollectionPlacement>>,
 }
 
 impl NavbarNavContext {
@@ -274,8 +274,11 @@ pub struct NavbarNavProps {
 pub fn NavbarNav(props: NavbarNavProps) -> Element {
     let mut ctx: NavbarContext = use_context();
     let is_open = use_memo(move || (ctx.open_nav)() == Some(props.index.cloned()));
-    let focus = use_focus_provider(ctx.focus.roving_loop);
+    let focus = use_collection_provider(ctx.focus.loop_signal());
     let initial_focus = use_signal(|| None);
+
+    let disabled = move || (ctx.disabled)() || (props.disabled)();
+
     let mut nav_ctx = use_context_provider(|| NavbarNavContext {
         index: props.index,
         focus,
@@ -286,13 +289,10 @@ pub fn NavbarNav(props: NavbarNavProps) -> Element {
 
     use_effect(move || {
         if !is_open() {
-            nav_ctx.focus.blur();
+            nav_ctx.focus.clear_focus();
             nav_ctx.initial_focus.set(None);
         }
     });
-
-    let disabled = move || (ctx.disabled)() || (props.disabled)();
-    use_focus_entry_disabled(ctx.focus, nav_ctx.index, disabled);
 
     rsx! {
         div {
@@ -312,7 +312,7 @@ pub fn NavbarNav(props: NavbarNavProps) -> Element {
             },
             onmouseleave: move |_| {
                 if is_open() {
-                    ctx.focus.set_focus(None);
+                    ctx.focus.clear_focus();
                 }
             },
             onkeydown: move |event: Event<KeyboardData>| {
@@ -322,7 +322,7 @@ pub fn NavbarNav(props: NavbarNavProps) -> Element {
                     }
                     Key::Named(NamedKey::ArrowDown) if !disabled() => {
                         if !is_open() {
-                            nav_ctx.initial_focus.set(Some(FocusPlacement::First));
+                            nav_ctx.initial_focus.set(Some(CollectionPlacement::First));
                             ctx.set_open_nav.call(Some(props.index.cloned()));
                         } else {
                             nav_ctx.focus_next();
@@ -332,7 +332,7 @@ pub fn NavbarNav(props: NavbarNavProps) -> Element {
                         if is_open() {
                             nav_ctx.focus_prev();
                         } else {
-                            nav_ctx.initial_focus.set(Some(FocusPlacement::Last));
+                            nav_ctx.initial_focus.set(Some(CollectionPlacement::Last));
                             ctx.set_open_nav.call(Some(props.index.cloned()));
                         }
                     },
@@ -426,11 +426,12 @@ pub struct NavbarTriggerProps {
 pub fn NavbarTrigger(props: NavbarTriggerProps) -> Element {
     let mut ctx: NavbarContext = use_context();
     let nav_ctx: NavbarNavContext = use_context();
-    let onmounted = use_focus_control(ctx.focus, nav_ctx.index);
-    let is_focused = move || {
-        ctx.focus.current_focus() == Some(nav_ctx.index.cloned()) && !nav_ctx.focus.any_focused()
-    };
     let disabled = move || (ctx.disabled)() || (nav_ctx.disabled)();
+    // The nav's trigger is the focusable element, so it registers the nav in the
+    // parent navbar collection.
+    let item = use_item(collection_item(ctx.focus, nav_ctx.index).disabled(disabled));
+    let is_focused = move || item.focused() && !nav_ctx.focus.any_focused();
+    let onmounted = item.onmounted();
     let is_open = nav_ctx.is_open;
 
     rsx! {
@@ -449,7 +450,7 @@ pub fn NavbarTrigger(props: NavbarTriggerProps) -> Element {
             },
             onblur: move |_| {
                 if is_focused() {
-                    ctx.focus.set_focus(None);
+                    ctx.focus.clear_focus();
                     ctx.set_open_nav.call(None);
                 }
             },
@@ -562,7 +563,7 @@ pub fn NavbarContent(props: NavbarContentProps) -> Element {
     let id = use_id_or(unique_id, props.id);
 
     let render = use_animated_open(id, nav_ctx.is_open);
-    use_deferred_focus(nav_ctx.focus, nav_ctx.initial_focus, render);
+    use_deferred_collection_focus(nav_ctx.focus, nav_ctx.initial_focus, render);
 
     rsx! {
         if render() {
@@ -730,7 +731,11 @@ pub fn NavbarItem(props: NavbarItemProps) -> Element {
         )
     };
 
-    let mut onmounted = use_focus_controlled_item_disabled(props.index, disabled);
+    // Resolve the innermost collection: the parent nav's when inside a
+    // NavbarNav, otherwise the top-level navbar's.
+    let collection: CollectionState = use_context();
+    let mut onmounted =
+        use_item(collection_item(collection, props.index).disabled(disabled)).onmounted();
 
     let attributes = props
         .attributes
@@ -762,9 +767,9 @@ pub fn NavbarItem(props: NavbarItemProps) -> Element {
         .onblur(move |_| {
             if focused() {
                 if let Some(nav_ctx) = &mut nav_ctx {
-                    nav_ctx.focus.blur();
+                    nav_ctx.focus.clear_focus();
                 }
-                ctx.focus.set_focus(None);
+                ctx.focus.clear_focus();
                 ctx.set_open_nav.call(None);
             }
         });

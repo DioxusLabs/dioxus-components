@@ -4,6 +4,7 @@ use dioxus::prelude::*;
 
 use super::super::context::ComboboxContext;
 use crate::{
+    collection::{collection_item, use_item},
     listbox::{ListboxContext, ListboxItemIndicator},
     selectable::{
         pointer_select_cancel, pointer_select_commit, pointer_select_start, use_selectable_option,
@@ -66,6 +67,13 @@ pub fn ComboboxOption<T: PartialEq + Clone + 'static>(props: ComboboxOptionProps
             component_name: "ComboboxOption",
         },
     );
+    use_item(
+        collection_item(ctx.selectable.collection, index)
+            .key(move || Some(option.id.cloned()))
+            .disabled(move || option.disabled.cloned())
+            .hidden(move || !visible())
+            .selected(move || (option.selected)()),
+    );
 
     let render = use_context::<ListboxContext>().render;
 
@@ -86,7 +94,7 @@ pub fn ComboboxOption<T: PartialEq + Clone + 'static>(props: ComboboxOptionProps
 
                 onmouseenter: move |_| {
                     if !(option.disabled)() {
-                        ctx.selectable.focus_state.set_focus(Some((option.index)()));
+                        ctx.selectable.collection.set_focus(Some((option.index)()));
                     }
                 },
                 onpointerdown: move |event| {

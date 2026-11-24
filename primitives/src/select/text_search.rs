@@ -8,6 +8,7 @@ pub(super) fn best_match(
     keyboard: &AdaptiveKeyboard,
     typeahead: &str,
     options: &[OptionState],
+    is_available: impl Fn(usize) -> bool,
 ) -> Option<usize> {
     if typeahead.is_empty() {
         return None;
@@ -17,12 +18,12 @@ pub(super) fn best_match(
 
     options
         .iter()
-        .filter(|opt| !opt.disabled)
+        .filter(|opt| is_available(opt.index))
         .map(|opt| {
             let value = &opt.text_value;
             let value_characters: Box<[_]> = value.chars().collect();
             let distance = normalized_distance(&typeahead_characters, &value_characters, keyboard);
-            (distance, opt.tab_index)
+            (distance, opt.index)
         })
         .min_by(|(d1, _), (d2, _)| f32::total_cmp(d1, d2))
         .map(|(_, value)| value)
@@ -420,6 +421,15 @@ mod tests {
     use crate::selectable::{OptionState, RcPartialEqValue};
     use std::collections::HashMap;
 
+    fn option(index: usize, value: &'static str, text_value: &str) -> OptionState {
+        OptionState {
+            id: format!("option-{index}"),
+            index,
+            value: RcPartialEqValue::new(value),
+            text_value: text_value.to_string(),
+        }
+    }
+
     #[test]
     fn test_levenshtein_distance() {
         let typeahead = ['a', 'b', 'c'];
@@ -534,45 +544,27 @@ mod tests {
     #[test]
     fn test_best_match() {
         let options = vec![
-            OptionState {
-                tab_index: 0,
-                value: RcPartialEqValue::new("apple"),
-                text_value: "Apple".to_string(),
-                id: "apple".to_string(),
-                disabled: false,
-            },
-            OptionState {
-                tab_index: 1,
-                value: RcPartialEqValue::new("banana"),
-                text_value: "Banana".to_string(),
-                id: "banana".to_string(),
-                disabled: false,
-            },
-            OptionState {
-                tab_index: 2,
-                value: RcPartialEqValue::new("cherry"),
-                text_value: "Cherry".to_string(),
-                id: "cherry".to_string(),
-                disabled: false,
-            },
+            option(0, "apple", "Apple"),
+            option(1, "banana", "Banana"),
+            option(2, "cherry", "Cherry"),
         ];
 
         let layout = AdaptiveKeyboard::default();
 
         // Exact prefix match
-        let result = best_match(&layout, "App", &options);
+        let result = best_match(&layout, "App", &options, |_| true);
         assert_eq!(result, Some(0));
 
         // Partial match
-        let result = best_match(&layout, "ban", &options);
+        let result = best_match(&layout, "ban", &options, |_| true);
         assert_eq!(result, Some(1));
 
         // Empty typeahead should return None
-        let result = best_match(&layout, "", &options);
+        let result = best_match(&layout, "", &options, |_| true);
         assert_eq!(result, None);
 
         // No match should return closest option
-        let result = best_match(&layout, "xyz", &options);
+        let result = best_match(&layout, "xyz", &options, |_| true);
         assert!(result.is_some());
     }
 
@@ -602,29 +594,14 @@ mod tests {
         assert_eq!(adaptive.physical_mappings.get("KeyA"), Some(&'ф'));
         assert_eq!(adaptive.physical_mappings.get("KeyS"), Some(&'ы'));
 
-        let options = vec![
-            OptionState {
-                tab_index: 0,
-                value: RcPartialEqValue::new("ф"),
-                text_value: "ф".to_string(),
-                id: "ф".to_string(),
-                disabled: false,
-            },
-            OptionState {
-                tab_index: 1,
-                value: RcPartialEqValue::new("banana"),
-                text_value: "Banana".to_string(),
-                id: "banana".to_string(),
-                disabled: false,
-            },
-        ];
+        let options = vec![option(0, "ф", "ф"), option(1, "banana", "Banana")];
 
         // ы should be a closer match to ф than banana
-        let result = best_match(&adaptive, "ф", &options);
+        let result = best_match(&adaptive, "ф", &options, |_| true);
         assert_eq!(result, Some(0));
 
         // b should still match banana
-        let result = best_match(&adaptive, "b", &options);
+        let result = best_match(&adaptive, "b", &options, |_| true);
         assert_eq!(result, Some(1));
     }
 

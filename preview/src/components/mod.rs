@@ -45,7 +45,7 @@ pub fn category_of(name: &str) -> ComponentCategory {
         "toast" | "progress" | "skeleton" | "badge" => ComponentCategory::Feedback,
         "accordion" | "collapsible" => ComponentCategory::Disclosure,
         "avatar" | "card" | "separator" | "aspect_ratio" | "item" | "drag_and_drop_list"
-        | "virtual_list" | "scroll_area" => ComponentCategory::DataDisplay,
+        | "virtual_list" | "scroll_area" | "tag_group" => ComponentCategory::DataDisplay,
         _ => ComponentCategory::DataDisplay,
     }
 }
@@ -206,6 +206,7 @@ examples!(
     slider[dynamic_range, range],
     switch,
     tabs,
+    tag_group[multi, states],
     textarea[outline, fade, ghost],
     toast,
     toggle,

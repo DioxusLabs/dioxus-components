@@ -1,5 +1,30 @@
 import { test, expect } from "@playwright/test";
 
+test("Calendar keeps weekday headers aligned with compact day columns", async ({ page }) => {
+  await page.goto("http://127.0.0.1:8080/component/?name=calendar&");
+
+  const grid = page.locator("#component-preview-frame").first().locator("table");
+  await expect(grid.locator("thead th")).toHaveCount(7);
+
+  const columns = await grid.evaluate((table) => {
+    const bounds = (element: Element) => {
+      const { x, width } = element.getBoundingClientRect();
+      return { center: x + width / 2, width };
+    };
+    return {
+      headers: Array.from(table.querySelectorAll("thead th"), bounds),
+      days: Array.from(table.querySelectorAll("tbody tr:first-child button"), bounds),
+    };
+  });
+  expect(columns.days).toHaveLength(7);
+  for (const [index, day] of columns.days.entries()) {
+    expect(Math.abs(day.center - columns.headers[index].center)).toBeLessThan(1);
+    if (index > 0) {
+      expect(Math.abs(day.center - columns.days[index - 1].center - day.width)).toBeLessThan(1);
+    }
+  }
+});
+
 test("test", async ({ page }) => {
   await page.goto("http://127.0.0.1:8080/component/?name=calendar&", {
     timeout: 20 * 60 * 1000,

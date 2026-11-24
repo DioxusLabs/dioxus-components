@@ -92,10 +92,12 @@
 }
 
 .dx-calendar-grid {
-    width: 100%;
-    padding: 0.25rem 0.5rem;
+    --dx-calendar-day-size: 2rem;
+    --dx-calendar-inline-padding: 0.625rem;
+    width: calc(7 * var(--dx-calendar-day-size) + 2 * var(--dx-calendar-inline-padding));
+    padding: 0.375rem var(--dx-calendar-inline-padding);
     border-collapse: separate;
-    border-spacing: 0 0.25rem;
+    border-spacing: 0 0.375rem;
     table-layout: fixed;
 }
 
@@ -116,7 +118,7 @@
 
 .dx-calendar-grid-cell {
     display: block;
-    width: 2rem;
+    width: var(--dx-calendar-day-size);
     border: none;
     border-radius: 0.5rem;
     margin: 0 auto;

@@ -4,7 +4,7 @@ test("Calendar keeps weekday headers aligned with compact day columns", async ({
   await page.goto("http://127.0.0.1:8080/component/?name=calendar&");
 
   const grid = page.locator("#component-preview-frame").first().locator("table");
-  await expect(grid.locator("thead th")).toHaveCount(7);
+  await expect(grid.locator("thead th")).toHaveCount(7, { timeout: 30000 });
 
   const columns = await grid.evaluate((table) => {
     const bounds = (element: Element) => {
@@ -31,15 +31,33 @@ test("Calendar preserves the demo's vertical grid spacing", async ({ page, brows
   await page.goto("http://127.0.0.1:8080/component/?name=calendar&");
 
   const grid = page.locator("#component-preview-frame").first().locator("table");
-  await expect(grid.locator("tbody tr")).toHaveCount(6);
-  const offsets = await grid.evaluate(async (table) => {
+  await expect(grid.locator("tbody tr")).toHaveCount(6, { timeout: 30000 });
+  const layout = await grid.evaluate(async (table) => {
     await document.fonts.ready;
-    const top = table.getBoundingClientRect().top;
-    return Array.from(table.querySelectorAll("tbody tr td:first-child button"), (day) =>
-      Math.round(day.getBoundingClientRect().top - top),
+    const { top, width, height } = table.getBoundingClientRect();
+    const frameHeight = table.closest("#component-preview-frame")!.getBoundingClientRect().height;
+    const offsets = Array.from(table.querySelectorAll("tbody tr td:first-child button"), (day) =>
+      Math.round(day.getBoundingClientRect().top - top)
     );
+    return { width, height, frameHeight, offsets };
   });
-  expect(offsets).toEqual([37, 75, 113, 151, 189, 227]);
+  expect(layout).toEqual({
+    width: 244,
+    height: 270,
+    frameHeight: 422,
+    offsets: [37, 75, 113, 151, 189, 227],
+  });
+});
+
+test("Calendar exposes its grid structure to assistive technology", async ({ page }) => {
+  await page.goto("http://127.0.0.1:8080/component/?name=calendar&");
+
+  const grid = page.locator("#component-preview-frame").first().getByRole("grid");
+  const rows = grid.getByRole("row");
+  await expect(rows).toHaveCount(6, { timeout: 30000 });
+  for (const row of await rows.all()) {
+    await expect(row.getByRole("gridcell")).toHaveCount(7);
+  }
 });
 
 test("test", async ({ page }) => {

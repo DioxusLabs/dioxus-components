@@ -1,6 +1,5 @@
 //! Defines the [`VirtualList`] component for rendering large lists with virtualization.
 
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::time::Duration;
@@ -17,7 +16,6 @@ use crate::r#virtual::{
 };
 
 const SCROLL_IDLE: Duration = Duration::from_millis(600);
-const LAYOUT_POLL_INTERVAL: Duration = Duration::from_millis(50);
 
 /// The props for the [`VirtualList`] component.
 #[derive(Props, Clone, PartialEq)]
@@ -120,73 +118,17 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
     });
 
     let mut container = use_signal(|| None::<Rc<MountedData>>);
-    let mut height_probe = use_signal(|| None::<Rc<MountedData>>);
     let container_height = use_signal(|| 0);
     let window_height = use_signal(|| 0);
-    let mut has_resize_events = use_signal(|| false);
     let mut idle_task = use_signal(|| None::<Task>);
-    let mounted_rows = use_hook(|| Rc::new(RefCell::new(HashMap::<usize, Rc<MountedData>>::new())));
 
     use_effect(move || {
         set_viewport_size(&state, container_height().min(window_height()));
     });
 
-    // Blitz does not emit resize events yet. Measure only mounted rows while resize events
-    // are unavailable, including when an existing row changes height without being remounted.
-    let rows_to_measure = mounted_rows.clone();
-    use_future(move || {
-        let rows_to_measure = rows_to_measure.clone();
-        async move {
-            loop {
-                sleep(LAYOUT_POLL_INTERVAL).await;
-                if *has_resize_events.peek() {
-                    break;
-                }
-                let mounted = container.peek().clone();
-                let probe = height_probe.peek().clone();
-                let (Some(mounted), Some(probe)) = (mounted, probe) else {
-                    continue;
-                };
-                if let Ok(rect) = mounted.get_client_rect().await {
-                    set_height(container_height, rect.size.height);
-                }
-                if let Ok(rect) = probe.get_client_rect().await {
-                    set_height(window_height, rect.size.height);
-                }
-                if *container_height.peek() == 0 {
-                    continue;
-                }
-
-                let rows: Vec<_> = rows_to_measure
-                    .borrow()
-                    .iter()
-                    .map(|(&idx, row)| (idx, row.clone()))
-                    .collect();
-                let mut sizes = Vec::with_capacity(rows.len());
-                for (idx, row) in rows {
-                    if let Ok(rect) = row.get_client_rect().await {
-                        if rect.size.height > 0.0 {
-                            sizes.push((idx, rect.size.height.round() as u32));
-                        }
-                    }
-                }
-                sizes.sort_unstable_by_key(|&(idx, _)| idx);
-                measure_rows(state, measurements, &mounted, sizes).await;
-            }
-        }
-    });
-
     let m = measurements.read();
     let virtual_items = get_virtual_items(&state, &m, buffer());
     let total_height = get_total_size(&state, &m);
-
-    if let (Some(first), Some(last)) = (virtual_items.first(), virtual_items.last()) {
-        mounted_rows
-            .borrow_mut()
-            .retain(|&idx, _| (first.index()..=last.index()).contains(&idx));
-    } else {
-        mounted_rows.borrow_mut().clear();
-    }
 
     let top_offset = virtual_items.first().map(|item| item.start()).unwrap_or(0);
     let canvas_height = total_height.max(*state.viewport_size().peek());
@@ -238,7 +180,6 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
                     style: "position: absolute; inset: 0 auto auto 0; width: 100%; transform: translateY({top_offset}px); will-change: transform;",
                     {virtual_items.iter().map(move |item| {
                         let idx = item.index();
-                        let mounted_rows = mounted_rows.clone();
 
                         rsx! {
                             div {
@@ -247,11 +188,6 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
                                 "data-virtual-index": "{idx}",
                                 "aria-setsize": "{set_size}",
                                 "aria-posinset": "{idx + 1}",
-                                onmounted: move |event| {
-                                    if !*has_resize_events.peek() {
-                                        mounted_rows.borrow_mut().insert(idx, event.data());
-                                    }
-                                },
                                 onresize: move |event| async move {
                                     let Ok(size) = event.data().get_content_box_size() else {
                                         return;
@@ -273,10 +209,8 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
                 style: "position:absolute; top:0; left:0; width:0; height:0; overflow:hidden;",
                 div {
                     style: "height:100vh;",
-                    onmounted: move |event| height_probe.set(Some(event.data())),
                     onresize: move |event| {
                         if let Ok(size) = event.data().get_content_box_size() {
-                            has_resize_events.set(true);
                             set_height(window_height, size.height);
                         }
                     },

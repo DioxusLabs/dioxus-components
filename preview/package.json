@@ -3,9 +3,8 @@
     "create-stylelint": "^0.5.0"
   },
   "devDependencies": {
-    "stylelint": "^16.20.0",
-    "stylelint-config-idiomatic-order": "^10.0.0",
-    "stylelint-config-standard": "^38.0.0",
-    "stylelint-order": "^6.0.4"
+    "stylelint": "16.26.1",
+    "stylelint-config-idiomatic-order": "10.0.0",
+    "stylelint-config-standard": "39.0.1"
   }
 }

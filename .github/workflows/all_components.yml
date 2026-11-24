@@ -4,27 +4,11 @@ on:
   push:
     branches:
       - main
-    paths:
-      - /**
-      - preview/**/*.rs
-      - preview/**/Cargo.toml
-      - primitives/**/*.rs
-      - primitives/**/Cargo.toml
-      - .github/**
-      - Cargo.toml
 
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
-    paths:
-      - /**
-      - preview/**/*.rs
-      - preview/**/Cargo.toml
-      - primitives/**/*.rs
-      - primitives/**/Cargo.toml
-      - .github/**
-      - Cargo.toml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

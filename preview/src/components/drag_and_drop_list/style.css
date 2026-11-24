@@ -89,6 +89,7 @@
 
 .dx-item-icon {
   flex-shrink: 0;
+  pointer-events: none;
   margin-right: 6px;
   color: var(--secondary-color-6);
   transition: color 150ms ease;

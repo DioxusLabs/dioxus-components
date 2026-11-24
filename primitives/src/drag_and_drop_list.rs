@@ -1,6 +1,12 @@
 //! Defines the [`DragAndDropList`] component and its sub-components.
 use crate::collection::{collection_item, use_collection_provider, use_item, CollectionState};
 use dioxus::prelude::*;
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+use {
+    dioxus::html::{geometry::ClientPoint, input_data::MouseButton},
+    dioxus_native_dom::NodeHandle,
+    std::rc::Rc,
+};
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum DropPosition {
@@ -106,6 +112,14 @@ enum DragState {
     },
 }
 
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+#[derive(Clone, Copy)]
+enum NativeDrag {
+    Pressed { from: usize, origin: ClientPoint },
+    Dragging,
+    Cancelled,
+}
+
 /// Context provided by [`DragAndDropList`] to its descendants.
 /// Use `use_context::<DragAndDropContext>()` to access list-level operations.
 #[derive(Clone, Copy)]
@@ -114,6 +128,8 @@ pub struct DragAndDropContext {
     list_items: Signal<Vec<SortableListItem>>,
     focus: CollectionState,
     announcement: Signal<String>,
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    native_drag: Signal<Option<(i32, NativeDrag)>>,
 }
 
 impl DragAndDropContext {
@@ -293,6 +309,206 @@ impl DragAndDropContext {
     }
 }
 
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+impl DragAndDropContext {
+    fn native_drag(&self, pointer_id: i32) -> Option<NativeDrag> {
+        self.native_drag
+            .peek()
+            .filter(|(id, _)| *id == pointer_id)
+            .map(|(_, drag)| drag)
+    }
+
+    fn native_pointer_move(&mut self, pointer_id: i32, position: ClientPoint) -> bool {
+        match self.native_drag(pointer_id) {
+            Some(NativeDrag::Pressed { from, origin })
+                if !self.is_dragging() && (position - origin).square_length() >= 16.0 =>
+            {
+                self.start_drag(from);
+                self.native_drag
+                    .set(Some((pointer_id, NativeDrag::Dragging)));
+                true
+            }
+            Some(NativeDrag::Dragging) => true,
+            _ => false,
+        }
+    }
+
+    fn finish_native_drag(&mut self, pointer_id: i32, drop: bool) -> bool {
+        let Some(drag) = self.native_drag(pointer_id) else {
+            return false;
+        };
+        self.native_drag.set(None);
+        match drag {
+            NativeDrag::Pressed { .. } => false,
+            NativeDrag::Dragging => {
+                if drop {
+                    self.drop();
+                    self.end_drag();
+                } else {
+                    self.cancel_drag();
+                }
+                true
+            }
+            NativeDrag::Cancelled => true,
+        }
+    }
+
+    fn cancel_native_pointer(&mut self) {
+        let drag = *self.native_drag.peek();
+        if let Some((pointer_id, NativeDrag::Pressed { .. } | NativeDrag::Dragging)) = drag {
+            self.native_drag
+                .set(Some((pointer_id, NativeDrag::Cancelled)));
+        }
+    }
+
+    fn native_item_attributes(
+        mut self,
+        index: usize,
+        item_ref: Signal<Option<Rc<MountedData>>>,
+    ) -> Vec<Attribute> {
+        let update_target = move |mut ctx: Self, position: ClientPoint| {
+            let mounted = item_ref.peek();
+            let Some(node) = mounted
+                .as_ref()
+                .and_then(|item| item.downcast::<NodeHandle>())
+            else {
+                return;
+            };
+            if let Some(rect) = node
+                .try_doc()
+                .and_then(|doc| doc.get_client_bounding_rect(node.node_id()))
+            {
+                ctx.drag_over(
+                    index,
+                    if position.y < rect.y + rect.height / 2.0 {
+                        DropPosition::Before
+                    } else {
+                        DropPosition::After
+                    },
+                );
+            }
+        };
+        Vec::new()
+            .onpointerdown(move |event: PointerEvent| {
+                if event.is_primary()
+                    && event.trigger_button() == Some(MouseButton::Primary)
+                    && !self.is_dragging()
+                    && self.native_drag.peek().is_none()
+                    && item_ref
+                        .peek()
+                        .as_ref()
+                        .is_some_and(|item| item.downcast::<NodeHandle>().is_some())
+                {
+                    self.set_focus(Some(index));
+                    self.native_drag.set(Some((
+                        event.pointer_id(),
+                        NativeDrag::Pressed {
+                            from: index,
+                            origin: event.client_coordinates(),
+                        },
+                    )));
+                }
+            })
+            .onpointermove(move |event: PointerEvent| {
+                let position = event.client_coordinates();
+                if self.native_pointer_move(event.pointer_id(), position) {
+                    event.prevent_default();
+                    update_target(self, position);
+                }
+            })
+            .onpointerup(move |event: PointerEvent| {
+                if event.trigger_button() != Some(MouseButton::Primary) {
+                    return;
+                }
+                match self.native_drag(event.pointer_id()) {
+                    Some(NativeDrag::Dragging) => update_target(self, event.client_coordinates()),
+                    Some(NativeDrag::Pressed { from, .. }) if from == index => {
+                        let mounted = item_ref.peek().clone();
+                        spawn(async move {
+                            if let Some(mounted) = mounted {
+                                let _ = mounted.set_focus(true).await;
+                            }
+                        });
+                    }
+                    _ => {}
+                }
+            })
+    }
+}
+
+#[cfg(all(test, feature = "native", not(target_arch = "wasm32")))]
+mod native_tests {
+    use super::*;
+
+    fn with_drag(test: fn(&mut DragAndDropContext)) {
+        fn app(test: fn(&mut DragAndDropContext)) -> Element {
+            let mut ctx = DragAndDropContext {
+                drag: use_signal(|| DragState::Idle),
+                list_items: use_signal(|| {
+                    (0..3)
+                        .map(|index| SortableListItem::new(rsx! {}, index))
+                        .collect()
+                }),
+                focus: use_collection_provider(ReadSignal::new(Signal::new(true))),
+                announcement: use_signal(String::new),
+                native_drag: use_signal(|| {
+                    Some((
+                        1,
+                        NativeDrag::Pressed {
+                            from: 0,
+                            origin: ClientPoint::new(0.0, 0.0),
+                        },
+                    ))
+                }),
+            };
+            test(&mut ctx);
+            rsx! {}
+        }
+        VirtualDom::new_with_props(app, test).rebuild_in_place();
+    }
+
+    #[test]
+    fn only_the_pressed_pointer_can_reorder_after_moving() {
+        with_drag(|ctx| {
+            assert!(!ctx.native_pointer_move(1, ClientPoint::new(0.0, 1.0)));
+            assert!(!ctx.native_pointer_move(2, ClientPoint::new(0.0, 10.0)));
+            assert!(ctx.native_pointer_move(1, ClientPoint::new(0.0, 10.0)));
+            ctx.drag_over(2, DropPosition::After);
+            assert!(!ctx.finish_native_drag(2, true));
+            assert!(ctx.finish_native_drag(1, true));
+            assert_eq!((ctx.list_items)()[2].key, "0");
+            assert!(!ctx.is_dragging());
+        });
+    }
+
+    #[test]
+    fn cancelling_pointer_drag_preserves_order_and_clears_the_drag() {
+        with_drag(|ctx| {
+            assert!(ctx.native_pointer_move(1, ClientPoint::new(0.0, 10.0)));
+            ctx.drag_over(2, DropPosition::After);
+            assert!(ctx.finish_native_drag(1, false));
+            assert_eq!((ctx.list_items)()[0].key, "0");
+            assert!(!ctx.is_dragging());
+            assert!(!ctx.finish_native_drag(1, true));
+        });
+    }
+
+    #[test]
+    fn escape_keeps_the_cancelled_drag_from_committing_on_release() {
+        with_drag(|ctx| {
+            assert!(ctx.native_pointer_move(1, ClientPoint::new(0.0, 10.0)));
+            ctx.drag_over(2, DropPosition::After);
+            ctx.cancel_native_pointer();
+            ctx.cancel_drag();
+            assert!(!ctx.native_pointer_move(1, ClientPoint::new(0.0, 20.0)));
+            assert!(ctx.finish_native_drag(1, true));
+            assert_eq!((ctx.list_items)()[0].key, "0");
+            assert!(!ctx.is_dragging());
+            assert!(ctx.native_drag(1).is_none());
+        });
+    }
+}
+
 /// The props for the [`DragAndDropList`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct DragAndDropListProps {
@@ -380,12 +596,16 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
     });
     let announcement = use_signal(String::new);
     let focus = use_collection_provider(ReadSignal::new(Signal::new(true)));
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    let native_drag = use_signal(|| None);
 
     use_context_provider(move || DragAndDropContext {
         drag,
         list_items,
         focus,
         announcement,
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        native_drag,
     });
 
     let label = props
@@ -435,6 +655,23 @@ pub fn use_drag_and_drop_list_items() -> Vec<DragAndDropListRenderItem> {
 #[component]
 pub fn DragAndDropListItems(props: DragAndDropListItemsProps) -> Element {
     let mut ctx: DragAndDropContext = use_context();
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    let native_attributes = Vec::new()
+        .onpointerup(move |event: PointerEvent| {
+            if event.trigger_button() == Some(MouseButton::Primary)
+                && ctx.finish_native_drag(event.pointer_id(), true)
+            {
+                event.prevent_default();
+            }
+        })
+        .onpointerleave(move |event: PointerEvent| {
+            ctx.finish_native_drag(event.pointer_id(), false);
+        })
+        .onpointercancel(move |event: PointerEvent| {
+            ctx.finish_native_drag(event.pointer_id(), false);
+        });
+    #[cfg(not(all(feature = "native", not(target_arch = "wasm32"))))]
+    let native_attributes = Vec::new();
     let children = props.children.unwrap_or_else(|| {
         rsx! {
             for item in use_drag_and_drop_list_items() {
@@ -474,6 +711,7 @@ pub fn DragAndDropListItems(props: DragAndDropListItemsProps) -> Element {
                 event.prevent_default();
                 ctx.drop();
             },
+            ..native_attributes,
             ..props.attributes,
             {children}
         }
@@ -596,9 +834,19 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     let item = use_item(collection_item(ctx.focus, index_signal).key(move || item_key.clone()));
     let mut collection_onmounted = item.onmounted();
     let mut item_ref: Signal<Option<std::rc::Rc<MountedData>>> = use_signal(|| None);
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    let native_attributes = ctx.native_item_attributes(index, item_ref);
+    #[cfg(not(all(feature = "native", not(target_arch = "wasm32"))))]
+    let native_attributes = Vec::new();
 
     let onkeydown = move |event: Event<KeyboardData>| {
         let key = event.key();
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        if key != Key::Named(NamedKey::Escape)
+            && matches!(*ctx.native_drag.peek(), Some((_, NativeDrag::Dragging)))
+        {
+            return;
+        }
 
         match key {
             Key::Named(NamedKey::ArrowUp) => {
@@ -629,6 +877,8 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
             }
             Key::Named(NamedKey::Escape) => {
                 event.prevent_default();
+                #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+                ctx.cancel_native_pointer();
                 if ctx.is_dragging() {
                     let pos = ctx.drag_from().unwrap_or(index) + 1;
                     ctx.cancel_drag();
@@ -752,6 +1002,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
             },
             //ondragleave: move |_| ctx.drop_to.set(None),
             onkeydown,
+            ..native_attributes,
             ..props.attributes,
             {props.children}
         }

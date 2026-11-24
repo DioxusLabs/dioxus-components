@@ -308,7 +308,7 @@ fn SliderImpl(props: SliderImplProps) -> Element {
         "vertical"
     };
 
-    let mut dragging = use_signal(|| false);
+    let dragging = use_signal(|| false);
     // Index of the thumb currently being interacted with via pointer. Only meaningful while
     // `dragging` is true; reads outside a drag may return a stale value from the prior interaction.
     let active_thumb = use_signal(|| 0usize);
@@ -431,7 +431,7 @@ fn SliderImpl(props: SliderImplProps) -> Element {
                         ctx.set_thumb.call((idx, ctx.clamp_for(idx, raw)));
                     }
 
-                    dragging.set(true);
+                    movement.begin_drag();
                 });
             },
 

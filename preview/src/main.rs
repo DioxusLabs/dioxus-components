@@ -67,7 +67,19 @@ struct ComponentVariantDemoData {
     component: fn() -> Element,
 }
 
-#[cfg(not(feature = "server"))]
+#[cfg(all(
+    not(feature = "server"),
+    feature = "native",
+    not(target_arch = "wasm32")
+))]
+fn main() {
+    dioxus_native::launch(App);
+}
+
+#[cfg(all(
+    not(feature = "server"),
+    any(not(feature = "native"), target_arch = "wasm32")
+))]
 fn main() {
     dioxus::launch(App);
 }

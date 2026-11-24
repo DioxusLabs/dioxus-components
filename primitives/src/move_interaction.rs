@@ -7,6 +7,9 @@ use dioxus::html::input_data::MouseButton;
 use dioxus::prelude::*;
 use std::rc::Rc;
 
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+mod native;
+
 /// Keyboard modifier state attached to a move event.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(crate) struct MoveModifiers {
@@ -66,6 +69,8 @@ pub(crate) struct MoveInteraction {
     active_pointer_id: Signal<Option<i32>>,
     last_pointer_position: CopyValue<Option<ClientPoint>>,
     dragging: Signal<bool>,
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    native_pointer: Option<Signal<Option<native::NativePointer>>>,
 }
 
 pub(crate) fn use_move_interaction(dragging: Signal<bool>) -> MoveInteraction {
@@ -74,13 +79,18 @@ pub(crate) fn use_move_interaction(dragging: Signal<bool>) -> MoveInteraction {
     let active_pointer_id = use_signal(|| None);
     let last_pointer_position = use_hook(|| CopyValue::new(None::<ClientPoint>));
 
-    MoveInteraction {
+    let movement = MoveInteraction {
         rect,
         element,
         active_pointer_id,
         last_pointer_position,
         dragging,
-    }
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        native_pointer: None,
+    };
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    let movement = native::with_window_pointer(movement);
+    movement
 }
 
 impl MoveInteraction {
@@ -118,8 +128,22 @@ impl MoveInteraction {
 
         let pointer_id = event.data().pointer_id();
         self.active_pointer_id.set(Some(pointer_id));
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        if let Some(mut pointer) = self.native_pointer {
+            self.last_pointer_position
+                .set(Some(event.client_coordinates()));
+            pointer.set(Some(native::NativePointer::new(event)));
+            return true;
+        }
         pointer::track_pointer_down(pointer_id, event.client_coordinates());
         true
+    }
+
+    pub(crate) fn begin_drag(&mut self) {
+        // A native release can be delivered before the async pointer-down work completes.
+        if self.active_pointer_id.peek().is_some() {
+            self.dragging.set(true);
+        }
     }
 
     pub(crate) fn pointer_move(&mut self) -> Option<MoveEvent> {
@@ -128,7 +152,7 @@ impl MoveInteraction {
         }
 
         let active_pointer_id = (self.active_pointer_id)()?;
-        let Some(pointer_position) = pointer::pointer_position(active_pointer_id) else {
+        let Some(pointer_position) = self.pointer_position(active_pointer_id) else {
             self.end_pointer();
             return None;
         };
@@ -148,7 +172,19 @@ impl MoveInteraction {
         })
     }
 
-    pub(crate) fn end_pointer(&mut self) {
+    fn pointer_position(&self, pointer_id: i32) -> Option<ClientPoint> {
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        if let Some(pointer) = self.native_pointer {
+            return pointer.read().as_ref().map(|pointer| pointer.position);
+        }
+        pointer::pointer_position(pointer_id)
+    }
+
+    fn end_pointer(&mut self) {
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        if let Some(mut pointer) = self.native_pointer {
+            pointer.set(None);
+        }
         self.active_pointer_id.take();
         self.last_pointer_position.set(None);
         self.dragging.set(false);

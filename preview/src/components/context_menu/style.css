@@ -30,6 +30,7 @@
 
 .dx-context-menu-content[data-state="open"] {
   animation: dx-context-menu-animate-in 150ms ease-out forwards;
+  opacity: 1;
 }
 
 @keyframes dx-context-menu-animate-in {

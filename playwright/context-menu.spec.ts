@@ -15,6 +15,13 @@ test('pointer navigation', async ({ page }) => {
   await expect(contextMenu).toHaveCount(0);
 });
 
+test('the open menu is visible without its entrance animation', async ({ page }) => {
+  await page.goto('http://127.0.0.1:8080/component/?name=context_menu&', { timeout: 20 * 60 * 1000 });
+  await page.addStyleTag({ content: '[role="menu"] { animation: none !important; }' });
+  await page.getByRole('button', { name: 'right click here' }).click({ button: 'right' });
+  await expect(page.getByRole('menu')).toHaveCSS('opacity', '1');
+});
+
 test('menu lands at the tap coordinates on touch long-press', async ({ page }) => {
   await page.goto('http://127.0.0.1:8080/component/?name=context_menu&', { timeout: 20 * 60 * 1000 });
   // Push the trigger down so the tap point isn't at viewport (0, 0) — any

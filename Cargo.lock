@@ -68,7 +68,7 @@ dependencies = [
 [[package]]
 name = "accesskit_xplat"
 version = "0.2.1"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 dependencies = [
  "accesskit",
  "accesskit_macos",
@@ -696,7 +696,7 @@ checksum = "6099cdc01846bc367c4e7dd630dc5966dccf36b652fae7a74e17b640411a91b2"
 [[package]]
 name = "blitz-dom"
 version = "0.3.0-beta.4"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 dependencies = [
  "accesskit",
  "anyrender",
@@ -707,7 +707,7 @@ dependencies = [
  "color",
  "cssparser 0.38.0",
  "cursor-icon",
- "debug_timer 0.1.3 (git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027)",
+ "debug_timer 0.1.3 (git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899)",
  "euclid",
  "html-escape",
  "icu_casemap",
@@ -746,7 +746,7 @@ dependencies = [
 [[package]]
 name = "blitz-html"
 version = "0.3.0-beta.4"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 dependencies = [
  "blitz-dom",
  "blitz-traits",
@@ -757,7 +757,7 @@ dependencies = [
 [[package]]
 name = "blitz-net"
 version = "0.3.0-beta.4"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 dependencies = [
  "blitz-traits",
  "data-url",
@@ -769,7 +769,7 @@ dependencies = [
 [[package]]
 name = "blitz-paint"
 version = "0.3.0-beta.4"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 dependencies = [
  "anyrender",
  "anyrender_svg",
@@ -789,7 +789,7 @@ dependencies = [
 [[package]]
 name = "blitz-shell"
 version = "0.3.0-beta.4"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 dependencies = [
  "accesskit",
  "accesskit_xplat",
@@ -811,7 +811,7 @@ dependencies = [
 [[package]]
 name = "blitz-traits"
 version = "0.3.0-beta.4"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 dependencies = [
  "atomic_refcell",
  "bitflags 2.11.1",
@@ -1544,7 +1544,7 @@ checksum = "da220af51a1a335e9a930beaaef53d261e41ea9eecfb3d973a3ddae1a7284b9c"
 [[package]]
 name = "debug_timer"
 version = "0.1.3"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 
 [[package]]
 name = "deranged"
@@ -2134,7 +2134,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native"
 version = "0.7.0"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 dependencies = [
  "android-activity",
  "anyrender",
@@ -2173,7 +2173,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-dom"
 version = "0.7.0"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 dependencies = [
  "blitz-dom",
  "blitz-traits",
@@ -2422,7 +2422,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2454,7 +2454,7 @@ version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab8ecd87370524b461f8557c119c405552c396ed91fc0a8eec68679eab26f94a"
 dependencies = [
- "libloading 0.7.4",
+ "libloading 0.8.9",
 ]
 
 [[package]]
@@ -2465,7 +2465,7 @@ checksum = "9f5b01c17f85ee988d832c40e549a64bd89ab2c9f8d8a613bdf5122ae507e294"
 dependencies = [
  "cfg-if",
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2626,7 +2626,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5164,7 +5164,7 @@ version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "680998035259dcfcafe653688bf2aa6d3e2dc05e98be6ab46afb089dc84f1df8"
 dependencies = [
- "proc-macro-crate 1.3.1",
+ "proc-macro-crate 2.0.2",
  "proc-macro2",
  "quote",
  "syn 2.0.117",
@@ -6332,7 +6332,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6768,7 +6768,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6827,7 +6827,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7651,7 +7651,7 @@ dependencies = [
 [[package]]
 name = "stylo_taffy"
 version = "0.3.0-beta.4"
-source = "git+https://github.com/DioxusLabs/blitz?rev=2984f60c0497b99f2691882f9af85a1c75cca027#2984f60c0497b99f2691882f9af85a1c75cca027"
+source = "git+https://github.com/DioxusLabs/blitz?rev=a08dbb7836aa8aeeee6d65299c13ed194504e899#a08dbb7836aa8aeeee6d65299c13ed194504e899"
 dependencies = [
  "bitflags 2.11.1",
  "stylo",
@@ -7886,10 +7886,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7908,7 +7908,7 @@ version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8c27177b12a6399ffc08b98f76f7c9a1f4fe9fc967c784c5a071fa8d93cf7e1"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -9645,7 +9645,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

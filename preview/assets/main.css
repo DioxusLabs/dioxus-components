@@ -49,6 +49,14 @@ body {
   min-height: 0;
 }
 
+.dx-native-block-preview [data-slot="sidebar-wrapper"] {
+  flex-direction: row;
+}
+
+.dx-native-block-preview [data-slot="sidebar"][data-side="right"] {
+  order: 1;
+}
+
 .dx-native-block-preview [data-slot="sidebar-container"] {
   position: absolute;
 }

@@ -11,8 +11,9 @@ use dioxus::prelude::*;
 use dioxus_sdk_time::sleep;
 
 use crate::r#virtual::{
-    compute_measurements, get_total_size, get_virtual_items, resize_item, set_scroll_offset,
-    set_viewport_size, types::VirtualItem, VirtualizerState, VirtualizerStateStoreExt,
+    cache_item_sizes, compute_measurements, get_total_size, get_virtual_items, scroll_anchor,
+    set_scroll_offset, set_viewport_size, types::VirtualItem, VirtualizerState,
+    VirtualizerStateStoreExt,
 };
 
 const SCROLL_IDLE: Duration = Duration::from_millis(600);
@@ -97,10 +98,8 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
         viewport_size: 0,
         is_scrolling: false,
         item_size_cache: HashMap::new(),
-        scroll_adjustments: 0,
         stable_total_size: None,
         stable_measurement_count: None,
-        deferred_adjustments: 0,
     });
 
     // Measurements as a memo — recomputes when count or item_size_cache change.
@@ -228,17 +227,13 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
                     sleep(SCROLL_IDLE).await;
                     idle_task.set(None);
                     let current = *state.scroll_offset().peek();
-                    let correction = set_scroll_offset(&state, &measurements.peek(), current, false);
-                    let mounted = container.peek().clone();
-                    if let (Some(mounted), Some(delta)) = (mounted, correction) {
-                        apply_scroll_correction(state, &mounted, delta).await;
-                    }
+                    set_scroll_offset(&state, &measurements.peek(), current, false);
                 })));
             },
             ..attributes,
 
             div {
-                style: "position: relative; height:{canvas_height}px; width: 100%;",
+                style: "position: relative; height:{canvas_height}px; width: 100%; overflow-anchor:none;",
                 div {
                     style: "position: absolute; inset: 0 auto auto 0; width: 100%; transform: translateY({top_offset}px); will-change: transform;",
                     {virtual_items.iter().map(move |item| {
@@ -304,29 +299,32 @@ async fn measure_rows(
     container: &MountedData,
     sizes: impl IntoIterator<Item = (usize, u32)>,
 ) {
-    let adjustment: i32 = {
-        let measurements = measurements.peek();
-        sizes
-            .into_iter()
-            .filter_map(|(idx, size)| resize_item(&state, &measurements, idx, size))
-            .sum()
-    };
-    if adjustment != 0 {
-        apply_scroll_correction(state, container, adjustment).await;
-    }
-}
-
-async fn apply_scroll_correction(
-    state: Store<VirtualizerState>,
-    container: &MountedData,
-    delta: i32,
-) {
     let current_y = *state.scroll_offset().peek();
-    let target_y = current_y.saturating_add_signed(delta);
+    let anchor = {
+        let before = measurements.read();
+        let anchor = scroll_anchor(&before, current_y);
+        if !cache_item_sizes(&state, &before, sizes) {
+            return;
+        }
+        anchor
+    };
+    let Some((index, old_start)) = anchor else {
+        return;
+    };
+    let Some(new_start) = measurements.read().get(index).map(VirtualItem::start) else {
+        return;
+    };
+    if old_start == new_start {
+        return;
+    }
     if let Ok(offset) = container.get_scroll_offset().await {
+        if offset.y.round() as u32 != current_y || *state.scroll_offset().peek() != current_y {
+            return;
+        }
+        let target_y = offset.y + f64::from(new_start) - f64::from(old_start);
         if container
             .scroll(
-                PixelsVector2D::new(offset.x, f64::from(target_y)),
+                PixelsVector2D::new(offset.x, target_y.max(0.0)),
                 ScrollBehavior::Instant,
             )
             .await
@@ -335,9 +333,10 @@ async fn apply_scroll_correction(
             // Blitz does not dispatch a scroll event for programmatic scrolls. Read the
             // position back because the renderer may clamp the requested offset.
             if let Ok(actual) = container.get_scroll_offset().await {
-                state.scroll_offset().set(actual.y.round() as u32);
+                if *state.scroll_offset().peek() == current_y {
+                    state.scroll_offset().set(actual.y.round() as u32);
+                }
             }
         }
     }
-    state.scroll_adjustments().set(0);
 }

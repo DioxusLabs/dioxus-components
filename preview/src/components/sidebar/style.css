@@ -459,7 +459,6 @@
 
 .dx-sidebar-menu-button.dx-sidebar-collapsible-trigger:hover {
   text-decoration: none;
-  text-decoration-line: none;
 }
 
 @media (width >= 768px) {
@@ -592,14 +591,12 @@
   padding: 0;
 }
 
-.dx-sidebar-desktop[data-collapsible="icon"] .dx-sidebar-menu-button[data-sidebar="menu-button"]:has(> :first-child:is(svg, img)),
-.dx-sidebar-desktop[data-collapsible="icon"] .dx-sidebar-menu-button[data-sidebar="menu-button"]:has(> :first-child:has(svg, img)) {
+.dx-sidebar-desktop[data-collapsible="icon"] .dx-sidebar-menu-button[data-sidebar="menu-button"]:has(> :first-child:is(svg, img)) {
   justify-content: center;
   gap: 0;
 }
 
-.dx-sidebar-desktop[data-collapsible="icon"] .dx-sidebar-menu-button[data-sidebar="menu-button"]:has(> :first-child:is(svg, img))> :not(:first-child),
-.dx-sidebar-desktop[data-collapsible="icon"] .dx-sidebar-menu-button[data-sidebar="menu-button"]:has(> :first-child:has(svg, img))> :not(:first-child) {
+.dx-sidebar-desktop[data-collapsible="icon"] .dx-sidebar-menu-button[data-sidebar="menu-button"]:has(> :first-child:is(svg, img))> :not(:first-child) {
   position: absolute;
   overflow: hidden;
   width: 1px;

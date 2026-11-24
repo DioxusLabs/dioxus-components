@@ -38,14 +38,11 @@ jobs:
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
-      # Do our best to cache the toolchain and node install steps
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: "24"
       - name: Install dependencies
-        run: |
-          npm install --save-dev stylelint-config-idiomatic-order
-          npm install -g stylelint stylelint-config-standard
+        run: npm install --prefix preview --no-package-lock
       - name: Stylelint
         run: cd ./preview && npx stylelint "**/*.css" --max-warnings=0

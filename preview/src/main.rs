@@ -32,12 +32,42 @@ use dioxus_icons::lucide::{
     Pause, Play, SkipBack, SkipForward, X,
 };
 use std::str::FromStr;
+use std::time::Duration;
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 use unic_langid::{langid, LanguageIdentifier};
+use web_time::Instant;
 
 mod components;
 mod dashboard;
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+mod native;
 mod theme;
+
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+use native::NativeApp;
+
+fn is_native() -> bool {
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    return try_consume_context::<native::NativeTheme>().is_some();
+    #[cfg(not(all(feature = "native", not(target_arch = "wasm32"))))]
+    false
+}
+
+fn copy_text(_text: &str) -> bool {
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    if is_native() {
+        return native::copy(_text);
+    }
+    true
+}
+
+fn web_copy_handler(script: &'static str) -> Vec<Attribute> {
+    if is_native() {
+        Vec::new()
+    } else {
+        vec![Attribute::new("onclick", script, None, false)]
+    }
+}
 
 #[derive(Copy, Clone, PartialEq)]
 enum ComponentType {
@@ -69,6 +99,9 @@ struct ComponentVariantDemoData {
 
 #[cfg(not(feature = "server"))]
 fn main() {
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    dioxus::launch(NativeApp);
+    #[cfg(not(all(feature = "native", not(target_arch = "wasm32"))))]
     dioxus::launch(App);
 }
 
@@ -176,6 +209,9 @@ impl Route {
     }
 
     pub fn in_iframe() -> Option<bool> {
+        if is_native() {
+            return None;
+        }
         let route: Self = router().current();
         route.iframe()
     }
@@ -419,9 +455,9 @@ fn CodeBlock(source: HighlightedCode) -> Element {
         div {
             class: "dx-code-block",
             tabindex: "0",
-            PreviewCode { source: source.source }
+            PreviewCode { source: source.source.clone() }
         }
-        CopyButton { position: "absolute", top: "0.5em", right: "0.5em" }
+        CopyButton { code: source.source, position: "absolute", top: "0.5em", right: "0.5em" }
     }
 }
 
@@ -440,7 +476,10 @@ fn PreviewCode(source: HighlightedSource) -> Element {
 }
 
 #[component]
-fn CopyButton(#[props(extends=GlobalAttributes)] attributes: Vec<Attribute>) -> Element {
+fn CopyButton(
+    code: HighlightedSource,
+    #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
+) -> Element {
     let mut copied = use_signal(|| false);
 
     rsx! {
@@ -449,8 +488,8 @@ fn CopyButton(#[props(extends=GlobalAttributes)] attributes: Vec<Attribute>) -> 
             r#type: "button",
             aria_label: "Copy code",
             "data-copied": copied,
-            "onclick": "const visiblePre = Array.from(this.parentNode.querySelectorAll('pre')).find((pre) => pre.offsetParent !== null); navigator.clipboard.writeText(visiblePre ? visiblePre.innerText : Array.from(this.parentNode.childNodes).filter((node) => node !== this).map((node) => node.textContent).join('').trim());",
-            onclick: move |_| copied.set(true),
+            onclick: move |_| copied.set(copy_text(code.source())),
+            ..web_copy_handler("const visiblePre = Array.from(this.parentNode.querySelectorAll('pre')).find((pre) => pre.offsetParent !== null); navigator.clipboard.writeText(visiblePre ? visiblePre.innerText : Array.from(this.parentNode.childNodes).filter((node) => node !== this).map((node) => node.textContent).join('').trim());"),
             ..attributes,
             if copied() {
                 CheckIcon {}
@@ -1023,7 +1062,7 @@ fn BlockComponentVariantHighlight(
         name,
         rs_highlighted: highlighted,
         css_highlighted,
-        component: _,
+        component: Comp,
     } = variant;
 
     let route_path = Route::ComponentBlockDemo {
@@ -1071,12 +1110,16 @@ fn BlockComponentVariantHighlight(
                     value: "Preview",
                     width: "100%",
                     position: "relative",
-                    iframe {
-                        src: "{iframe_src}",
-                        width: "100%",
-                        height: "600px",
-                        border: "1px solid var(--primary-color-6)",
-                        border_radius: "0.5em",
+                    if is_native() {
+                        div { class: "dx-native-block-preview", Comp {} }
+                    } else {
+                        iframe {
+                            src: "{iframe_src}",
+                            width: "100%",
+                            height: "600px",
+                            border: "1px solid var(--primary-color-6)",
+                            border_radius: "0.5em",
+                        }
                     }
                 }
                 TabContent {
@@ -1425,35 +1468,29 @@ fn BlockPlayer() -> Element {
     let current_time = use_memo(move || format_track_time(progress_seconds().unwrap_or(0.0)));
     let duration_time = format_track_time(TRACK_DURATION_SECONDS);
 
-    use_effect(move || {
-        let mut timer = document::eval(
-            "setInterval(() => {
-                dioxus.send(performance.now());
-            }, 100);",
-        );
+    use_future(move || async move {
+        let mut last_tick = None;
 
-        spawn(async move {
-            let mut last_tick_ms: Option<f64> = None;
+        loop {
+            dioxus_timers::sleep(Duration::from_millis(100)).await;
+            let now = Instant::now();
+            let elapsed_seconds = last_tick
+                .replace(now)
+                .map(|last| now.duration_since(last).as_secs_f64().min(0.25))
+                .unwrap_or(0.0);
 
-            while let Ok(now_ms) = timer.recv::<f64>().await {
-                let elapsed_seconds = last_tick_ms
-                    .map(|last_ms| ((now_ms - last_ms) / 1000.0).clamp(0.0, 0.25))
-                    .unwrap_or(0.0);
-                last_tick_ms = Some(now_ms);
-
-                if !playing() {
-                    continue;
-                }
-
-                let current = progress_seconds().unwrap_or(0.0);
-                let next = if current >= TRACK_DURATION_SECONDS {
-                    0.0
-                } else {
-                    (current + elapsed_seconds).min(TRACK_DURATION_SECONDS)
-                };
-                progress_seconds.set(Some(next));
+            if !playing() {
+                continue;
             }
-        });
+
+            let current = progress_seconds().unwrap_or(0.0);
+            let next = if current >= TRACK_DURATION_SECONDS {
+                0.0
+            } else {
+                (current + elapsed_seconds).min(TRACK_DURATION_SECONDS)
+            };
+            progress_seconds.set(Some(next));
+        }
     });
 
     rsx! {
@@ -1962,8 +1999,8 @@ fn CopyCommandButton(command: String) -> Element {
             aria_label: "Copy install command",
             "data-command": "{command}",
             "data-copied": copied,
-            "onclick": "navigator.clipboard.writeText(this.dataset.command);",
-            onclick: move |_| copied.set(true),
+            onclick: move |_| copied.set(copy_text(&command)),
+            ..web_copy_handler("navigator.clipboard.writeText(this.dataset.command);"),
             if copied() {
                 CheckIcon {}
             } else {

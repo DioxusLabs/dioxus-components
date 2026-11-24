@@ -18,7 +18,7 @@ pub struct VirtualizerState {
     /// Current scroll offset from the container's `scrollTop`.
     pub scroll_offset: u32,
     /// Current viewport height.
-    pub viewport_size: u32,
+    pub viewport_size: Option<u32>,
     /// Whether the user is actively scrolling.
     pub is_scrolling: bool,
 
@@ -108,6 +108,7 @@ pub fn set_scroll_offset(
 
 /// Set the viewport size. Reactive write.
 pub fn set_viewport_size(state: &Store<VirtualizerState>, size: u32) {
+    let size = Some(size);
     if *state.viewport_size().peek() != size {
         state.viewport_size().set(size);
     }
@@ -205,7 +206,13 @@ fn calculate_range(
     let scroll_offset = *state.scroll_offset().read();
     let viewport_size = *state.viewport_size().read();
 
-    if measurements.is_empty() || viewport_size == 0 {
+    if measurements.is_empty() {
+        return None;
+    }
+    let Some(viewport_size) = viewport_size else {
+        return Some(0..1);
+    };
+    if viewport_size == 0 {
         return None;
     }
 
@@ -278,7 +285,7 @@ mod tests {
     fn create_test_state() -> Store<VirtualizerState> {
         Store::new(VirtualizerState {
             scroll_offset: 0,
-            viewport_size: 600,
+            viewport_size: Some(600),
             is_scrolling: false,
             item_size_cache: HashMap::new(),
             stable_total_size: None,
@@ -290,6 +297,26 @@ mod tests {
         let isc = state.item_size_cache();
         let cache = isc.peek();
         compute_measurements(100, &cache, Some(&|_| 50))
+    }
+
+    #[test]
+    fn unmeasured_viewport_renders_initial_rows() {
+        with_runtime(|| {
+            let state = create_test_state();
+            state.viewport_size().set(None);
+            let measurements = make_measurements(&state);
+
+            assert!(get_virtual_items(&state, &[], 2).is_empty());
+            let initial = get_virtual_items(&state, &measurements, 2);
+            let indexes: Vec<_> = initial.iter().map(VirtualItem::index).collect();
+            assert_eq!(indexes, vec![0, 1, 2, 3]);
+
+            set_viewport_size(&state, 0);
+            assert!(get_virtual_items(&state, &measurements, 2).is_empty());
+
+            set_viewport_size(&state, 600);
+            assert!(get_virtual_items(&state, &measurements, 2).len() > initial.len());
+        });
     }
 
     #[test]
@@ -312,7 +339,7 @@ mod tests {
             let state = create_test_state();
             let smaller = compute_measurements(4, &HashMap::new(), Some(&|_| 50));
             state.scroll_offset().set(10_000);
-            state.viewport_size().set(600);
+            state.viewport_size().set(Some(600));
 
             let virtual_items = get_virtual_items(&state, &smaller, 0);
             let indexes: Vec<_> = virtual_items.iter().map(VirtualItem::index).collect();

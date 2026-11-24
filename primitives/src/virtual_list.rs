@@ -93,7 +93,11 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
     // Create the Store — only holds mutable shared state
     let state: Store<VirtualizerState> = use_store(|| VirtualizerState {
         scroll_offset: 0,
-        viewport_size: 0,
+        viewport_size: if cfg!(target_arch = "wasm32") {
+            Some(0)
+        } else {
+            None
+        },
         is_scrolling: false,
         item_size_cache: HashMap::new(),
         stable_total_size: None,
@@ -118,12 +122,14 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
     });
 
     let mut container = use_signal(|| None::<Rc<MountedData>>);
-    let container_height = use_signal(|| 0);
-    let window_height = use_signal(|| 0);
+    let container_height = use_signal(|| None::<u32>);
+    let window_height = use_signal(|| None::<u32>);
     let mut idle_task = use_signal(|| None::<Task>);
 
     use_effect(move || {
-        set_viewport_size(&state, container_height().min(window_height()));
+        if let (Some(container), Some(window)) = (container_height(), window_height()) {
+            set_viewport_size(&state, container.min(window));
+        }
     });
 
     let m = measurements.read();
@@ -131,7 +137,7 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
     let total_height = get_total_size(&state, &m);
 
     let top_offset = virtual_items.first().map(|item| item.start()).unwrap_or(0);
-    let canvas_height = total_height.max(*state.viewport_size().peek());
+    let canvas_height = total_height.max(state.viewport_size().peek().unwrap_or_default());
     let set_size = count.to_string();
 
     rsx! {
@@ -220,8 +226,8 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
     }
 }
 
-fn set_height(mut height: Signal<u32>, value: f64) {
-    let value = value.round() as u32;
+fn set_height(mut height: Signal<Option<u32>>, value: f64) {
+    let value = Some(value.round() as u32);
     if *height.peek() != value {
         height.set(value);
     }

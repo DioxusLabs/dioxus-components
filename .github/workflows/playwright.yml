@@ -38,7 +38,7 @@ jobs:
   playwright-tests:
     if: github.event.pull_request.draft == false
     timeout-minutes: 30
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:

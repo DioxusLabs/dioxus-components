@@ -6,7 +6,7 @@ rust-version = "1.92.0"
 
 [dependencies]
 dioxus.workspace = true
-dioxus-native = { workspace = true, features = ["accessibility", "hot-reload", "net", "html", "svg", "system-fonts", "clipboard", "file-dialog", "woff", "text-transform-icu", "apple-font-embolden"] }
+dioxus-native = { workspace = true, features = ["accessibility", "hot-reload", "net", "html", "svg", "system-fonts", "file-dialog", "woff", "text-transform-icu", "apple-font-embolden"] }
 preview = { path = "../preview", features = ["native"] }
 
 [features]

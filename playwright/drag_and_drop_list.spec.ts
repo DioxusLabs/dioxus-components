@@ -71,6 +71,14 @@ async function startMouseDrag(
   return { start, end };
 }
 
+async function rememberPointerId(item: import("@playwright/test").Locator) {
+  await item.evaluate((element) => {
+    element.addEventListener("pointerdown", (event) => {
+      element.dataset.testPointerId = String(event.pointerId);
+    }, { once: true });
+  });
+}
+
 test.describe("Keyboard focus management", () => {
   test("first item is tab-reachable", async ({ page }) => {
     const list = await loadMainList(page);
@@ -274,9 +282,13 @@ test.describe("Drag and drop lifecycle", () => {
     const items = getItems(list);
     const sourceTitle = await itemText(items.nth(2));
 
+    const source = items.nth(2);
+    await rememberPointerId(source);
     const { end } = await startMouseDrag(page, list);
     const bounds = (await list.boundingBox())!;
     await page.mouse.move(bounds.x - 10, end.y);
+    const pointerId = Number(await source.getAttribute("data-test-pointer-id"));
+    expect(await source.evaluate((item, id) => item.hasPointerCapture(id), pointerId)).toBe(true);
     await page.mouse.up();
 
     await expect.poll(() => itemText(items.nth(3))).toBe(sourceTitle);
@@ -322,6 +334,22 @@ test.describe("Drag and drop lifecycle", () => {
     await startMouseDrag(page, list);
     await items.nth(2).dispatchEvent("dnd-test-cancel");
     await expect(items.nth(2)).toHaveAttribute("aria-grabbed", "false");
+    await page.mouse.up();
+    await expect(items).toHaveText(originalOrder);
+  });
+
+  test("losing pointer capture before release cancels the drag", async ({ page }) => {
+    const list = await loadMainList(page);
+    const items = getItems(list);
+    const originalOrder = await items.allTextContents();
+    const source = items.nth(2);
+    await rememberPointerId(source);
+    const { end } = await startMouseDrag(page, list);
+    const pointerId = Number(await source.getAttribute("data-test-pointer-id"));
+    await source.evaluate((item, id) => item.releasePointerCapture(id), pointerId);
+    // The browser dispatches lostpointercapture before the next pointer event.
+    await page.mouse.move(end.x + 1, end.y);
+    await expect(source).toHaveAttribute("aria-grabbed", "false");
     await page.mouse.up();
     await expect(items).toHaveText(originalOrder);
   });

@@ -116,10 +116,17 @@ enum PointerDrag {
     Cancelled,
 }
 
+type PointerId = i32;
+
+enum PointerCapture {
+    Pending(Rc<ScopeId>),
+    Captured(ScopeId),
+}
+
 enum PointerUpdate {
-    Move(i32, ClientPoint),
-    Release(i32),
-    Cancel(i32),
+    Move(PointerId, ClientPoint),
+    Release(PointerId),
+    Cancel(PointerId),
 }
 
 #[derive(Clone)]
@@ -137,7 +144,8 @@ pub struct DragAndDropContext {
     list_items: Signal<Vec<SortableListItem>>,
     focus: CollectionState,
     announcement: Signal<String>,
-    pointer_drag: Signal<Option<(i32, PointerDrag)>>,
+    pointer_drag: Signal<Option<(PointerId, PointerDrag)>>,
+    pointer_capture: Signal<Option<PointerCapture>>,
     mounted_items: Signal<Vec<MountedItem>>,
 }
 
@@ -319,14 +327,62 @@ impl DragAndDropContext {
 }
 
 impl DragAndDropContext {
-    fn pointer_drag(&self, pointer_id: i32) -> Option<PointerDrag> {
+    fn capture_pointer(&mut self, id: PointerId, scope: ScopeId, element: &MountedData) {
+        let request = Rc::new(scope);
+        self.pointer_capture
+            .set(Some(PointerCapture::Pending(request.clone())));
+        let capture = element.set_pointer_capture(id);
+        let mut capture_state = self.pointer_capture;
+        spawn(async move {
+            let captured = capture.await.is_ok();
+            if matches!(&*capture_state.peek(), Some(PointerCapture::Pending(current)) if Rc::ptr_eq(current, &request))
+            {
+                capture_state.set(captured.then_some(PointerCapture::Captured(scope)));
+            }
+        });
+    }
+
+    fn pointer_routes_to(&self, id: PointerId, item: Option<ScopeId>) -> bool {
+        self.pointer_drag(id).is_some()
+            && match *self.pointer_capture.peek() {
+                Some(PointerCapture::Captured(scope)) => item == Some(scope),
+                _ => item.is_none(),
+            }
+    }
+
+    fn on_pointer_move(&mut self, event: &PointerEvent, updates: Coroutine<PointerUpdate>) {
+        let id = event.pointer_id();
+        let position = event.client_coordinates();
+        if self.pointer_move(id, position) {
+            event.prevent_default();
+            updates.send(PointerUpdate::Move(id, position));
+        }
+    }
+
+    fn on_pointer_up(&mut self, event: &PointerEvent, updates: Coroutine<PointerUpdate>) {
+        let id = event.pointer_id();
+        if event.trigger_button() == Some(MouseButton::Primary) {
+            match self.pointer_drag(id) {
+                Some(PointerDrag::Pressed { .. }) => {
+                    self.finish_pointer_drag(id, true);
+                }
+                Some(PointerDrag::Dragging | PointerDrag::Cancelled) => {
+                    event.prevent_default();
+                    updates.send(PointerUpdate::Release(id));
+                }
+                None => {}
+            }
+        }
+    }
+
+    fn pointer_drag(&self, pointer_id: PointerId) -> Option<PointerDrag> {
         self.pointer_drag
             .peek()
             .filter(|(id, _)| *id == pointer_id)
             .map(|(_, drag)| drag)
     }
 
-    fn pointer_move(&mut self, pointer_id: i32, position: ClientPoint) -> bool {
+    fn pointer_move(&mut self, pointer_id: PointerId, position: ClientPoint) -> bool {
         match self.pointer_drag(pointer_id) {
             Some(PointerDrag::Pressed { from, origin })
                 if !self.is_dragging() && (position - origin).square_length() >= 16.0 =>
@@ -341,11 +397,12 @@ impl DragAndDropContext {
         }
     }
 
-    fn finish_pointer_drag(&mut self, pointer_id: i32, drop: bool) -> bool {
+    fn finish_pointer_drag(&mut self, pointer_id: PointerId, drop: bool) -> bool {
         let Some(drag) = self.pointer_drag(pointer_id) else {
             return false;
         };
         self.pointer_drag.set(None);
+        self.pointer_capture.set(None);
         match drag {
             PointerDrag::Pressed { .. } => false,
             PointerDrag::Dragging => {
@@ -367,12 +424,14 @@ impl DragAndDropContext {
             Some((id, PointerDrag::Dragging)) => {
                 self.pointer_drag.set(Some((id, PointerDrag::Cancelled)));
             }
-            Some((_, PointerDrag::Pressed { .. })) => self.pointer_drag.set(None),
+            Some((id, PointerDrag::Pressed { .. })) => {
+                self.finish_pointer_drag(id, false);
+            }
             _ => {}
         }
     }
 
-    async fn update_pointer_target(&mut self, pointer_id: i32, position: ClientPoint) {
+    async fn update_pointer_target(&mut self, pointer_id: PointerId, position: ClientPoint) {
         if !matches!(self.pointer_drag(pointer_id), Some(PointerDrag::Dragging)) {
             return;
         }
@@ -424,6 +483,7 @@ mod pointer_tests {
                         },
                     ))
                 }),
+                pointer_capture: use_signal(|| None),
                 mounted_items: use_signal(Vec::new),
             };
             test(&mut ctx);
@@ -595,6 +655,7 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
     let announcement = use_signal(String::new);
     let focus = use_collection_provider(ReadSignal::new(Signal::new(true)));
     let pointer_drag = use_signal(|| None);
+    let pointer_capture = use_signal(|| None);
     let mounted_items = use_signal(Vec::new);
 
     let mut ctx = use_context_provider(move || DragAndDropContext {
@@ -603,6 +664,7 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
         focus,
         announcement,
         pointer_drag,
+        pointer_capture,
         mounted_items,
     });
     let updates = use_coroutine(move |mut rx: UnboundedReceiver<PointerUpdate>| async move {
@@ -638,43 +700,34 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
     rsx! {
         div {
             onpointermove: move |event: PointerEvent| {
-                let id = event.pointer_id();
-                let position = event.client_coordinates();
-                if ctx.pointer_move(id, position) {
-                    event.prevent_default();
-                    updates.send(PointerUpdate::Move(id, position));
+                if ctx.pointer_routes_to(event.pointer_id(), None) {
+                    ctx.on_pointer_move(&event, updates);
                 }
             },
             onpointerup: move |event: PointerEvent| {
-                let id = event.pointer_id();
-                if event.trigger_button() == Some(MouseButton::Primary) {
-                    match ctx.pointer_drag(id) {
-                        Some(PointerDrag::Pressed { .. }) => {
-                            ctx.finish_pointer_drag(id, true);
-                        }
-                        Some(PointerDrag::Dragging | PointerDrag::Cancelled) => {
-                            event.prevent_default();
-                            updates.send(PointerUpdate::Release(id));
-                        }
-                        None => {}
-                    }
+                if ctx.pointer_routes_to(event.pointer_id(), None) {
+                    ctx.on_pointer_up(&event, updates);
                 }
             },
             onpointercancel: move |event: PointerEvent| {
                 let id = event.pointer_id();
-                if ctx.pointer_drag(id).is_some() {
+                if ctx.pointer_routes_to(id, None) {
                     updates.send(PointerUpdate::Cancel(id));
                 }
             },
             onpointerleave: move |event: PointerEvent| {
                 let id = event.pointer_id();
-                if matches!(ctx.pointer_drag(id), Some(PointerDrag::Pressed { .. })) {
+                if ctx.pointer_routes_to(id, None)
+                    && matches!(ctx.pointer_drag(id), Some(PointerDrag::Pressed { .. }))
+                {
                     ctx.finish_pointer_drag(id, false);
                 }
             },
             ..props.attributes,
             {children}
-            if matches!(pointer_drag(), Some((_, PointerDrag::Dragging | PointerDrag::Cancelled))) {
+            if matches!(pointer_drag(), Some((_, PointerDrag::Dragging | PointerDrag::Cancelled)))
+                && !matches!(*pointer_capture.read(), Some(PointerCapture::Captured(_)))
+            {
                 div {
                     aria_hidden: "true",
                     style: "position:fixed;inset:0;z-index:2147483647;cursor:grabbing;touch-action:none;",
@@ -865,6 +918,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     let item = use_item(collection_item(ctx.focus, index_signal).key(move || item_key.clone()));
     let mut collection_onmounted = item.onmounted();
     let mut item_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
+    let updates = use_coroutine_handle::<PointerUpdate>();
     use_drop(move || {
         if let Ok(mut items) = mounted_items.try_write() {
             items.retain(|item| item.scope != scope);
@@ -969,11 +1023,20 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                     && !ctx.is_dragging()
                     && ctx.pointer_drag.peek().is_none()
                 {
+                    let id = event.pointer_id();
                     ctx.set_focus(Some(index));
                     ctx.pointer_drag.set(Some((
-                        event.pointer_id(),
+                        id,
                         PointerDrag::Pressed { from: index, origin: event.client_coordinates() },
                     )));
+                    if let Some(element) = item_ref.peek().as_ref() {
+                        ctx.capture_pointer(id, scope, element);
+                    }
+                }
+            },
+            onpointermove: move |event: PointerEvent| {
+                if ctx.pointer_routes_to(event.pointer_id(), Some(scope)) {
+                    ctx.on_pointer_move(&event, updates);
                 }
             },
             onpointerup: move |event: PointerEvent| {
@@ -986,6 +1049,21 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                             let _ = mounted.set_focus(true).await;
                         }
                     });
+                }
+                if ctx.pointer_routes_to(event.pointer_id(), Some(scope)) {
+                    ctx.on_pointer_up(&event, updates);
+                }
+            },
+            onpointercancel: move |event: PointerEvent| {
+                let id = event.pointer_id();
+                if ctx.pointer_routes_to(id, Some(scope)) {
+                    updates.send(PointerUpdate::Cancel(id));
+                }
+            },
+            onlostpointercapture: move |event: PointerEvent| {
+                let id = event.pointer_id();
+                if ctx.pointer_routes_to(id, Some(scope)) {
+                    updates.send(PointerUpdate::Cancel(id));
                 }
             },
             onkeydown,

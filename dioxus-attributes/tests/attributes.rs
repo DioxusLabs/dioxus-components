@@ -1,4 +1,4 @@
-use dioxus::dioxus_core::AttributeValue;
+use dioxus::core::AttributeValue;
 use dioxus::prelude::*;
 use dioxus_attributes::attributes;
 

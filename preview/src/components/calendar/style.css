@@ -92,8 +92,11 @@
 }
 
 .dx-calendar-grid {
+    display: flex;
     width: 100%;
-    padding: 0.5rem;
+    flex-direction: column;
+    padding: calc(0.5rem + 2px);
+    gap: 2px;
 }
 
 .dx-calendar-grid-header {

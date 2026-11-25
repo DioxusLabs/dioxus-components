@@ -4,8 +4,8 @@ use dioxus::document;
 use dioxus::prelude::*;
 
 use crate::{
-    use_animated_open, use_controlled, use_global_escape_listener, use_id_or, use_outside_dismiss,
-    use_unique_id, FOCUS_TRAP_JS,
+    use_animated_open, use_controlled, use_focus_trap, use_global_escape_listener, use_id_or,
+    use_outside_dismiss, use_unique_id, FOCUS_TRAP_JS,
 };
 
 /// Context for the [`DialogRoot`] component
@@ -20,6 +20,9 @@ pub struct DialogCtx {
     // Whether the dialog is a modal and should capture focus.
     #[allow(unused)]
     is_modal: ReadSignal<bool>,
+
+    // Whether background content should be marked inert while a modal dialog is open.
+    inert_background: ReadSignal<bool>,
     dialog_labelledby: Signal<String>,
     dialog_describedby: Signal<String>,
 }
@@ -45,6 +48,13 @@ pub struct DialogRootProps {
     /// Whether the dialog is modal. If true, it will trap focus within the dialog when open.
     #[props(default = ReadSignal::new(Signal::new(true)))]
     pub is_modal: ReadSignal<bool>,
+
+    /// Whether to mark the content outside of a modal dialog `inert` while it is open, which
+    /// takes it out of the accessibility tree and makes it unreachable by pointer and by
+    /// programmatic focus. Defaults to true; set it to false if the application manages `inert`
+    /// itself. It has no effect if the dialog is not modal.
+    #[props(default = ReadSignal::new(Signal::new(true)))]
+    pub inert_background: ReadSignal<bool>,
 
     /// The controlled `open` state of the dialog.
     pub open: ReadSignal<Option<bool>>,
@@ -111,6 +121,14 @@ pub struct DialogRootProps {
 ///
 /// The [`DialogRoot`] component defines the following data attributes you can use to control styling:
 /// - `data-state`: Indicates if the dialog is open or closed. It can be either "open" or "closed".
+///
+/// ## Accessibility
+///
+/// While a modal dialog is open, the content outside of it is marked `inert`: it is removed from
+/// the accessibility tree and cannot be reached by a pointer or by a programmatic `focus()`. Every
+/// element marked this way also carries a `data-inert-by` attribute naming the dialogs that marked
+/// it, so stacked dialogs unwind independently, and `inert` the application had already set
+/// before the dialog opened is left alone. Set `inert_background` to false to opt out.
 #[component]
 pub fn DialogRoot(props: DialogRootProps) -> Element {
     let dialog_labelledby = use_unique_id();
@@ -125,6 +143,7 @@ pub fn DialogRoot(props: DialogRootProps) -> Element {
         open,
         set_open,
         is_modal: props.is_modal,
+        inert_background: props.inert_background,
         dialog_labelledby,
         dialog_describedby,
     });
@@ -218,6 +237,7 @@ pub fn DialogContent(props: DialogContentProps) -> Element {
     let ctx: DialogCtx = use_context();
     let open = ctx.open;
     let is_modal = ctx.is_modal;
+    let inert_background = ctx.inert_background;
     let set_open = ctx.set_open;
 
     // Add a escape key listener to the document when the dialog is open. We can't
@@ -229,29 +249,10 @@ pub fn DialogContent(props: DialogContentProps) -> Element {
     let id = use_id_or(gen_id, props.id);
 
     use_outside_dismiss(id, move || set_open.call(false));
-    use_effect(move || {
-        let is_modal = is_modal();
-        if !is_modal {
-            // If the dialog is not modal, we don't need to trap focus.
-            return;
-        }
 
-        let eval = document::eval(
-            r#"let id = await dioxus.recv();
-            let is_open = await dioxus.recv();
-            let dialog = document.getElementById(id);
-
-            if (is_open) {
-                dialog.trap = window.createFocusTrap(dialog);
-            }
-            if (!is_open && dialog.trap) {
-                dialog.trap.remove();
-                dialog.trap = null;
-            }"#,
-        );
-        let _ = eval.send(id.to_string());
-        let _ = eval.send(open.cloned());
-    });
+    // Only a modal dialog traps focus; a non-modal one leaves the rest of the page usable.
+    let trap_focus = use_memo(move || is_modal() && open());
+    use_focus_trap(id, trap_focus, inert_background);
 
     rsx! {
         div {

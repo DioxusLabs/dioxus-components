@@ -2069,6 +2069,7 @@ version = "0.0.1"
 dependencies = [
  "dioxus",
  "dioxus-attributes",
+ "dioxus-native",
  "dioxus-sdk-time",
  "dioxus-ssr",
  "lazy-js-bundle",
@@ -5991,6 +5992,7 @@ version = "0.1.0"
 dependencies = [
  "dioxus",
  "dioxus-native",
+ "dioxus-primitives",
  "preview",
 ]
 

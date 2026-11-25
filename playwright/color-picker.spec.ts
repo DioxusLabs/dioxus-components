@@ -173,6 +173,10 @@ test('dragging the color area updates saturation and value', async ({ page }) =>
 
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
+  // Move beyond the area while pressed: hit testing alone cannot deliver this move.
+  await page.mouse.move(box.x + box.width + 10, box.y + box.height + 10);
+  await expect.poll(async () => Number(await sInput.inputValue())).toBe(100);
+  await expect.poll(async () => Number(await vInput.inputValue())).toBe(0);
   await page.mouse.move(end.x, end.y, { steps: 10 });
   await page.mouse.up();
 

@@ -217,7 +217,7 @@ pub struct ColorAreaProps {
 #[component]
 pub fn ColorArea(props: ColorAreaProps) -> Element {
     let picker_ctx = use_context::<ColorPickerContext>();
-    let mut dragging = use_signal(|| false);
+    let dragging = use_signal(|| false);
 
     // Thumb position is read straight from HSV state so saturation is preserved
     // at brightness=0.
@@ -274,6 +274,9 @@ pub fn ColorArea(props: ColorAreaProps) -> Element {
                 // Handle pointer interaction
                 spawn(async move {
                     let mut movement = movement;
+                    if !movement.capture_pointer(&e).await {
+                        return;
+                    }
 
                     // Update the bounding rect of the slider in case it moved
                     if let Some(r) = movement.refresh_rect().await {
@@ -290,9 +293,13 @@ pub fn ColorArea(props: ColorAreaProps) -> Element {
                         set_area_value(picker_ctx, clamp_area_value(pt, (area_ctx.step)()));
                     }
 
-                    dragging.set(true);
+                    movement.begin_drag(&e);
                 });
             },
+            onpointermove: move |e| movement.move_capture(&e),
+            onpointerup: move |e| movement.release_capture(&e),
+            onpointercancel: move |e| movement.release_capture(&e),
+            onlostpointercapture: move |e| movement.finish_capture(&e),
             ..props.attributes,
             {props.children}
         }

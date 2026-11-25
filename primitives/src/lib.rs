@@ -35,7 +35,6 @@ pub mod menubar;
 mod move_interaction;
 #[cfg(feature = "router")]
 pub mod navbar;
-mod pointer;
 pub mod popover;
 mod portal;
 pub mod progress;

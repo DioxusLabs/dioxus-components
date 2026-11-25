@@ -22,6 +22,24 @@ function sliderTrack(slider: Locator) {
   return slider.locator('div[data-orientation="horizontal"]:has([role="slider"])').first();
 }
 
+async function startCapturedDrag(page: Page, slider: Locator, frac: number) {
+  await page.waitForLoadState('networkidle');
+  const track = sliderTrack(slider);
+  await expect(slider).toHaveCSS('touch-action', 'none');
+  await track.scrollIntoViewIfNeeded();
+  const point = await sliderTrackPoint(track, frac);
+  await slider.evaluate((el) => {
+    el.addEventListener('pointerdown', (event) => {
+      el.setAttribute('data-test-pointer-id', String((event as PointerEvent).pointerId));
+    }, { capture: true, once: true });
+  });
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.down();
+  const pointerId = Number(await slider.getAttribute('data-test-pointer-id'));
+  await expect.poll(() => slider.evaluate((el, id) => el.hasPointerCapture(id), pointerId)).toBe(true);
+  return { ...point, pointerId };
+}
+
 test('test', async ({ page }) => {
   await page.goto('http://127.0.0.1:8080/component/?name=slider&', { timeout: 20 * 60 * 1000 }); // Increase timeout to 20 minutes
   const thumb = page.getByRole('slider', { name: 'Demo Slider' });
@@ -56,40 +74,13 @@ test('drag survives pointercancel (iPad system gesture)', async ({ page }) => {
 
   await expect(thumb).toHaveAttribute('aria-valuenow', '50');
 
-  const dispatchPointerDown = async (frac: number, pointerId: number) => {
-    // Re-measure each time — focusing the thumb can scroll the page, which
-    // shifts the slider's viewport coordinates between taps.
-    const box = await sliderTrack(slider).boundingBox();
-    if (!box) throw new Error('slider track has no bounding box');
-    const x = box.x + box.width * frac;
-    const y = box.y + box.height / 2;
-
-    await slider.evaluate((el, { x, y, pointerId }) => {
-      el.dispatchEvent(new PointerEvent('pointerdown', {
-        pointerId,
-        pointerType: 'touch',
-        isPrimary: true,
-        clientX: x,
-        clientY: y,
-        button: 0,
-        buttons: 1,
-        bubbles: true,
-        cancelable: true,
-      }));
-    }, { x, y, pointerId });
-
-    return { x, y };
-  };
-
-  // Start a drag so the slider records an active pointer.
-  const firstPointerId = 99;
-  const firstDrag = await dispatchPointerDown(0.5, firstPointerId);
+  const firstDrag = await startCapturedDrag(page, slider, 0.5);
   await expect(thumb).toHaveAttribute('data-dragging', 'true');
 
-  // OS gesture: pointercancel fires without a matching pointerup. Dispatch it
-  // through window so the shared pointer tracker observes the cancellation.
-  await page.evaluate(({ x, y, pointerId }) => {
-    window.dispatchEvent(new PointerEvent('pointercancel', {
+  // Dispatch the OS gesture's cancellation to the capture owner. A synthetic
+  // cancellation does not release the browser's real mouse button.
+  await slider.evaluate((el, { x, y, pointerId }) => {
+    el.dispatchEvent(new PointerEvent('pointercancel', {
       pointerId,
       pointerType: 'touch',
       isPrimary: true,
@@ -98,8 +89,9 @@ test('drag survives pointercancel (iPad system gesture)', async ({ page }) => {
       bubbles: true,
       cancelable: true,
     }));
-  }, { ...firstDrag, pointerId: firstPointerId });
+  }, firstDrag);
   await expect(thumb).toHaveAttribute('data-dragging', 'false');
+  await page.mouse.up();
 
   // New tap at 70% with a fresh pointer should still update the slider.
   await clickSliderTrack(page, sliderTrack(slider), 0.7);
@@ -120,38 +112,18 @@ test('drag ignores pageX/clientX mismatch (iPad pinch-zoom analog)', async ({ pa
   const thumb = page.getByRole('slider', { name: 'Demo Slider' });
   await expect(thumb).toHaveAttribute('aria-valuenow', '50');
 
-  const box = await sliderTrack(slider).boundingBox();
-  if (!box) throw new Error('slider has no bounding box');
-  const x = box.x + box.width * 0.3;
-  const y = box.y + box.height / 2;
+  const { x, y, pointerId } = await startCapturedDrag(page, slider, 0.3);
+  const { x: moveX } = await sliderTrackPoint(sliderTrack(slider), 0.4);
   const pageOffset = 1000; // way larger than the slider width — would clamp to 100
 
-  // Slider's onpointerdown reads client_coordinates, so push that. Firefox does
-  // not reliably map this synthetic event to the exact track coordinate, so the
-  // assertion below only depends on staying below the midpoint before and after
-  // the forged pointermove.
-  const pointerId = 51;
-  await slider.evaluate((el, { x, y, pointerId }) => {
-    el.dispatchEvent(new PointerEvent('pointerdown', {
-      pointerId,
-      pointerType: 'touch',
-      isPrimary: true,
-      clientX: x,
-      clientY: y,
-      button: 0,
-      buttons: 1,
-      bubbles: true,
-      cancelable: true,
-    }));
-  }, { x, y, pointerId });
   await expect(thumb).toHaveAttribute('data-dragging', 'true');
   const before = await thumb.getAttribute('aria-valuenow');
   expect(parseInt(before!, 10)).toBeLessThan(50);
 
   // Prime the drag loop with matching client/page coordinates so the next move
   // measures the forged pageX delta.
-  await page.evaluate(({ x, y, pointerId }) => {
-    window.dispatchEvent(new PointerEvent('pointermove', {
+  await slider.evaluate((el, { x, y, pointerId }) => {
+    el.dispatchEvent(new PointerEvent('pointermove', {
       pointerId,
       pointerType: 'touch',
       isPrimary: true,
@@ -161,25 +133,27 @@ test('drag ignores pageX/clientX mismatch (iPad pinch-zoom analog)', async ({ pa
     }));
   }, { x, y, pointerId });
 
-  // Pointermove with clientX unchanged but pageX forged so it differs.
+  // Pointermove with a small clientX change but a large forged pageX change.
   // Mirrors what iPad sends when the visual viewport is offset from layout.
-  await page.evaluate(({ x, y, pageOffset, pointerId }) => {
+  await slider.evaluate((el, { moveX, y, pageOffset, pointerId }) => {
     const evt = new PointerEvent('pointermove', {
       pointerId,
       pointerType: 'touch',
       isPrimary: true,
-      clientX: x,
+      clientX: moveX,
       clientY: y,
       bubbles: true,
     });
-    Object.defineProperty(evt, 'pageX', { value: x + pageOffset });
+    Object.defineProperty(evt, 'pageX', { value: moveX + pageOffset });
     Object.defineProperty(evt, 'pageY', { value: y });
-    window.dispatchEvent(evt);
-  }, { x, y, pageOffset, pointerId });
+    el.dispatchEvent(evt);
+  }, { moveX, y, pageOffset, pointerId });
 
-  // Without the fix the value jumps to ~100. With consistent coords it stays.
+  // Without the fix the value jumps to ~100. With client coordinates it moves a little.
+  await expect.poll(async () => Number(await thumb.getAttribute('aria-valuenow'))).toBeGreaterThan(Number(before));
   const after = await thumb.getAttribute('aria-valuenow');
   expect(parseInt(after!, 10)).toBeLessThan(50);
+  await page.mouse.up();
 });
 
 test('dynamic min/max', async ({ page }) => {

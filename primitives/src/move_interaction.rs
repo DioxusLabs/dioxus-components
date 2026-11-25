@@ -1,4 +1,3 @@
-use crate::pointer;
 use dioxus::html::geometry::euclid::Rect;
 use dioxus::html::geometry::euclid::Vector2D;
 use dioxus::html::geometry::ClientPoint;
@@ -6,6 +5,9 @@ use dioxus::html::geometry::Pixels;
 use dioxus::html::input_data::MouseButton;
 use dioxus::prelude::*;
 use std::rc::Rc;
+
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+mod native;
 
 /// Keyboard modifier state attached to a move event.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -64,23 +66,33 @@ pub(crate) struct MoveInteraction {
     rect: Signal<Option<Rect<f64, Pixels>>>,
     element: Signal<Option<Rc<MountedData>>>,
     active_pointer_id: Signal<Option<i32>>,
+    captured_position: Signal<Option<ClientPoint>>,
     last_pointer_position: CopyValue<Option<ClientPoint>>,
     dragging: Signal<bool>,
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    native_pointer: Option<Signal<Option<native::NativePointer>>>,
 }
 
 pub(crate) fn use_move_interaction(dragging: Signal<bool>) -> MoveInteraction {
     let rect = use_signal(|| None);
     let element = use_signal(|| None);
     let active_pointer_id = use_signal(|| None);
+    let captured_position = use_signal(|| None);
     let last_pointer_position = use_hook(|| CopyValue::new(None::<ClientPoint>));
 
-    MoveInteraction {
+    let movement = MoveInteraction {
         rect,
         element,
         active_pointer_id,
+        captured_position,
         last_pointer_position,
         dragging,
-    }
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        native_pointer: None,
+    };
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    let movement = native::with_window_pointer(movement);
+    movement
 }
 
 impl MoveInteraction {
@@ -89,10 +101,10 @@ impl MoveInteraction {
     }
 
     pub(crate) async fn set_mounted(&mut self, mounted: Rc<MountedData>) {
+        self.element.set(Some(mounted.clone()));
         if let Ok(rect) = mounted.get_client_rect().await {
             self.rect.set(Some(rect));
         }
-        self.element.set(Some(mounted));
     }
 
     pub(crate) async fn refresh_rect(&mut self) -> Option<Rect<f64, Pixels>> {
@@ -118,8 +130,78 @@ impl MoveInteraction {
 
         let pointer_id = event.data().pointer_id();
         self.active_pointer_id.set(Some(pointer_id));
-        pointer::track_pointer_down(pointer_id, event.client_coordinates());
+        let position = event.client_coordinates();
+        self.last_pointer_position.set(Some(position));
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        if let Some(mut pointer) = self.native_pointer {
+            pointer.set(Some(native::NativePointer::new(event)));
+            return true;
+        }
+        self.captured_position.set(Some(position));
         true
+    }
+
+    pub(crate) async fn capture_pointer(&mut self, event: &Event<PointerData>) -> bool {
+        if !self.is_active(event) {
+            return false;
+        }
+        if self.uses_window_events() {
+            return true;
+        }
+        let element = self.element.peek().clone();
+        if let Some(element) = element {
+            if element
+                .set_pointer_capture(event.pointer_id())
+                .await
+                .is_ok()
+            {
+                return self.is_active(event);
+            }
+        }
+        self.finish_capture(event);
+        false
+    }
+
+    pub(crate) fn begin_drag(&mut self, event: &Event<PointerData>) {
+        if self.is_active(event) {
+            self.dragging.set(true);
+        }
+    }
+
+    pub(crate) fn move_capture(&mut self, event: &Event<PointerData>) {
+        if !self.uses_window_events() && self.is_active(event) {
+            self.captured_position.set(Some(event.client_coordinates()));
+        }
+    }
+
+    pub(crate) fn finish_capture(&mut self, event: &Event<PointerData>) {
+        if !self.uses_window_events() && self.is_active(event) {
+            self.end_pointer();
+        }
+    }
+
+    pub(crate) fn release_capture(&mut self, event: &Event<PointerData>) {
+        if !self.uses_window_events() && self.is_active(event) {
+            self.end_pointer();
+            if let Some(element) = self.element.peek().as_ref() {
+                let release = element.release_pointer_capture(event.pointer_id());
+                spawn(async move {
+                    let _ = release.await;
+                });
+            }
+        }
+    }
+
+    fn is_active(&self, event: &Event<PointerData>) -> bool {
+        *self.active_pointer_id.peek() == Some(event.pointer_id())
+    }
+
+    fn uses_window_events(&self) -> bool {
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        if self.native_pointer.is_some() {
+            return true;
+        }
+        false
     }
 
     pub(crate) fn pointer_move(&mut self) -> Option<MoveEvent> {
@@ -127,11 +209,7 @@ impl MoveInteraction {
             return None;
         }
 
-        let active_pointer_id = (self.active_pointer_id)()?;
-        let Some(pointer_position) = pointer::pointer_position(active_pointer_id) else {
-            self.end_pointer();
-            return None;
-        };
+        let pointer_position = self.pointer_position()?;
 
         let delta = if let Some(last_position) =
             self.last_pointer_position.replace(Some(pointer_position))
@@ -148,7 +226,20 @@ impl MoveInteraction {
         })
     }
 
-    pub(crate) fn end_pointer(&mut self) {
+    fn pointer_position(&self) -> Option<ClientPoint> {
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        if let Some(pointer) = self.native_pointer {
+            return pointer.read().as_ref().map(|pointer| pointer.position);
+        }
+        self.captured_position.cloned()
+    }
+
+    fn end_pointer(&mut self) {
+        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+        if let Some(mut pointer) = self.native_pointer {
+            pointer.set(None);
+        }
+        self.captured_position.set(None);
         self.active_pointer_id.take();
         self.last_pointer_position.set(None);
         self.dragging.set(false);

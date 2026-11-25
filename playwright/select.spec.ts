@@ -6,11 +6,16 @@ const singleSelectTrigger = (page: Page) =>
 const multiSelectTrigger = (page: Page) =>
     page.getByRole("button").filter({ hasText: /Pepperoni|Mushroom|Onion/ });
 
+async function gotoSelectDemo(page: Page, variant?: "multi") {
+    const query = variant ? `name=select&variant=${variant}&` : "name=select&";
+    await page.goto(`http://127.0.0.1:8080/component/?${query}`);
+    // The preview loads its stylesheet after navigation and can shift the trigger mid-click.
+    await expect(page.locator(".dx-docs-layout")).toHaveCSS("display", "grid");
+    await page.evaluate(async () => { await document.fonts.ready; });
+}
+
 test("test", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&", {
-        timeout: 20 * 60 * 1000,
-        waitUntil: 'networkidle'
-    }); // Increase timeout to 20 minutes
+    await gotoSelectDemo(page);
     // Find Select a fruit...
     let selectTrigger = singleSelectTrigger(page);
     await selectTrigger.click();
@@ -69,7 +74,7 @@ test("test", async ({ page }) => {
 });
 
 test("tabbing out of menu closes the select menu", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&");
+    await gotoSelectDemo(page);
     // Find Select a fruit...
     let selectTrigger = singleSelectTrigger(page);
     await selectTrigger.click();
@@ -85,9 +90,7 @@ test("tabbing out of menu closes the select menu", async ({ page }) => {
 });
 
 test("multi-select toggles options and stays open", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&variant=multi&", {
-        timeout: 20 * 60 * 1000,
-    });
+    await gotoSelectDemo(page, "multi");
     const selectTrigger = multiSelectTrigger(page);
     // Default values from the demo: Pepperoni and Mushroom
     await expect(selectTrigger).toContainText("Pepperoni");
@@ -123,9 +126,7 @@ test("multi-select toggles options and stays open", async ({ page }) => {
 });
 
 test("mobile: multi-select tapping options keeps the dropdown open", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&variant=multi&", {
-        timeout: 20 * 60 * 1000,
-    });
+    await gotoSelectDemo(page, "multi");
     const selectTrigger = multiSelectTrigger(page);
     await selectTrigger.tap();
 
@@ -148,9 +149,7 @@ test("mobile: multi-select tapping options keeps the dropdown open", async ({ pa
 });
 
 test("multi-select keyboard toggles and exposes aria-multiselectable", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&variant=multi&", {
-        timeout: 20 * 60 * 1000,
-    });
+    await gotoSelectDemo(page, "multi");
     const selectTrigger = multiSelectTrigger(page);
     await selectTrigger.click();
 
@@ -186,7 +185,7 @@ test("multi-select keyboard toggles and exposes aria-multiselectable", async ({ 
 });
 
 test("tabbing out of item closes the select menu", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&");
+    await gotoSelectDemo(page);
     // Find Select a fruit...
     let selectTrigger = singleSelectTrigger(page);
     await selectTrigger.click();
@@ -207,7 +206,7 @@ test("tabbing out of item closes the select menu", async ({ page }) => {
 });
 
 test("options selected", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&");
+    await gotoSelectDemo(page);
     // Find Select a fruit...
     let selectTrigger = singleSelectTrigger(page);
     await selectTrigger.click();
@@ -236,7 +235,7 @@ test("options selected", async ({ page }) => {
 });
 
 test("down arrow selects first element", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&");
+    await gotoSelectDemo(page);
     // Find Select a fruit...
     let selectTrigger = singleSelectTrigger(page);
     const selectMenu = page.getByRole("listbox");
@@ -249,7 +248,7 @@ test("down arrow selects first element", async ({ page }) => {
 });
 
 test("up arrow selects last element", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&");
+    await gotoSelectDemo(page);
     // Find Select a fruit...
     let selectTrigger = singleSelectTrigger(page);
     const selectMenu = page.getByRole("listbox");
@@ -262,7 +261,7 @@ test("up arrow selects last element", async ({ page }) => {
 });
 
 test("keyboard navigation skips disabled options", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&");
+    await gotoSelectDemo(page);
     const selectTrigger = singleSelectTrigger(page);
     await selectTrigger.click();
 
@@ -281,7 +280,7 @@ test("keyboard navigation skips disabled options", async ({ page }) => {
 });
 
 test("typeahead skips disabled options", async ({ page }) => {
-    await page.goto("http://127.0.0.1:8080/component/?name=select&");
+    await gotoSelectDemo(page);
     const selectTrigger = singleSelectTrigger(page);
     await selectTrigger.click();
 

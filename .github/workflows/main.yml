@@ -51,7 +51,15 @@ jobs:
           cache-on-failure: "false"
           cache-directories: "target/dx"
       - name: Check
-        run: cargo check --workspace --all-features
+        shell: bash
+        run: |
+          set -euo pipefail
+          log=$(mktemp)
+          cargo check --workspace --all-features 2>&1 | tee "$log"
+          if grep -q "was not used in the crate graph" "$log"; then
+            echo "::error::Unused [patch.crates-io] entry detected"
+            exit 1
+          fi
 
   test:
     if: github.event.pull_request.draft == false

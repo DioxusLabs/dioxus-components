@@ -10,4 +10,4 @@ dioxus-native = { workspace = true, features = ["accessibility", "hot-reload", "
 preview = { path = "../preview" }
 
 [features]
-default = ["dioxus-native/vello-hybrid"]
+default = ["dioxus-native/vello-gpu"]

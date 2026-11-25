@@ -9,8 +9,12 @@ const multiSelectTrigger = (page: Page) =>
 async function gotoSelectDemo(page: Page, variant?: "multi") {
     const query = variant ? `name=select&variant=${variant}&` : "name=select&";
     await page.goto(`http://127.0.0.1:8080/component/?${query}`);
-    // The preview loads its stylesheet after navigation and can shift the trigger mid-click.
-    await expect(page.locator(".dx-docs-layout")).toHaveCSS("display", "grid");
+    // Dioxus inserts the preview stylesheets after the initial navigation.
+    await page.waitForFunction(() => {
+        const links = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'));
+        return links.some(link => /\/main(?:-dxh[0-9a-f]+)?\.css$/.test(new URL(link.href).pathname)) &&
+            links.every(link => link.sheet !== null);
+    });
     await page.evaluate(async () => { await document.fonts.ready; });
 }
 

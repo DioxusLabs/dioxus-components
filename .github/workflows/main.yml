@@ -28,6 +28,10 @@ jobs:
       - uses: DioxusLabs/dioxus-ci/actions/setup-dioxus@v0.1.0
         with:
           toolchain: 1.88.0
+          cache: "false"
+      - uses: Swatinem/rust-cache@v2.9.3
+        with:
+          cache-all-crates: "true"
           cache-on-failure: "false"
           cache-directories: "target/dx"
       - name: Check
@@ -49,6 +53,10 @@ jobs:
         with:
           toolchain: 1.88.0
           components: rustfmt, clippy
+          cache: "false"
+      - uses: Swatinem/rust-cache@v2.9.3
+        with:
+          cache-all-crates: "true"
       - uses: browser-actions/setup-firefox@latest
       - run: cargo test --workspace
 
@@ -62,6 +70,10 @@ jobs:
         with:
           toolchain: 1.88.0
           components: rustfmt
+          cache: "false"
+      - uses: Swatinem/rust-cache@v2.9.3
+        with:
+          cache-all-crates: "true"
       - run: cargo fmt --all -- --check
 
   docs:
@@ -77,6 +89,11 @@ jobs:
       - uses: DioxusLabs/dioxus-ci/actions/setup-dioxus@v0.1.0
         with:
           toolchain: nightly-2026-11-24
+          cache: "false"
+      - uses: Swatinem/rust-cache@v2.9.3
+        with:
+          cache-all-crates: "true"
+          key: cargo-layout-v2
       - name: "doc --lib --all-features"
         run: |
           cargo doc --workspace --no-deps --all-features --document-private-items
@@ -97,4 +114,8 @@ jobs:
         with:
           toolchain: 1.88.0
           components: rustfmt, clippy
+          cache: "false"
+      - uses: Swatinem/rust-cache@v2.9.3
+        with:
+          cache-all-crates: "true"
       - run: cargo clippy --workspace --examples --tests --all-features --all-targets -- -D warnings

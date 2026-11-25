@@ -1,4 +1,4 @@
-use crate::dioxus_core::provide_root_context;
+use dioxus::core::provide_root_context;
 use dioxus::prelude::*;
 use std::collections::HashMap;
 

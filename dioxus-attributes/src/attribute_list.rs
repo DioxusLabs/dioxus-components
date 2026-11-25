@@ -77,7 +77,7 @@ impl ToTokens for AttributeList {
             .map(|attr| {
                 let rendered = attr.rendered_as_dynamic_attr();
                 quote! {
-                    let __rendered: Box<[dioxus_core::Attribute]> = #rendered;
+                    let __rendered: Box<[dioxus::core::Attribute]> = #rendered;
                     __attrs.extend(__rendered.into_vec());
                 }
             })

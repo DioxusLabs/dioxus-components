@@ -35,6 +35,17 @@ test('opens popover and shows initial color', async ({ page }) => {
   );
 });
 
+test('keeps the color area square and bounds the hex field', async ({ page }) => {
+  const { popover } = await openPicker(page);
+  const hexField = popover.locator('#color_field');
+  await hexField.evaluate((input) => { input.style.width = '300px'; });
+  await expect(hexField).toHaveCSS('width', '230px');
+
+  const area = popover.getByRole('group').filter({ has: page.getByLabel('Color area') }).last();
+  await expect(area).toHaveCSS('width', '224px');
+  await expect(area).toHaveCSS('height', '224px');
+});
+
 test('typing a new hex updates the color picker', async ({ page }) => {
   const { button } = await openPicker(page);
   const hexField = page.locator('#color_field');

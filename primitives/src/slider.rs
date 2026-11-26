@@ -389,14 +389,14 @@ fn SliderImpl(props: SliderImplProps) -> Element {
                     return;
                 }
 
-                if !movement.start_pointer(&evt) {
+                let Some(capture) = movement.start_pointer(&evt) else {
                     return;
-                }
+                };
 
                 // Handle pointer interaction
                 spawn(async move {
                     let mut movement = movement;
-                    if !movement.capture_pointer(&evt).await {
+                    if !capture.await {
                         return;
                     }
 

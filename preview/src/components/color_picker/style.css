@@ -58,6 +58,7 @@
     align-items: center;
     grid-column: span 2 / span 2;
     touch-action: none;
+    user-select: none;
 }
 
 .dx-color-slider-track {
@@ -104,6 +105,7 @@
     aspect-ratio: 1;
     forced-color-adjust: none;
     touch-action: none;
+    user-select: none;
 }
 
 .dx-color-area-track {

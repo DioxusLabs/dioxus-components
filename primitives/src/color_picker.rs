@@ -267,14 +267,14 @@ pub fn ColorArea(props: ColorAreaProps) -> Element {
                 movement.refresh_rect().await;
             },
             onpointerdown: move |e| {
-                if !movement.start_pointer(&e) {
+                let Some(capture) = movement.start_pointer(&e) else {
                     return;
-                }
+                };
 
                 // Handle pointer interaction
                 spawn(async move {
                     let mut movement = movement;
-                    if !movement.capture_pointer(&e).await {
+                    if !capture.await {
                         return;
                     }
 

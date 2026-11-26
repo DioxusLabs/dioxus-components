@@ -57,7 +57,6 @@ impl NativePointer {
     fn ends_on(&self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::Focused(false) => true,
-            WindowEvent::PointerLeft { kind, .. } => self.id == (*kind).into(),
             WindowEvent::PointerButton {
                 state: ElementState::Released,
                 button,
@@ -150,7 +149,7 @@ mod tests {
             primary: true,
         };
         assert!(!pointer.ends_on(&leave(PointerKind::Touch(FingerId::from_raw(8)))));
-        assert!(pointer.ends_on(&leave(PointerKind::Touch(finger))));
+        assert!(!pointer.ends_on(&leave(PointerKind::Touch(finger))));
         assert!(pointer.ends_on(&WindowEvent::Focused(false)));
     }
 }

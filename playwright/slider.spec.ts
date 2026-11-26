@@ -29,7 +29,16 @@ async function startCapturedDrag(page: Page, slider: Locator, frac: number) {
   await track.scrollIntoViewIfNeeded();
   const point = await sliderTrackPoint(track, frac);
   await slider.evaluate((el) => {
+    let pointerDown: PointerEvent | undefined;
+    const setPointerCapture = el.setPointerCapture;
+    el.setPointerCapture = (id) => {
+      el.setAttribute('data-test-capture-on-pointerdown', String(
+        pointerDown?.pointerId === id && pointerDown.eventPhase !== Event.NONE,
+      ));
+      setPointerCapture.call(el, id);
+    };
     el.addEventListener('pointerdown', (event) => {
+      pointerDown = event as PointerEvent;
       el.setAttribute('data-test-pointer-id', String((event as PointerEvent).pointerId));
     }, { capture: true, once: true });
   });
@@ -37,6 +46,7 @@ async function startCapturedDrag(page: Page, slider: Locator, frac: number) {
   await page.mouse.down();
   const pointerId = Number(await slider.getAttribute('data-test-pointer-id'));
   await expect.poll(() => slider.evaluate((el, id) => el.hasPointerCapture(id), pointerId)).toBe(true);
+  await expect(slider).toHaveAttribute('data-test-capture-on-pointerdown', 'true');
   return { ...point, pointerId };
 }
 

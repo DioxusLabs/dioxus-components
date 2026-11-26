@@ -5,6 +5,10 @@
     gap: 4px;
 }
 
+.dx-color-field-container > input {
+    max-width: 230px;
+}
+
 .dx-color-field-description {
     color: var(--secondary-color-5);
     font-size: 14px;
@@ -94,8 +98,8 @@
 .dx-color-area-container {
     position: relative;
     display: flex;
-    width: 100%;
-    max-width: 224px;
+    width: 224px;
+    max-width: 100%;
     min-height: 116px;
     aspect-ratio: 1;
     forced-color-adjust: none;

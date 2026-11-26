@@ -249,9 +249,7 @@ fn use_animated_open(
 }
 
 #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-pub(crate) fn native_exit_animation_duration(
-    handle: &dioxus_native_dom::NodeHandle,
-) -> std::time::Duration {
+fn native_exit_animation_duration(handle: &dioxus_native_dom::NodeHandle) -> std::time::Duration {
     let max_secs = handle
         .try_doc()
         .and_then(|doc| {

@@ -73,6 +73,10 @@ pub(crate) struct MoveInteraction {
     native_pointer: Option<Signal<Option<native::NativePointer>>>,
 }
 
+/// Test switch: when false, Native drags use pointer capture instead of winit window events.
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+const WINDOW_POINTER_FALLBACK: bool = false;
+
 pub(crate) fn use_move_interaction(dragging: Signal<bool>) -> MoveInteraction {
     let rect = use_signal(|| None);
     let element = use_signal(|| None);
@@ -91,7 +95,11 @@ pub(crate) fn use_move_interaction(dragging: Signal<bool>) -> MoveInteraction {
         native_pointer: None,
     };
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    let movement = native::with_window_pointer(movement);
+    let movement = if WINDOW_POINTER_FALLBACK {
+        native::with_window_pointer(movement)
+    } else {
+        movement
+    };
     movement
 }
 
@@ -150,12 +158,12 @@ impl MoveInteraction {
         }
         let element = self.element.peek().clone();
         if let Some(element) = element {
-            if element
-                .set_pointer_capture(event.pointer_id())
-                .await
-                .is_ok()
-            {
-                return self.is_active(event);
+            match element.set_pointer_capture(event.pointer_id()).await {
+                Ok(()) => {
+                    tracing::info!("MoveInteraction: captured pointer {}", event.pointer_id());
+                    return self.is_active(event);
+                }
+                Err(err) => tracing::error!("MoveInteraction: set_pointer_capture failed: {err:?}"),
             }
         }
         self.finish_capture(event);

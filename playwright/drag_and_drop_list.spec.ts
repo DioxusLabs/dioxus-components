@@ -35,58 +35,48 @@ async function itemText(locator: import("@playwright/test").Locator) {
   return (await locator.textContent())?.replace(/\s+/g, "") ?? "";
 }
 
-async function dispatchDragLifecycle(
+async function dragPoints(list: import("@playwright/test").Locator) {
+  const items = getItems(list);
+  await items.nth(3).scrollIntoViewIfNeeded();
+  const source = await items.nth(2).boundingBox();
+  const target = await items.nth(3).boundingBox();
+  if (!source || !target) {
+    throw new Error("Drag-and-drop test elements were not found");
+  }
+  return {
+    start: { x: source.x + source.width / 2, y: source.y + source.height / 2 },
+    end: { x: target.x + target.width / 2, y: target.y + target.height * 0.75 },
+  };
+}
+
+async function startMouseDrag(
   page: import("@playwright/test").Page,
-  options: {
-    sourceIndex: number;
-    targetIndex: number;
-    drop?: "list" | "document";
-    end?: boolean;
-  },
+  list: import("@playwright/test").Locator,
 ) {
-  await page.evaluate(async ({ sourceIndex, targetIndex, drop, end = true }) => {
-    const list = document.querySelector('ul[aria-roledescription="sortable list"]');
-    const items = list?.querySelectorAll('li[aria-roledescription="sortable item"]');
-    const source = items?.[sourceIndex];
-    const target = items?.[targetIndex];
-    if (!list || !source || !target) {
-      throw new Error("Drag-and-drop test elements were not found");
-    }
+  const { start } = await dragPoints(list);
+  const items = getItems(list);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x + 8, start.y);
+  await expect(items.nth(2)).toHaveAttribute("aria-grabbed", "true");
+  const target = (await items.nth(3).boundingBox())!;
+  const end = {
+    x: target.x + target.width / 2,
+    y: target.y + target.height * 0.75,
+  };
+  await page.mouse.move(end.x, end.y);
+  await expect(
+    items.nth(3).locator('xpath=following-sibling::*[1][@data-position="after"]'),
+  ).toHaveCount(1);
+  return { start, end };
+}
 
-    const dataTransfer = new DataTransfer();
-    const dispatch = (node: EventTarget, type: string, init: DragEventInit = {}) => {
-      const event = new DragEvent(type, {
-        bubbles: true,
-        cancelable: true,
-        dataTransfer,
-        ...init,
-      });
-      node.dispatchEvent(event);
-    };
-
-    dispatch(source, "dragstart");
-    await new Promise(requestAnimationFrame);
-
-    const targetRect = target.getBoundingClientRect();
-    dispatch(target, "dragover", {
-      clientX: targetRect.left + targetRect.width / 2,
-      clientY: targetRect.top + targetRect.height * 0.8,
-    });
-    await new Promise(requestAnimationFrame);
-
-    if (drop === "list") {
-      dispatch(list, "drop");
-      await new Promise(requestAnimationFrame);
-    } else if (drop === "document") {
-      dispatch(document, "drop");
-      await new Promise(requestAnimationFrame);
-    }
-
-    if (end) {
-      dispatch(source, "dragend");
-      await new Promise(requestAnimationFrame);
-    }
-  }, options);
+async function rememberPointerId(item: import("@playwright/test").Locator) {
+  await item.evaluate((element) => {
+    element.addEventListener("pointerdown", (event) => {
+      element.dataset.testPointerId = String(event.pointerId);
+    }, { once: true });
+  });
 }
 
 test.describe("Keyboard focus management", () => {
@@ -258,14 +248,11 @@ test.describe("Drag and drop lifecycle", () => {
   test("mouse drag shows the drop-indicator line", async ({ page }) => {
     const list = await loadMainList(page);
 
-    await dispatchDragLifecycle(page, {
-      sourceIndex: 2,
-      targetIndex: 3,
-      end: false,
-    });
+    await startMouseDrag(page, list);
 
     await expect(page.locator("[data-position]")).toHaveCount(1);
     await expect.poll(() => dropIndicatorOpacity(page)).toBeGreaterThan(0.5);
+    await page.mouse.up();
   });
 
   test("keyboard drag shows the drop-indicator line", async ({ page }) => {
@@ -281,20 +268,35 @@ test.describe("Drag and drop lifecycle", () => {
     await page.keyboard.press("Escape");
   });
 
-  test("mouse drop to the side commits without cancelling the native drop", async ({
+  test("mouse release to the side commits the last hovered slot", async ({
     page,
   }) => {
+    const lifetimeWarnings: string[] = [];
+    page.on("console", (message) => {
+      const text = message.text();
+      if (text.includes("A Copy Value created") && text.includes("drag_and_drop_list.rs")) {
+        lifetimeWarnings.push(text);
+      }
+    });
     const list = await loadMainList(page);
     const items = getItems(list);
     const sourceTitle = await itemText(items.nth(2));
 
-    await dispatchDragLifecycle(page, {
-      sourceIndex: 2,
-      targetIndex: 3,
-      drop: "document",
-    });
+    const source = items.nth(2);
+    await rememberPointerId(source);
+    const { end } = await startMouseDrag(page, list);
+    const bounds = (await list.boundingBox())!;
+    await page.mouse.move(bounds.x - 10, end.y);
+    const pointerId = Number(await source.getAttribute("data-test-pointer-id"));
+    expect(await source.evaluate((item, id) => item.hasPointerCapture(id), pointerId)).toBe(true);
+    await page.mouse.up();
 
     await expect.poll(() => itemText(items.nth(3))).toBe(sourceTitle);
+    await expect.poll(() => itemText(items.nth(2))).not.toBe(sourceTitle);
+    await startMouseDrag(page, list);
+    await page.mouse.up();
+    await expect.poll(() => itemText(items.nth(2))).toBe(sourceTitle);
+    expect(lifetimeWarnings).toEqual([]);
   });
 
   test("cancelled mouse drag does not reorder the list", async ({ page }) => {
@@ -303,13 +305,86 @@ test.describe("Drag and drop lifecycle", () => {
     const sourceText = await itemText(items.nth(2));
     const targetText = await itemText(items.nth(3));
 
-    await dispatchDragLifecycle(page, {
-      sourceIndex: 2,
-      targetIndex: 3,
-    });
+    await startMouseDrag(page, list);
+    await page.keyboard.press("Escape");
+    await expect(items.nth(2)).toHaveAttribute("aria-grabbed", "false");
+    await page.mouse.up();
 
     await expect.poll(() => itemText(items.nth(2))).toBe(sourceText);
     await expect.poll(() => itemText(items.nth(3))).toBe(targetText);
+  });
+
+  test("pointercancel clears the drag without reordering", async ({ page }) => {
+    const list = await loadMainList(page);
+    const items = getItems(list);
+    const originalOrder = await items.allTextContents();
+    await items.nth(2).evaluate((item) => {
+      item.addEventListener("pointerdown", (event) => {
+        const { pointerId, pointerType, isPrimary } = event;
+        item.addEventListener("dnd-test-cancel", () => {
+          item.dispatchEvent(new PointerEvent("pointercancel", {
+            bubbles: true,
+            pointerId,
+            pointerType,
+            isPrimary,
+          }));
+        }, { once: true });
+      }, { once: true });
+    });
+    await startMouseDrag(page, list);
+    await items.nth(2).dispatchEvent("dnd-test-cancel");
+    await expect(items.nth(2)).toHaveAttribute("aria-grabbed", "false");
+    await page.mouse.up();
+    await expect(items).toHaveText(originalOrder);
+  });
+
+  test("losing pointer capture before release cancels the drag", async ({ page }) => {
+    const list = await loadMainList(page);
+    const items = getItems(list);
+    const originalOrder = await items.allTextContents();
+    const source = items.nth(2);
+    await rememberPointerId(source);
+    const { end } = await startMouseDrag(page, list);
+    const pointerId = Number(await source.getAttribute("data-test-pointer-id"));
+    await source.evaluate((item, id) => item.releasePointerCapture(id), pointerId);
+    // The browser dispatches lostpointercapture before the next pointer event.
+    await page.mouse.move(end.x + 1, end.y);
+    await expect(source).toHaveAttribute("aria-grabbed", "false");
+    await page.mouse.up();
+    await expect(items).toHaveText(originalOrder);
+  });
+});
+
+test.describe("Touch drag", () => {
+  test.use({ hasTouch: true });
+
+  test("touch drag reorders without scrolling", async ({ page, browserName }) => {
+    test.skip(browserName !== "chromium", "Touch movement uses Chromium CDP");
+    const list = await loadMainList(page);
+    const items = getItems(list);
+    const sourceTitle = await itemText(items.nth(2));
+    const { start, end } = await dragPoints(list);
+    const scrollBefore = await list.evaluate((node) => {
+      const positions: number[] = [];
+      for (let element: Element | null = node; element; element = element.parentElement) {
+        positions.push(element.scrollTop);
+      }
+      return positions;
+    });
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [start] });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [end] });
+    await expect(items.nth(2)).toHaveAttribute("aria-grabbed", "true");
+    await expect(list.locator('[data-position="after"]')).toHaveCount(1);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect.poll(() => itemText(items.nth(3))).toBe(sourceTitle);
+    expect(await list.evaluate((node) => {
+      const positions: number[] = [];
+      for (let element: Element | null = node; element; element = element.parentElement) {
+        positions.push(element.scrollTop);
+      }
+      return positions;
+    })).toEqual(scrollBefore);
   });
 });
 

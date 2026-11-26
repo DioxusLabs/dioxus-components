@@ -1,8 +1,9 @@
 //! Defines the [`Accordion`] component and its sub-components.
 
 use crate::collection::{collection_item, use_item, CollectionOptions, CollectionState};
-use crate::{use_animated_open, use_id_or, use_unique_id};
+use crate::{use_animated_open_with_mounted, use_id_or, use_unique_id};
 use dioxus::prelude::*;
+use std::rc::Rc;
 
 // TODO: controlled version
 // TODO: rewrite this to use collapsible
@@ -369,14 +370,16 @@ pub fn AccordionContent(props: AccordionContentProps) -> Element {
     let id = use_id_or(item.aria_id, props.id);
     let ctx: AccordionContext = use_context();
     let open = use_memo(move || ctx.is_open(item.id));
+    let mut mounted = use_signal(|| None::<Rc<MountedData>>);
 
-    let render_element = use_animated_open(id, open);
+    let render_element = use_animated_open_with_mounted(id, open, Some(mounted.into()));
 
     rsx! {
         if render_element() {
             div {
                 id: id,
                 "data-open": open,
+                onmounted: move |evt| mounted.set(Some(evt.data())),
                 ..props.attributes,
 
                 {props.children}
@@ -508,5 +511,106 @@ impl Item {
 
     pub fn aria_id(&self) -> String {
         (self.aria_id)()
+    }
+}
+
+#[cfg(all(test, feature = "native", not(target_arch = "wasm32")))]
+mod native_tests {
+    use super::*;
+    use dioxus_native_dom::{DioxusDocument, DocumentConfig};
+    use std::cell::RefCell;
+
+    const ACCORDION_CSS: &str = r#"
+        .dx-accordion-content { display: grid; }
+        .dx-accordion-content > * { overflow: hidden; min-height: 0; }
+        .dx-accordion-content[data-open="false"] {
+            animation: dx-accordion-slide-down 300ms cubic-bezier(0.87, 0, 0.13, 1) forwards;
+        }
+        .dx-accordion-content[data-open="true"] {
+            animation: dx-accordion-slide-up 300ms cubic-bezier(0.87, 0, 0.13, 1) forwards;
+        }
+        @keyframes dx-accordion-slide-down {
+            from { grid-template-rows: 1fr; }
+            to { grid-template-rows: 0fr; }
+        }
+        @keyframes dx-accordion-slide-up {
+            from { grid-template-rows: 0fr; }
+            to { grid-template-rows: 1fr; }
+        }
+    "#;
+
+    #[test]
+    fn accordion_animates_grid_rows_and_reports_exit_duration_on_native() {
+        thread_local! {
+            static CAPTURED: RefCell<Option<Rc<MountedData>>> = const { RefCell::new(None) };
+        }
+        CAPTURED.with(|c| *c.borrow_mut() = None);
+
+        fn app() -> Element {
+            rsx! {
+                style { "{ACCORDION_CSS}" }
+                Accordion {
+                    AccordionItem { index: 0, default_open: true,
+                        AccordionTrigger { "Toggle" }
+                        AccordionContent {
+                            id: Some("acc-content".to_string()),
+                            class: "dx-accordion-content",
+                            onmounted: move |evt: MountedEvent| {
+                                CAPTURED.with(|c| *c.borrow_mut() = Some(evt.data()));
+                            },
+                            div {
+                                p { style: "height: 100px; margin: 0;", "Body" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut doc = DioxusDocument::new(VirtualDom::new(app), DocumentConfig::default());
+        doc.initial_build();
+        doc.inner.borrow_mut().resolve(0.0);
+
+        let content_id = doc.inner.borrow().get_element_by_id("acc-content").unwrap();
+        let h_start = doc
+            .inner
+            .borrow()
+            .get_node(content_id)
+            .unwrap()
+            .final_layout()
+            .size
+            .height;
+        doc.inner.borrow_mut().resolve(0.15);
+        let h_mid = doc
+            .inner
+            .borrow()
+            .get_node(content_id)
+            .unwrap()
+            .final_layout()
+            .size
+            .height;
+        doc.inner.borrow_mut().resolve(0.35);
+        let h_end = doc
+            .inner
+            .borrow()
+            .get_node(content_id)
+            .unwrap()
+            .final_layout()
+            .size
+            .height;
+
+        assert!(
+            h_start < h_mid && h_mid < h_end,
+            "expected smooth open animation, got start={h_start}, mid={h_mid}, end={h_end}"
+        );
+
+        let mounted = CAPTURED.with(|c| c.borrow().clone());
+        if let Some(data) = mounted {
+            let handle = data
+                .downcast::<dioxus_native_dom::NodeHandle>()
+                .expect("native mounted data should downcast to NodeHandle");
+            let dur = crate::native_exit_animation_duration(handle);
+            assert_eq!(dur, std::time::Duration::from_millis(300));
+        }
     }
 }

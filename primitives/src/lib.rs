@@ -245,34 +245,127 @@ fn use_animated_open(
     id: impl Readable<Target = String> + Copy + 'static,
     open: impl Readable<Target = bool> + Copy + 'static,
 ) -> impl Fn() -> bool + Copy {
+    use_animated_open_with_mounted(id, open, None)
+}
+
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+pub(crate) fn native_exit_animation_duration(
+    handle: &dioxus_native_dom::NodeHandle,
+) -> std::time::Duration {
+    let max_secs = handle
+        .try_doc()
+        .and_then(|doc| {
+            let node = doc.get_node(handle.node_id())?;
+            let style = node.primary_styles()?;
+            let ui = style.get_ui();
+            let mut max_secs: f32 = 0.0;
+            for i in 0..ui.animation_name_count() {
+                if ui.animation_name_at(i).is_none() {
+                    continue;
+                }
+                let iterations = ui.animation_iteration_count_mod(i).0;
+                if !iterations.is_finite() || iterations <= 0.0 {
+                    continue;
+                }
+                let duration = ui.animation_duration_mod(i).seconds();
+                let delay = ui.animation_delay_mod(i).seconds();
+                let total = (delay + duration * iterations).max(0.0);
+                if total > max_secs {
+                    max_secs = total;
+                }
+            }
+            for i in 0..ui.transition_duration_count() {
+                let duration = ui.transition_duration_at(i).seconds();
+                if duration <= 0.0 {
+                    continue;
+                }
+                let delay = ui.transition_delay_mod(i).seconds();
+                let total = (delay + duration).max(0.0);
+                if total > max_secs {
+                    max_secs = total;
+                }
+            }
+            Some(max_secs)
+        })
+        .unwrap_or(0.0);
+
+    std::time::Duration::from_secs_f32(max_secs)
+}
+
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+async fn wait_for_native_exit_animation(mounted: &Rc<MountedData>) -> bool {
+    let Some(handle) = mounted.downcast::<dioxus_native_dom::NodeHandle>() else {
+        return false;
+    };
+
+    // Wait one frame so Blitz resolves the updated `data-open="false"` styles.
+    let frame_wait = std::time::Duration::from_millis(20);
+    dioxus_sdk_time::sleep(frame_wait).await;
+
+    let total = native_exit_animation_duration(handle);
+    if let Some(remaining) = total.checked_sub(frame_wait) {
+        if !remaining.is_zero() {
+            dioxus_sdk_time::sleep(remaining).await;
+        }
+    }
+
+    true
+}
+
+fn use_animated_open_with_mounted(
+    id: impl Readable<Target = String> + Copy + 'static,
+    open: impl Readable<Target = bool> + Copy + 'static,
+    mounted: Option<ReadSignal<Option<Rc<MountedData>>>>,
+) -> impl Fn() -> bool + Copy {
     let animating = use_signal(|| false);
 
     // Show in dom is a few frames behind the open signal to allow for the animation to start.
     // If it does start, we wait for the animation to finish before showing removing the element from the DOM.
-    let mut show_in_dom = use_signal(|| false);
+    let mut show_in_dom = use_signal(|| open.cloned());
+    let mut close_generation = use_signal(|| 0u64);
 
     use_effect(move || {
         if open.cloned() {
+            let next = close_generation.peek().wrapping_add(1);
+            close_generation.set(next);
             show_in_dom.set(true);
         } else {
+            if !*show_in_dom.peek() {
+                return;
+            }
+            let generation = close_generation.peek().wrapping_add(1);
+            close_generation.set(generation);
             spawn(async move {
-                let id = id.cloned();
-                let mut eval = dioxus::document::eval(
-                    "const id = await dioxus.recv();
-                    const element = document.getElementById(id);
-                    if (element && element.getAnimations().length > 0) {
-                        Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => {}))).then(() => {
+                #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+                let handled_natively = match mounted.and_then(|m| m.peek().clone()) {
+                    Some(data) => wait_for_native_exit_animation(&data).await,
+                    None => false,
+                };
+                #[cfg(not(all(feature = "native", not(target_arch = "wasm32"))))]
+                let handled_natively = {
+                    let _ = mounted;
+                    false
+                };
+
+                if !handled_natively {
+                    let id = id.cloned();
+                    let mut eval = dioxus::document::eval(
+                        "const id = await dioxus.recv();
+                        const element = document.getElementById(id);
+                        if (element && element.getAnimations().length > 0) {
+                            Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => {}))).then(() => {
+                                dioxus.send(true);
+                            });
+                        } else {
                             dioxus.send(true);
-                        });
-                    } else {
-                        dioxus.send(true);
-                    }"
-                );
-                let _ = eval.send(id);
-                _ = eval.recv::<bool>().await;
+                        }",
+                    );
+                    let _ = eval.send(id);
+                    _ = eval.recv::<bool>().await;
+                }
                 // The element may have been reopened while we waited for the exit
                 // animation. Only hide it if it is still closed.
-                if !open.cloned() {
+                if *close_generation.peek() == generation && !open.cloned() {
                     show_in_dom.set(false);
                 }
             });

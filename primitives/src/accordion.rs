@@ -1,8 +1,9 @@
 //! Defines the [`Accordion`] component and its sub-components.
 
 use crate::collection::{collection_item, use_item, CollectionOptions, CollectionState};
-use crate::{use_animated_open, use_id_or, use_unique_id};
+use crate::{use_animated_open_with_mounted, use_id_or, use_unique_id};
 use dioxus::prelude::*;
+use std::rc::Rc;
 
 // TODO: controlled version
 // TODO: rewrite this to use collapsible
@@ -369,14 +370,16 @@ pub fn AccordionContent(props: AccordionContentProps) -> Element {
     let id = use_id_or(item.aria_id, props.id);
     let ctx: AccordionContext = use_context();
     let open = use_memo(move || ctx.is_open(item.id));
+    let mut mounted = use_signal(|| None::<Rc<MountedData>>);
 
-    let render_element = use_animated_open(id, open);
+    let render_element = use_animated_open_with_mounted(id, open, Some(mounted.into()));
 
     rsx! {
         if render_element() {
             div {
                 id: id,
                 "data-open": open,
+                onmounted: move |evt| mounted.set(Some(evt.data())),
                 ..props.attributes,
 
                 {props.children}

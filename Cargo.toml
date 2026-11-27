@@ -7,6 +7,7 @@ dioxus = "=0.8.0-alpha.3"
 dioxus-code = { version = "=0.2.0-alpha.3", default-features = false }
 dioxus-i18n = "=0.7.0-alpha.1"
 dioxus-icons = "=0.2.0-alpha.3"
+dioxus-native-dom = { version = "=0.8.0-alpha.3", default-features = false }
 dioxus-primitives = { path = "primitives" }
 dioxus-rsx = "=0.8.0-alpha.3"
 dioxus-sdk-time = "=0.8.0-alpha.3"

@@ -2169,6 +2169,7 @@ version = "0.0.1"
 dependencies = [
  "dioxus",
  "dioxus-attributes",
+ "dioxus-native-dom",
  "dioxus-sdk-time",
  "dioxus-ssr",
  "lazy-js-bundle",

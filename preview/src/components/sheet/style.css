@@ -15,6 +15,7 @@
 
 .dx-sheet-root[data-state="open"] {
   animation: dx-sheet-root-in 200ms ease-out forwards;
+  opacity: 1;
 }
 
 @keyframes dx-sheet-root-in {

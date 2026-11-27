@@ -220,6 +220,7 @@ pub struct DropdownMenuTriggerProps {
 pub fn DropdownMenuTrigger(props: DropdownMenuTriggerProps) -> Element {
     let mut ctx: DropdownMenuContext = use_context();
     let mut element = use_signal(|| None::<Rc<MountedData>>);
+    let mut refocusing = use_signal(|| false);
 
     let open = ctx.open;
     let disabled = ctx.disabled;
@@ -247,13 +248,17 @@ pub fn DropdownMenuTrigger(props: DropdownMenuTriggerProps) -> Element {
             // Focus the element on click. Safari does not do this automatically.
             // https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#clicking_and_focus
             if let Some(data) = element() {
+                // Dioxus Native blurs a focused button after its click handler runs; ignore
+                // that blur since focus is restored here.
+                refocusing.set(true);
                 spawn(async move {
                     _ = data.set_focus(true).await;
+                    refocusing.set(false);
                 });
             }
         },
         onblur: move |_| {
-            if !ctx.focus.any_focused() {
+            if !*refocusing.peek() && !ctx.focus.any_focused() {
                 ctx.focus.clear_focus();
                 ctx.set_open.call(false);
             }

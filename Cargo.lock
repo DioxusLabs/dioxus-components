@@ -1948,10 +1948,12 @@ dependencies = [
 [[package]]
 name = "dioxus-icons"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/dioxus-icons?rev=1df2a824db17d4ebcb88f78824b3cb23416e7870#1df2a824db17d4ebcb88f78824b3cb23416e7870"
+source = "git+https://github.com/DioxusLabs/dioxus-icons?rev=cd6381f6a25c43ed027cd1eb5510ee09bff6b152#cd6381f6a25c43ed027cd1eb5510ee09bff6b152"
 dependencies = [
- "dioxus",
+ "dioxus-core",
  "dioxus-signals",
+ "dioxus-vdom",
+ "dioxus-vdom-template",
  "lazy-js-bundle",
 ]
 

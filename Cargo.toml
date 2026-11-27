@@ -67,6 +67,8 @@ dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae7
 dioxus-ssr = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae77ab0d940e9c115c415fc7b77c5895226" }
 dioxus-stores = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae77ab0d940e9c115c415fc7b77c5895226" }
 dioxus-stores-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae77ab0d940e9c115c415fc7b77c5895226" }
+dioxus-vdom = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae77ab0d940e9c115c415fc7b77c5895226" }
+dioxus-vdom-template = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae77ab0d940e9c115c415fc7b77c5895226" }
 dioxus-web = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae77ab0d940e9c115c415fc7b77c5895226" }
 generational-box = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae77ab0d940e9c115c415fc7b77c5895226" }
 lazy-js-bundle = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae77ab0d940e9c115c415fc7b77c5895226" }
@@ -76,5 +78,5 @@ manganis-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae7
 subsecond = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae77ab0d940e9c115c415fc7b77c5895226" }
 subsecond-types = { git = "https://github.com/DioxusLabs/dioxus", rev = "736f4ae77ab0d940e9c115c415fc7b77c5895226" }
 dioxus-code = { git = "https://github.com/DioxusLabs/dioxus-code", rev = "b20d3d4575c36f4b3c4fe9432b002b20da6beb9b" }
-dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", rev = "1df2a824db17d4ebcb88f78824b3cb23416e7870" }
+dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", rev = "cd6381f6a25c43ed027cd1eb5510ee09bff6b152" }
 dioxus-sdk-time = { git = "https://github.com/DioxusLabs/sdk", rev = "fbb2049f1934541f0077c5c30a974dc5fe2c35d0" }

@@ -5,7 +5,7 @@ use crate::{
     use_global_keydown_listener, use_unique_id,
 };
 use dioxus::prelude::*;
-use dioxus_sdk_time::use_timeout;
+use dioxus_timers::use_timeout;
 use std::collections::VecDeque;
 use std::time::Duration;
 

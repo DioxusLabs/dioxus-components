@@ -5,10 +5,10 @@ use crate::{
         weekday_abbreviation, AvailableRanges, CalendarProps, DateRange, RangeCalendarProps,
     },
     collection::{collection_item, use_collection_provider, use_item, CollectionState},
-    dioxus_core::Properties,
     popover::*,
     use_unique_id, LocalDateExt as _,
 };
+use dioxus_vdom::Properties;
 
 use dioxus::prelude::*;
 use num_integer::Integer;

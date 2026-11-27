@@ -4,8 +4,8 @@ use dioxus::document;
 use dioxus::prelude::*;
 
 use crate::{
-    use_animated_open, use_controlled, use_global_escape_listener, use_id_or, use_outside_dismiss,
-    use_unique_id, FOCUS_TRAP_JS,
+    overlay_platform, use_animated_open, use_controlled, use_global_escape_listener, use_id_or,
+    use_outside_dismiss, use_unique_id, FOCUS_TRAP_JS,
 };
 
 /// Context for the [`DialogRoot`] component
@@ -130,11 +130,14 @@ pub fn DialogRoot(props: DialogRootProps) -> Element {
     });
 
     let render = use_animated_open(id, open);
+    let native = overlay_platform::is_native();
 
     rsx! {
-        document::Script {
-            src: FOCUS_TRAP_JS,
-            defer: true
+        if !native {
+            document::Script {
+                src: FOCUS_TRAP_JS,
+                defer: true
+            }
         }
         if render() {
             div {
@@ -227,9 +230,16 @@ pub fn DialogContent(props: DialogContentProps) -> Element {
 
     let gen_id = use_unique_id();
     let id = use_id_or(gen_id, props.id);
+    let reference = use_signal(|| None);
+    let native = overlay_platform::is_native();
+    let trap_active = move || open() && is_modal();
 
-    use_outside_dismiss(id, move || set_open.call(false));
+    use_outside_dismiss(id, open, reference, move || set_open.call(false));
+    overlay_platform::use_focus_trap(reference, trap_active);
     use_effect(move || {
+        if native {
+            return;
+        }
         let is_modal = is_modal();
         if !is_modal {
             // If the dialog is not modal, we don't need to trap focus.
@@ -253,6 +263,8 @@ pub fn DialogContent(props: DialogContentProps) -> Element {
         let _ = eval.send(open.cloned());
     });
 
+    let attributes =
+        overlay_platform::add_element_listeners(props.attributes, reference, trap_active);
     rsx! {
         div {
             id,
@@ -261,7 +273,7 @@ pub fn DialogContent(props: DialogContentProps) -> Element {
             aria_labelledby: ctx.dialog_labelledby,
             aria_describedby: ctx.dialog_describedby,
             class: props.class.clone().unwrap_or_else(|| "dx-dialog".to_string()),
-            ..props.attributes,
+            ..attributes,
             {props.children}
         }
     }

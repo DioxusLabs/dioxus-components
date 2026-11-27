@@ -35,6 +35,7 @@ pub mod menubar;
 mod move_interaction;
 #[cfg(feature = "router")]
 pub mod navbar;
+mod overlay_platform;
 mod pointer;
 pub mod popover;
 mod portal;
@@ -160,9 +161,15 @@ struct EscapeListenerStack(Rc<RefCell<Vec<ScopeId>>>);
 fn use_global_escape_listener(mut on_escape: impl FnMut() + Clone + 'static) {
     let scope_id = current_scope_id();
     let stack = use_hook(move || {
-        // Get or create the escape listener stack
-        let stack: EscapeListenerStack = try_consume_context()
-            .unwrap_or_else(|| provide_context(EscapeListenerStack(Default::default())));
+        let get_stack = || {
+            try_consume_context::<EscapeListenerStack>()
+                .unwrap_or_else(|| provide_context(EscapeListenerStack(Default::default())))
+        };
+        let stack = if overlay_platform::is_native() {
+            dioxus_core::Runtime::current().in_scope(ScopeId::ROOT, get_stack)
+        } else {
+            get_stack()
+        };
         // Push the current scope onto the stack
         stack.0.borrow_mut().push(scope_id);
         stack
@@ -177,14 +184,19 @@ fn use_global_escape_listener(mut on_escape: impl FnMut() + Clone + 'static) {
     });
     use_global_keydown_listener("Escape", move || {
         // Only call the listener if this component is on top of the stack
-        let stack = stack.0.borrow();
-        if stack.last() == Some(&scope_id) {
+        let is_topmost = stack.0.borrow().last() == Some(&scope_id);
+        if is_topmost {
             on_escape();
         }
     });
 }
 
-fn use_global_keydown_listener(key: &'static str, on_escape: impl FnMut() + Clone + 'static) {
+fn use_global_keydown_listener(key: &'static str, on_keydown: impl FnMut() + Clone + 'static) {
+    if overlay_platform::is_native() {
+        overlay_platform::use_keydown_listener(key, on_keydown);
+        return;
+    }
+
     use_effect_with_cleanup(move || {
         let mut escape = document::eval(
             "let targetKey = await dioxus.recv();
@@ -199,10 +211,10 @@ fn use_global_keydown_listener(key: &'static str, on_escape: impl FnMut() + Clon
             document.removeEventListener('keydown', listener);",
         );
         let _ = escape.send(key);
-        let mut on_escape = on_escape.clone();
+        let mut on_keydown = on_keydown.clone();
         spawn(async move {
             while let Ok(true) = escape.recv().await {
-                on_escape();
+                on_keydown();
             }
         });
         move || _ = escape.send(true)
@@ -213,8 +225,15 @@ fn use_global_keydown_listener(key: &'static str, on_escape: impl FnMut() + Clon
 /// `id` should be the id of the popover/dialog root that contains every "inside" element.
 fn use_outside_dismiss(
     id: impl Readable<Target = String> + Copy + 'static,
+    open: impl Readable<Target = bool> + Copy + 'static,
+    reference: overlay_platform::ElementRef,
     on_dismiss: impl FnMut() + Clone + 'static,
 ) {
+    if overlay_platform::is_native() {
+        overlay_platform::use_outside_dismiss(id, open, reference, on_dismiss);
+        return;
+    }
+
     use_effect_with_cleanup(move || {
         let mut eval = document::eval(
             "const id = await dioxus.recv();
@@ -245,6 +264,7 @@ fn use_animated_open(
     id: impl Readable<Target = String> + Copy + 'static,
     open: impl Readable<Target = bool> + Copy + 'static,
 ) -> impl Fn() -> bool + Copy {
+    let native = overlay_platform::is_native();
     let animating = use_signal(|| false);
 
     // Show in dom is a few frames behind the open signal to allow for the animation to start.
@@ -252,8 +272,9 @@ fn use_animated_open(
     let mut show_in_dom = use_signal(|| false);
 
     use_effect(move || {
-        if open.cloned() {
-            show_in_dom.set(true);
+        let is_open = open.cloned();
+        if is_open || native {
+            show_in_dom.set(is_open);
         } else {
             spawn(async move {
                 let id = id.cloned();

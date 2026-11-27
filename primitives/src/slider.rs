@@ -308,10 +308,8 @@ fn SliderImpl(props: SliderImplProps) -> Element {
         "vertical"
     };
 
-    let mut dragging = use_signal(|| false);
-    // Index of the thumb currently being interacted with via pointer. Only meaningful while
-    // `dragging` is true; reads outside a drag may return a stale value from the prior interaction.
-    let active_thumb = use_signal(|| 0usize);
+    let dragging = use_signal(|| false);
+    let mut active_thumb = use_signal(|| None);
 
     let ctx = use_context_provider(|| SliderContext {
         thumbs: props.thumbs,
@@ -359,7 +357,9 @@ fn SliderImpl(props: SliderImplProps) -> Element {
 
         let value_delta = delta_pos / size * ctx.range_size();
 
-        let idx = ctx.active_thumb.cloned();
+        let Some(idx) = active_thumb() else {
+            return;
+        };
         let mut current = granular_thumbs.cloned();
         let cur_v = current.get(idx).copied().unwrap_or(0.0);
         let raw = cur_v + value_delta;
@@ -393,10 +393,10 @@ fn SliderImpl(props: SliderImplProps) -> Element {
                     return;
                 }
 
+                active_thumb.set(None);
                 // Handle pointer interaction
                 spawn(async move {
                     let mut movement = movement;
-
                     // Update the bounding rect of the slider in case it moved
                     if let Some(r) = movement.refresh_rect().await {
                         let size = if props.horizontal {
@@ -417,8 +417,7 @@ fn SliderImpl(props: SliderImplProps) -> Element {
                         let raw = (offset / size) * ctx.range_size() + (ctx.min)();
 
                         let idx = ctx.closest_thumb(raw);
-                        let mut active = ctx.active_thumb;
-                        active.set(idx);
+                        active_thumb.set(Some(idx));
 
                         // Seed granular state from the live thumb values, then write the
                         // unclamped raw position into the active slot for fluid drag.
@@ -431,9 +430,20 @@ fn SliderImpl(props: SliderImplProps) -> Element {
                         ctx.set_thumb.call((idx, ctx.clamp_for(idx, raw)));
                     }
 
-                    dragging.set(true);
+                    movement.begin_drag(&evt);
                 });
             },
+            onpointermove: move |evt| movement.move_capture(&evt),
+            onpointerup: move |evt| {
+                if movement.is_active(&evt) {
+                    movement.release_capture(&evt);
+                    // Restore focus after the renderer's click default action.
+                    let thumb = active_thumb.cloned();
+                    active_thumb.set(thumb);
+                }
+            },
+            onpointercancel: move |evt| movement.release_capture(&evt),
+            onlostpointercapture: move |evt| movement.finish_capture(&evt),
 
             ..props.attributes,
 
@@ -685,10 +695,7 @@ pub fn SliderThumb(props: SliderThumbProps) -> Element {
     use_effect(move || {
         let button_ref = button_ref();
         if let Some(button) = button_ref {
-            let disabled = ctx.disabled.cloned();
-            let dragging = ctx.dragging.cloned();
-            let active = ctx.active_thumb.cloned();
-            if !disabled && dragging && active == index {
+            if !*ctx.disabled.peek() && (ctx.active_thumb)() == Some(index) {
                 spawn(async move {
                     _ = button.set_focus(true).await;
                 });
@@ -719,11 +726,9 @@ pub fn SliderThumb(props: SliderThumbProps) -> Element {
                 button_ref.set(Some(evt.data()));
             },
             onmousedown: move |evt| {
-                // Don't focus the button. The dragging state will handle focus
                 evt.prevent_default();
             },
             ontouchstart: move |evt| {
-                // Don't focus the button. The dragging state will handle focus
                 evt.prevent_default();
             },
             onkeydown: move |evt| async move {
@@ -759,7 +764,7 @@ struct SliderContext {
     horizontal: bool,
     inverted: bool,
     dragging: ReadSignal<bool>,
-    active_thumb: Signal<usize>,
+    active_thumb: Signal<Option<usize>>,
     label: ReadSignal<Option<String>>,
 }
 

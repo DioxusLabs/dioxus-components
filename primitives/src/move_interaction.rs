@@ -1,4 +1,3 @@
-use crate::pointer;
 use dioxus::html::geometry::euclid::Rect;
 use dioxus::html::geometry::euclid::Vector2D;
 use dioxus::html::geometry::ClientPoint;
@@ -64,6 +63,7 @@ pub(crate) struct MoveInteraction {
     rect: Signal<Option<Rect<f64, Pixels>>>,
     element: Signal<Option<Rc<MountedData>>>,
     active_pointer_id: Signal<Option<i32>>,
+    captured_position: Signal<Option<ClientPoint>>,
     last_pointer_position: CopyValue<Option<ClientPoint>>,
     dragging: Signal<bool>,
 }
@@ -72,12 +72,14 @@ pub(crate) fn use_move_interaction(dragging: Signal<bool>) -> MoveInteraction {
     let rect = use_signal(|| None);
     let element = use_signal(|| None);
     let active_pointer_id = use_signal(|| None);
+    let captured_position = use_signal(|| None);
     let last_pointer_position = use_hook(|| CopyValue::new(None::<ClientPoint>));
 
     MoveInteraction {
         rect,
         element,
         active_pointer_id,
+        captured_position,
         last_pointer_position,
         dragging,
     }
@@ -89,10 +91,10 @@ impl MoveInteraction {
     }
 
     pub(crate) async fn set_mounted(&mut self, mounted: Rc<MountedData>) {
+        self.element.set(Some(mounted.clone()));
         if let Ok(rect) = mounted.get_client_rect().await {
             self.rect.set(Some(rect));
         }
-        self.element.set(Some(mounted));
     }
 
     pub(crate) async fn refresh_rect(&mut self) -> Option<Rect<f64, Pixels>> {
@@ -116,10 +118,54 @@ impl MoveInteraction {
             return false;
         }
 
+        let Some(element) = self.element.peek().clone() else {
+            return false;
+        };
         let pointer_id = event.data().pointer_id();
         self.active_pointer_id.set(Some(pointer_id));
-        pointer::track_pointer_down(pointer_id, event.client_coordinates());
+        let position = event.client_coordinates();
+        self.last_pointer_position.set(Some(position));
+        self.captured_position.set(Some(position));
+        let capture = element.set_pointer_capture(pointer_id);
+        spawn(async move {
+            let _ = capture.await;
+        });
         true
+    }
+
+    pub(crate) fn begin_drag(&mut self, event: &Event<PointerData>) {
+        if self.is_active(event) {
+            self.dragging.set(true);
+        }
+    }
+
+    pub(crate) fn move_capture(&mut self, event: &Event<PointerData>) {
+        if self.is_active(event) {
+            self.captured_position.set(Some(event.client_coordinates()));
+        }
+    }
+
+    pub(crate) fn finish_capture(&mut self, event: &Event<PointerData>) {
+        if self.is_active(event) {
+            self.end_pointer();
+        }
+    }
+
+    pub(crate) fn release_capture(&mut self, event: &Event<PointerData>) {
+        if !self.is_active(event) {
+            return;
+        }
+        self.end_pointer();
+        if let Some(element) = self.element.peek().as_ref() {
+            let release = element.release_pointer_capture(event.pointer_id());
+            spawn(async move {
+                let _ = release.await;
+            });
+        }
+    }
+
+    pub(crate) fn is_active(&self, event: &Event<PointerData>) -> bool {
+        *self.active_pointer_id.peek() == Some(event.pointer_id())
     }
 
     pub(crate) fn pointer_move(&mut self) -> Option<MoveEvent> {
@@ -127,11 +173,7 @@ impl MoveInteraction {
             return None;
         }
 
-        let active_pointer_id = (self.active_pointer_id)()?;
-        let Some(pointer_position) = pointer::pointer_position(active_pointer_id) else {
-            self.end_pointer();
-            return None;
-        };
+        let pointer_position = self.captured_position.cloned()?;
 
         let delta = if let Some(last_position) =
             self.last_pointer_position.replace(Some(pointer_position))
@@ -148,7 +190,8 @@ impl MoveInteraction {
         })
     }
 
-    pub(crate) fn end_pointer(&mut self) {
+    fn end_pointer(&mut self) {
+        self.captured_position.set(None);
         self.active_pointer_id.take();
         self.last_pointer_position.set(None);
         self.dragging.set(false);

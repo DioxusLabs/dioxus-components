@@ -35,6 +35,17 @@ test('opens popover and shows initial color', async ({ page }) => {
   );
 });
 
+test('keeps the color area square and bounds the hex field', async ({ page }) => {
+  const { popover } = await openPicker(page);
+  const hexField = popover.locator('#color_field');
+  await hexField.evaluate((input) => { input.style.width = '300px'; });
+  await expect(hexField).toHaveCSS('width', '230px');
+
+  const area = popover.getByRole('group').filter({ has: page.getByLabel('Color area') }).last();
+  await expect(area).toHaveCSS('width', '224px');
+  await expect(area).toHaveCSS('height', '224px');
+});
+
 test('typing a new hex updates the color picker', async ({ page }) => {
   const { button } = await openPicker(page);
   const hexField = page.locator('#color_field');
@@ -173,6 +184,10 @@ test('dragging the color area updates saturation and value', async ({ page }) =>
 
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
+  // Move beyond the area while pressed: hit testing alone cannot deliver this move.
+  await page.mouse.move(box.x + box.width + 10, box.y + box.height + 10);
+  await expect.poll(async () => Number(await sInput.inputValue())).toBe(100);
+  await expect.poll(async () => Number(await vInput.inputValue())).toBe(0);
   await page.mouse.move(end.x, end.y, { steps: 10 });
   await page.mouse.up();
 

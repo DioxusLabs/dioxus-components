@@ -1,6 +1,6 @@
-use dioxus::core::AttributeValue;
 use dioxus::prelude::*;
 use dioxus_attributes::attributes;
+use dioxus_vdom::AttributeValue;
 
 fn attribute_list() -> Element {
     let additional = vec![Attribute {

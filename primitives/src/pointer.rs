@@ -1,6 +1,6 @@
-use dioxus::core::{queue_effect, Runtime};
 use dioxus::html::geometry::ClientPoint;
 use dioxus::prelude::*;
+use dioxus_vdom::{queue_effect, Runtime};
 
 #[derive(Debug)]
 struct Pointer {

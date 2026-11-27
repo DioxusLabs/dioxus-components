@@ -15,6 +15,7 @@ repository = "https://github.com/DioxusLabs/components"
 dioxus.workspace = true
 dioxus-attributes = { path = "../dioxus-attributes" }
 dioxus-sdk-time.workspace = true
+dioxus-vdom.workspace = true
 time = { version = "0.3.44", features = ["std", "macros", "parsing", "local-offset"] }
 num-integer = "0.1.46"
 tracing.workspace = true

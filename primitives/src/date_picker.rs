@@ -8,7 +8,7 @@ use crate::{
     popover::*,
     use_unique_id, LocalDateExt as _,
 };
-use dioxus::core::Properties;
+use dioxus_vdom::Properties;
 
 use dioxus::prelude::*;
 use num_integer::Integer;

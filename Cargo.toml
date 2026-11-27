@@ -11,6 +11,7 @@ dioxus-primitives = { path = "primitives" }
 dioxus-rsx = "=0.8.0-alpha.4"
 dioxus-sdk-time = "=0.8.0-alpha.3"
 dioxus-ssr = "=0.8.0-alpha.4"
+dioxus-vdom = "=0.8.0-alpha.4"
 lazy-js-bundle = "=0.8.0-alpha.4"
 tracing = { version = "0.1", features = ["std"] }
 

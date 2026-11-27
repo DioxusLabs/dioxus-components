@@ -7,11 +7,16 @@ on:
     paths:
       - /**
       - preview/**/*.css
+      - components/**/*.css
+      - components/**/*.rs
+      - components/**/Cargo.toml
       - preview/**/*.rs
       - preview/**/Cargo.toml
       - primitives/**/*.rs
       - primitives/**/Cargo.toml
       - .github/**
+      - package.json
+      - .stylelintrc.json
       - Cargo.toml
 
   pull_request:
@@ -21,11 +26,16 @@ on:
     paths:
       - /**
       - preview/**/*.css
+      - components/**/*.css
+      - components/**/*.rs
+      - components/**/Cargo.toml
       - preview/**/*.rs
       - preview/**/Cargo.toml
       - primitives/**/*.rs
       - primitives/**/Cargo.toml
       - .github/**
+      - package.json
+      - .stylelintrc.json
       - Cargo.toml
 
 concurrency:
@@ -43,6 +53,6 @@ jobs:
         with:
           node-version: "24"
       - name: Install dependencies
-        run: npm install --prefix preview --no-package-lock
+        run: npm install --no-package-lock
       - name: Stylelint
-        run: cd ./preview && npx stylelint "**/*.css" --max-warnings=0
+        run: npx stylelint "preview/**/*.css" "components/**/*.css" --max-warnings=0

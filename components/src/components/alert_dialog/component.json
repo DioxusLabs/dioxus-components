@@ -1,0 +1,13 @@
+{
+  "name": "alert_dialog",
+  "description": "An alert dialog component for displaying important messages and requiring user confirmation.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-primitives",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../../assets/dx-components-theme.css"]
+}

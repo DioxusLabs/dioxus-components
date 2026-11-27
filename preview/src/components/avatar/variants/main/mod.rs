@@ -1,8 +1,7 @@
 use super::super::component::*;
 use dioxus::prelude::*;
 
-#[css_module("/src/components/avatar/style.css")]
-struct Styles;
+use super::super::component::Styles;
 
 // Keep this request pending so the example uses the real avatar loading state.
 const LOADING_AVATAR_SRC: &str = "https://httpbin.org/delay/3600";

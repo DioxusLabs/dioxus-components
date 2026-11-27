@@ -1634,6 +1634,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "dioxus-components"
+version = "0.0.1"
+dependencies = [
+ "dioxus",
+ "dioxus-icons",
+ "dioxus-primitives",
+ "dioxus-ssr",
+ "palette",
+ "time",
+]
+
+[[package]]
 name = "dioxus-config-macro"
 version = "0.8.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5890,6 +5902,7 @@ version = "0.1.0"
 dependencies = [
  "dioxus",
  "dioxus-code",
+ "dioxus-components",
  "dioxus-i18n",
  "dioxus-icons",
  "dioxus-primitives",

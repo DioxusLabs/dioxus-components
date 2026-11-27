@@ -66,13 +66,18 @@ dx components add button --git https://github.com/dioxuslabs/components --rev or
 
 If an older `dx` previously cached `main`, run `dx components clean` to clear the local cache.
 
+### Using the components as a library
+
+The styled components are also available as the `dioxus-components` library crate, if you would rather depend on them than copy their source. See [`components/README.md`](./components/README.md).
+
 ## Contributing
 
 ### Project structure
 
-This repository contains two main crates:
+This repository contains three main crates:
 - `dioxus-primitives`: The core unstyled component library.
-- `preview`: A Dioxus application that showcases the components from `dioxus-primitives` with shadcn-styled versions.
+- `dioxus-components` (in `components/`): The shadcn-styled components built on `dioxus-primitives`. Each component lives in `components/src/components/<name>/` with its `component.rs`, `style.css` and `component.json`. This is the registry `dx components add` copies from.
+- `preview`: A Dioxus application that showcases the components from `dioxus-components`, with each component's docs and demo variants in `preview/src/components/<name>/`.
 
 ### Adding new components
 
@@ -80,8 +85,9 @@ If you want to add a new component, you should:
 1. If there is any new interaction logic or accessibility features required, implement an unstyled component in the `dioxus-primitives` crate. When adding components to the primitives library, ensure:
     - It adheres to the [WAI-ARIA Authoring Practices for accessibility](https://www.w3.org/WAI/standards-guidelines/aria/).
     - All styling can be modified via props. Every element should spread attributes and children from the props
-2. In the `preview` crate, create a styled version of the component using shadcn styles. This will serve as an example of how to use the unstyled component and serve as the styled version `dx components` will add to projects.
-3. Add tests in `playwright` to ensure the component behaves as expected.
+2. In the `dioxus-components` crate, create a styled version of the component using shadcn styles in `components/src/components/<name>/` and add it to `components/src/components/mod.rs` and the root `component.json`. This is the styled version `dx components` will add to projects.
+3. In the `preview` crate, add the component's `docs.md` and demo `variants` in `preview/src/components/<name>/` and register it in `preview/src/components/mod.rs`.
+4. Add tests in `playwright` to ensure the component behaves as expected.
 
 ### Testing changes
 
@@ -96,9 +102,8 @@ cargo test -p dioxus-primitives
 To run the CSS linting, use:
 
 ```sh
-cd preview
 npm install
-npx stylelint "src/**/*.css"
+npx stylelint "preview/**/*.css" "components/**/*.css"
 ```
 
 To run the Playwright end-to-end tests, use:

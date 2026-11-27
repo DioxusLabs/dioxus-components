@@ -72,7 +72,7 @@ jobs:
           version: 0.7.6
       - name: Add each component and check
         run: |
-          cd preview/src/components/
+          cd components/src/components/
           for file in *; do
             if [ -d "$file" ]; then
               echo "Testing component: $file"
@@ -99,5 +99,5 @@ jobs:
             cargo check --all-features
             # Undo changes
             dx components remove --all --path ..
-            cd ../preview/src/components/
+            cd ../components/src/components/
           done

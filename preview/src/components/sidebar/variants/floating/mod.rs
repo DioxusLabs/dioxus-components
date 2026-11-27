@@ -19,8 +19,7 @@ use dioxus::prelude::*;
 #[css_module("/src/components/sidebar/variants/demo.css")]
 struct DemoStyles;
 
-#[css_module("/src/components/sidebar/style.css")]
-struct Styles;
+use super::super::component::Styles;
 
 #[derive(Clone, PartialEq)]
 struct Team {

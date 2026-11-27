@@ -1,0 +1,13 @@
+{
+  "name": "hover_card",
+  "description": "A hover card component for displaying additional information on hover.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-primitives",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../../assets/dx-components-theme.css"]
+}

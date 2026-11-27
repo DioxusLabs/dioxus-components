@@ -2,8 +2,7 @@ use dioxus::prelude::*;
 
 use super::super::component::*;
 
-#[css_module("/src/components/badge/style.css")]
-struct Styles;
+use super::super::component::Styles;
 
 #[component]
 pub fn Demo() -> Element {

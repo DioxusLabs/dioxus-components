@@ -1,0 +1,13 @@
+{
+  "name": "toast",
+  "description": "A toast notification component.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-primitives",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../../assets/dx-components-theme.css"]
+}

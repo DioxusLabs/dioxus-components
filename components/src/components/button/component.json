@@ -1,0 +1,13 @@
+{
+  "name": "button",
+  "description": "A button component for triggering actions or events when clicked.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-primitives",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../../assets/dx-components-theme.css"]
+}

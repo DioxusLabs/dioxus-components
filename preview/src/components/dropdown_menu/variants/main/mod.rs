@@ -4,8 +4,7 @@ use super::super::component::{
 use dioxus::prelude::*;
 use strum::IntoEnumIterator;
 
-#[css_module("/src/components/dropdown_menu/style.css")]
-struct Styles;
+use super::super::component::Styles;
 
 #[derive(Clone, Copy, strum::Display, strum::EnumIter, PartialEq)]
 enum Operation {

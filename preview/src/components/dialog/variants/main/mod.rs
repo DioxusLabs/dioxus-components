@@ -3,8 +3,7 @@ use crate::components::button::component::Button;
 use super::super::component::{Dialog, DialogDescription, DialogTitle};
 use dioxus::prelude::*;
 
-#[css_module("/src/components/dialog/style.css")]
-struct Styles;
+use super::super::component::Styles;
 
 #[component]
 pub fn Demo() -> Element {

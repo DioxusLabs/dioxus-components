@@ -1615,7 +1615,7 @@ dependencies = [
 [[package]]
 name = "dioxus-code"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/dioxus-code?rev=b1fa1b9cd9c53f46e6176340fb22f4728a7c5c68#b1fa1b9cd9c53f46e6176340fb22f4728a7c5c68"
+source = "git+https://github.com/DioxusLabs/dioxus-code?rev=b20d3d4575c36f4b3c4fe9432b002b20da6beb9b#b20d3d4575c36f4b3c4fe9432b002b20da6beb9b"
 dependencies = [
  "arborium",
  "arborium-theme",
@@ -1627,7 +1627,7 @@ dependencies = [
 [[package]]
 name = "dioxus-code-macro"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/dioxus-code?rev=b1fa1b9cd9c53f46e6176340fb22f4728a7c5c68#b1fa1b9cd9c53f46e6176340fb22f4728a7c5c68"
+source = "git+https://github.com/DioxusLabs/dioxus-code?rev=b20d3d4575c36f4b3c4fe9432b002b20da6beb9b#b20d3d4575c36f4b3c4fe9432b002b20da6beb9b"
 dependencies = [
  "arborium",
  "arborium-theme",

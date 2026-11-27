@@ -313,7 +313,14 @@ pub fn AvatarImage(props: AvatarImageProps) -> Element {
             }
             "#,
         );
-        if eval.send(image_id_value).is_err() || eval.send(watcher_src.clone()).is_err() {
+        if let Err(err) = eval
+            .send(image_id_value)
+            .and_then(|_| eval.send(watcher_src.clone()))
+        {
+            // Renderers without JavaScript (Dioxus Native) may never deliver image load events.
+            if matches!(err, document::EvalError::Unsupported) {
+                mark_avatar_loaded(watcher_ctx.clone());
+            }
             return;
         }
 

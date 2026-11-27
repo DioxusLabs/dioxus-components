@@ -1,0 +1,13 @@
+{
+  "name": "toggle",
+  "description": "A simple toggle button component.",
+  "authors": ["Evan Almloff"],
+  "exclude": ["component.json"],
+  "cargoDependencies": [
+    {
+      "name": "dioxus-primitives",
+      "git": "https://github.com/DioxusLabs/components"
+    }
+  ],
+  "globalAssets": ["../../../assets/dx-components-theme.css"]
+}

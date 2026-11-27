@@ -20,8 +20,7 @@ use crate::dashboard::common::{
 use super::avatars::avatar_profile_for_key;
 use super::state::{EmailClientState, EmailClientStateStoreExt, EmailClientStateStoreImplExt};
 
-#[css_module("/src/components/select/style.css")]
-struct SelectStyles;
+use crate::components::select::Styles as SelectStyles;
 
 #[component]
 pub(super) fn ReadPane(

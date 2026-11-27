@@ -1,8 +1,7 @@
 use super::super::component::AspectRatio;
 use dioxus::prelude::*;
 
-#[css_module("/src/components/aspect_ratio/style.css")]
-struct Styles;
+use super::super::component::Styles;
 
 #[component]
 pub fn Demo() -> Element {

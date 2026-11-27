@@ -54,7 +54,7 @@ macro_rules! examples {
     ($($name:ident $(($kind:ident))? $([$($variant:ident),*])?),* $(,)?) => {
         $(
             pub(crate) mod $name {
-                pub(crate) mod component;
+                pub(crate) use dioxus_components::$name as component;
                 #[allow(unused)]
                 pub use component::*;
                 pub(crate) mod variants {
@@ -91,10 +91,10 @@ macro_rules! examples {
             )),
             docs: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/docs.html")),
             component: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/component.rs")),
+                source: dioxus_code::code!(concat!("/../components/src/components/", stringify!($name), "/component.rs")),
             },
             style: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/style.css")),
+                source: dioxus_code::code!(concat!("/../components/src/components/", stringify!($name), "/style.css")),
             },
             variants: &[
                 ComponentVariantDemoData {
@@ -134,10 +134,10 @@ macro_rules! examples {
             )),
             docs: include_str!(concat!(env!("OUT_DIR"), "/", stringify!($name), "/docs.html")),
             component: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/component.rs")),
+                source: dioxus_code::code!(concat!("/../components/src/components/", stringify!($name), "/component.rs")),
             },
             style: HighlightedCode {
-                source: dioxus_code::code!(concat!("/src/components/", stringify!($name), "/style.css")),
+                source: dioxus_code::code!(concat!("/../components/src/components/", stringify!($name), "/style.css")),
             },
             variants: &[
                 ComponentVariantDemoData {

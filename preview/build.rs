@@ -12,6 +12,19 @@ fn main() {
         let folder_path = folder.path();
         walk_markdown_dir(&folder_path, &out_dir).unwrap();
     }
+    // Read each component's description from the styled components library.
+    let library_components = std::path::Path::new("../components/src/components");
+    println!("cargo:rerun-if-changed={}", library_components.display());
+    for folder in std::fs::read_dir(library_components).unwrap().flatten() {
+        let component_json = folder.path().join("component.json");
+        if !component_json.exists() {
+            continue;
+        }
+        let out_folder = out_dir.join(folder.file_name());
+        std::fs::create_dir_all(&out_folder).unwrap();
+        let description = read_component_description(&component_json);
+        std::fs::write(out_folder.join("description.txt"), description).unwrap();
+    }
 }
 
 fn walk_markdown_dir(dir: &std::path::Path, out_dir: &std::path::Path) -> std::io::Result<()> {
@@ -32,11 +45,6 @@ fn walk_markdown_dir(dir: &std::path::Path, out_dir: &std::path::Path) -> std::i
             let out_file_path = out_folder.join(file.file_name()).with_extension("html");
             std::fs::write(out_file_path, markdown).unwrap();
             continue;
-        }
-        if file.file_name() == "component.json" {
-            let description = read_component_description(&file.path());
-            let out_file_path = out_folder.join("description.txt");
-            std::fs::write(out_file_path, description).unwrap();
         }
     }
     Ok(())

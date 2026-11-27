@@ -1,8 +1,7 @@
 use super::super::component::*;
 use dioxus::prelude::*;
 
-#[css_module("/src/components/switch/style.css")]
-struct Styles;
+use super::super::component::Styles;
 
 #[component]
 pub fn Demo() -> Element {

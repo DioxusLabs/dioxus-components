@@ -1,8 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_primitives::checkbox::{Checkbox, CheckboxIndicator};
 
-#[css_module("/src/components/form/style.css")]
-struct Styles;
+use super::super::component::Styles;
 
 #[component]
 pub fn Demo() -> Element {

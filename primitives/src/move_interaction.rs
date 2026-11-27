@@ -43,10 +43,10 @@ impl MoveEvent {
         };
 
         let (delta_x, delta_y) = match event.data().key() {
-            Key::ArrowUp => (0.0, delta),
-            Key::ArrowDown => (0.0, -delta),
-            Key::ArrowRight => (delta, 0.0),
-            Key::ArrowLeft => (-delta, 0.0),
+            Key::Named(NamedKey::ArrowUp) => (0.0, delta),
+            Key::Named(NamedKey::ArrowDown) => (0.0, -delta),
+            Key::Named(NamedKey::ArrowRight) => (delta, 0.0),
+            Key::Named(NamedKey::ArrowLeft) => (-delta, 0.0),
             _ => return None,
         };
 
@@ -208,7 +208,10 @@ mod tests {
     #[test]
     fn keyboard_move_maps_arrow_keys() {
         assert_eq!(
-            MoveEvent::from_keyboard(&keyboard_event(Key::ArrowUp, Modifiers::empty()), 2.0),
+            MoveEvent::from_keyboard(
+                &keyboard_event(Key::Named(NamedKey::ArrowUp), Modifiers::empty()),
+                2.0
+            ),
             Some(MoveEvent {
                 delta_x: 0.0,
                 delta_y: 2.0,
@@ -216,18 +219,27 @@ mod tests {
             })
         );
         assert_eq!(
-            MoveEvent::from_keyboard(&keyboard_event(Key::ArrowDown, Modifiers::empty()), 2.0)
-                .map(|event| (event.delta_x, event.delta_y)),
+            MoveEvent::from_keyboard(
+                &keyboard_event(Key::Named(NamedKey::ArrowDown), Modifiers::empty()),
+                2.0
+            )
+            .map(|event| (event.delta_x, event.delta_y)),
             Some((0.0, -2.0))
         );
         assert_eq!(
-            MoveEvent::from_keyboard(&keyboard_event(Key::ArrowRight, Modifiers::empty()), 2.0)
-                .map(|event| (event.delta_x, event.delta_y)),
+            MoveEvent::from_keyboard(
+                &keyboard_event(Key::Named(NamedKey::ArrowRight), Modifiers::empty()),
+                2.0
+            )
+            .map(|event| (event.delta_x, event.delta_y)),
             Some((2.0, 0.0))
         );
         assert_eq!(
-            MoveEvent::from_keyboard(&keyboard_event(Key::ArrowLeft, Modifiers::empty()), 2.0)
-                .map(|event| (event.delta_x, event.delta_y)),
+            MoveEvent::from_keyboard(
+                &keyboard_event(Key::Named(NamedKey::ArrowLeft), Modifiers::empty()),
+                2.0
+            )
+            .map(|event| (event.delta_x, event.delta_y)),
             Some((-2.0, 0.0))
         );
     }
@@ -240,8 +252,11 @@ mod tests {
         };
 
         assert_eq!(
-            MoveEvent::from_keyboard(&keyboard_event(Key::ArrowRight, Modifiers::SHIFT), 2.0)
-                .map(|event| (event.delta_x, event.delta_y, event.modifiers)),
+            MoveEvent::from_keyboard(
+                &keyboard_event(Key::Named(NamedKey::ArrowRight), Modifiers::SHIFT),
+                2.0
+            )
+            .map(|event| (event.delta_x, event.delta_y, event.modifiers)),
             Some((20.0, 0.0, expected_modifiers))
         );
     }

@@ -2,7 +2,7 @@
 name = "dioxus-primitives"
 version = "0.0.1"
 edition = "2021"
-rust-version = "1.80.0"
+rust-version = "1.92.0"
 readme = "../README.md"
 keywords = ["gui", "dioxus", "components", "primitives"]
 categories = ["gui", "wasm"]
@@ -14,7 +14,8 @@ repository = "https://github.com/DioxusLabs/components"
 [dependencies]
 dioxus.workspace = true
 dioxus-attributes = { path = "../dioxus-attributes" }
-dioxus-sdk-time = "0.7.0"
+dioxus-timers.workspace = true
+dioxus-vdom.workspace = true
 time = { version = "0.3.44", features = ["std", "macros", "parsing", "local-offset"] }
 num-integer = "0.1.46"
 tracing.workspace = true
@@ -22,10 +23,10 @@ serde = { version = "1.0", features = ["derive"] }
 palette = "0.7.6"
 
 [build-dependencies]
-lazy-js-bundle = "0.7.9"
+lazy-js-bundle.workspace = true
 
 [dev-dependencies]
-dioxus-ssr = "0.7.0"
+dioxus-ssr.workspace = true
 
 [features]
 default = ["router"]

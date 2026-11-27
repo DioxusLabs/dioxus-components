@@ -311,12 +311,12 @@ pub fn RadioItem(props: RadioItemProps) -> Element {
                 let horizontal = (ctx.horizontal)();
                 let mut prevent_default = true;
                 match key {
-                    Key::ArrowUp if !horizontal => ctx.focus_prev(),
-                    Key::ArrowDown if !horizontal => ctx.focus_next(),
-                    Key::ArrowLeft if horizontal => ctx.focus_prev(),
-                    Key::ArrowRight if horizontal => ctx.focus_next(),
-                    Key::Home => ctx.focus_start(),
-                    Key::End => ctx.focus_end(),
+                    Key::Named(NamedKey::ArrowUp) if !horizontal => ctx.focus_prev(),
+                    Key::Named(NamedKey::ArrowDown) if !horizontal => ctx.focus_next(),
+                    Key::Named(NamedKey::ArrowLeft) if horizontal => ctx.focus_prev(),
+                    Key::Named(NamedKey::ArrowRight) if horizontal => ctx.focus_next(),
+                    Key::Named(NamedKey::Home) => ctx.focus_start(),
+                    Key::Named(NamedKey::End) => ctx.focus_end(),
                     _ => prevent_default = false,
                 };
                 if prevent_default {

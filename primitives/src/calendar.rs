@@ -641,15 +641,15 @@ pub fn Calendar(props: CalendarProps) -> Element {
                     }
                 };
                 match e.key() {
-                    Key::ArrowLeft => {
+                    Key::Named(NamedKey::ArrowLeft) => {
                         e.prevent_default();
                         set_focused_date(focused_date.previous_day());
                     }
-                    Key::ArrowRight => {
+                    Key::Named(NamedKey::ArrowRight) => {
                         e.prevent_default();
                         set_focused_date(focused_date.next_day());
                     }
-                    Key::ArrowUp => {
+                    Key::Named(NamedKey::ArrowUp) => {
                         e.prevent_default();
                         if e.modifiers().shift() {
                             if let Some(date) = previous_month(focused_date) {
@@ -659,7 +659,7 @@ pub fn Calendar(props: CalendarProps) -> Element {
                             set_focused_date(Some(focused_date.saturating_sub(7.days())));
                         }
                     }
-                    Key::ArrowDown => {
+                    Key::Named(NamedKey::ArrowDown) => {
                         e.prevent_default();
                         if e.modifiers().shift() {
                             if let Some(date) = next_month(focused_date) {
@@ -918,15 +918,15 @@ pub fn RangeCalendar(props: RangeCalendarProps) -> Element {
                     }
                 };
                 match e.key() {
-                    Key::ArrowLeft => {
+                    Key::Named(NamedKey::ArrowLeft) => {
                         e.prevent_default();
                         set_focused_date(focused_date.previous_day());
                     }
-                    Key::ArrowRight => {
+                    Key::Named(NamedKey::ArrowRight) => {
                         e.prevent_default();
                         set_focused_date(focused_date.next_day());
                     }
-                    Key::ArrowUp => {
+                    Key::Named(NamedKey::ArrowUp) => {
                         e.prevent_default();
                         if e.modifiers().shift() {
                             if let Some(date) = previous_month(focused_date) {
@@ -936,7 +936,7 @@ pub fn RangeCalendar(props: RangeCalendarProps) -> Element {
                             set_focused_date(Some(focused_date.saturating_sub(7.days())));
                         }
                     }
-                    Key::ArrowDown => {
+                    Key::Named(NamedKey::ArrowDown) => {
                         e.prevent_default();
                         if e.modifiers().shift() {
                             if let Some(date) = next_month(focused_date) {
@@ -946,7 +946,7 @@ pub fn RangeCalendar(props: RangeCalendarProps) -> Element {
                             set_focused_date(Some(focused_date.saturating_add(7.days())));
                         }
                     }
-                    Key::Escape => {
+                    Key::Named(NamedKey::Escape) => {
                         ctx.reset_selection((props.selected_range)());
                     }
                     _ => {}

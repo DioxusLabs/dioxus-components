@@ -108,7 +108,7 @@ pub fn Switch(props: SwitchProps) -> Element {
 
             // Switches should only toggle on Space, not Enter
             onkeydown: move |e| {
-                if e.key() == Key::Enter {
+                if e.key() == Key::Named(NamedKey::Enter) {
                     e.prevent_default();
                 }
             },

@@ -10,16 +10,16 @@ members = [
 ]
 
 [workspace.dependencies]
-dioxus = "=0.8.0-alpha.3"
+dioxus = "=0.8.0-alpha.4"
 dioxus-code = { version = "=0.2.0-alpha.3", default-features = false }
 dioxus-i18n = "=0.7.0-alpha.1"
 dioxus-icons = "=0.2.0-alpha.3"
-dioxus-native = { version = "=0.8.0-alpha.3", features = ["prelude"] }
+dioxus-native = { version = "=0.8.0-alpha.4", features = ["prelude"] }
 dioxus-primitives = { path = "primitives" }
-dioxus-rsx = "=0.8.0-alpha.3"
+dioxus-rsx = "=0.8.0-alpha.4"
 dioxus-sdk-time = "=0.8.0-alpha.3"
-dioxus-ssr = "=0.8.0-alpha.3"
-lazy-js-bundle = "=0.8.0-alpha.3"
+dioxus-ssr = "=0.8.0-alpha.4"
+lazy-js-bundle = "=0.8.0-alpha.4"
 tracing = { version = "0.1", features = ["std"] }
 
 [profile.release]
@@ -35,53 +35,46 @@ opt-level = 3
 codegen-units = 1
 
 [patch.crates-io]
-const-serialize = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-const-serialize-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-asset-resolver = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-cli-config = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-config-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-config-macros = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-const-vec = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-devtools = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-devtools-types = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-document = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-fullstack = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-fullstack-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-fullstack-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-history = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-html = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-html-internal-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-interpreter-js = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-liveview = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-logger = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-native = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-native-dom = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-router-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-server = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-ssr = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-stores = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-stores-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-web = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-generational-box = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-lazy-js-bundle = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-manganis = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-manganis-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-manganis-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-subsecond = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-subsecond-types = { git = "https://github.com/DioxusLabs/dioxus", rev = "c1921a20aeb61e2426c710800a972b83649cac7e" }
-dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", rev = "54128daf09c3d544978fc78abb549b9fc749d366" }
-dioxus-sdk-time = { git = "https://github.com/DioxusLabs/sdk", rev = "10f7a43e1afbab89e76ef564f020b9dc670c0abd" }
-# Temporary until Dioxus bumps past blitz 0.3.0-beta.5 (needs blitz#1572, blitz#1766, blitz#1746; matches dioxus#6152)
-blitz-dom = { git = "https://github.com/DioxusLabs/blitz", rev = "5ebeb96fcd46a783a928498ba6f0dc9edfb4ebc5" }
-blitz-html = { git = "https://github.com/DioxusLabs/blitz", rev = "5ebeb96fcd46a783a928498ba6f0dc9edfb4ebc5" }
-blitz-net = { git = "https://github.com/DioxusLabs/blitz", rev = "5ebeb96fcd46a783a928498ba6f0dc9edfb4ebc5" }
-blitz-paint = { git = "https://github.com/DioxusLabs/blitz", rev = "5ebeb96fcd46a783a928498ba6f0dc9edfb4ebc5" }
-blitz-shell = { git = "https://github.com/DioxusLabs/blitz", rev = "5ebeb96fcd46a783a928498ba6f0dc9edfb4ebc5" }
-blitz-traits = { git = "https://github.com/DioxusLabs/blitz", rev = "5ebeb96fcd46a783a928498ba6f0dc9edfb4ebc5" }
+const-serialize = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+const-serialize-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-asset-resolver = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-cli-config = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-config-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-config-macros = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-desktop = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-devtools = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-devtools-types = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-document = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-fullstack = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-fullstack-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-fullstack-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-history = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-html = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-html-internal-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-interpreter-js = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-liveview = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-logger = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-native = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-native-dom = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-router-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-server = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-ssr = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-stores = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-stores-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-web = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+generational-box = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+lazy-js-bundle = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+manganis = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+manganis-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+manganis-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+subsecond = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+subsecond-types = { git = "https://github.com/DioxusLabs/dioxus", rev = "9d6dcbe3e3691059c90a8461ede657f54feec31c" }
+dioxus-code = { git = "https://github.com/DioxusLabs/dioxus-code", rev = "b1fa1b9cd9c53f46e6176340fb22f4728a7c5c68" }
+dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", rev = "1df2a824db17d4ebcb88f78824b3cb23416e7870" }
+dioxus-sdk-time = { git = "https://github.com/DioxusLabs/sdk", rev = "dbece3e3a67bcd67dfec3ae32b27ee37ba38a736" }

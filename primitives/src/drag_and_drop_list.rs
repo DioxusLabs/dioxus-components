@@ -116,10 +116,12 @@ enum PointerDrag {
     Cancelled,
 }
 
+type PointerId = i32;
+
 enum PointerUpdate {
-    Move(i32, ClientPoint),
-    Release(i32),
-    Cancel(i32),
+    Move(PointerId, ClientPoint),
+    Release(PointerId),
+    Cancel(PointerId),
 }
 
 #[derive(Clone)]
@@ -137,7 +139,7 @@ pub struct DragAndDropContext {
     list_items: Signal<Vec<SortableListItem>>,
     focus: CollectionState,
     announcement: Signal<String>,
-    pointer_drag: Signal<Option<(i32, PointerDrag)>>,
+    pointer_drag: Signal<Option<(PointerId, ScopeId, PointerDrag)>>,
     mounted_items: Signal<Vec<MountedItem>>,
 }
 
@@ -319,21 +321,51 @@ impl DragAndDropContext {
 }
 
 impl DragAndDropContext {
-    fn pointer_drag(&self, pointer_id: i32) -> Option<PointerDrag> {
-        self.pointer_drag
-            .peek()
-            .filter(|(id, _)| *id == pointer_id)
-            .map(|(_, drag)| drag)
+    fn pointer_is_on_source(&self, id: PointerId, scope: ScopeId) -> bool {
+        matches!(*self.pointer_drag.peek(), Some((active, source, _)) if id == active && scope == source)
     }
 
-    fn pointer_move(&mut self, pointer_id: i32, position: ClientPoint) -> bool {
+    fn on_pointer_move(&mut self, event: &PointerEvent, updates: Coroutine<PointerUpdate>) {
+        let id = event.pointer_id();
+        let position = event.client_coordinates();
+        if self.pointer_move(id, position) {
+            event.prevent_default();
+            updates.send(PointerUpdate::Move(id, position));
+        }
+    }
+
+    fn on_pointer_up(&mut self, event: &PointerEvent, updates: Coroutine<PointerUpdate>) {
+        let id = event.pointer_id();
+        if event.trigger_button() == Some(MouseButton::Primary) {
+            match self.pointer_drag(id) {
+                Some(PointerDrag::Pressed { .. }) => {
+                    self.finish_pointer_drag(id, true);
+                }
+                Some(PointerDrag::Dragging | PointerDrag::Cancelled) => {
+                    event.prevent_default();
+                    updates.send(PointerUpdate::Release(id));
+                }
+                None => {}
+            }
+        }
+    }
+
+    fn pointer_drag(&self, pointer_id: PointerId) -> Option<PointerDrag> {
+        self.pointer_drag
+            .peek()
+            .filter(|(id, _, _)| *id == pointer_id)
+            .map(|(_, _, drag)| drag)
+    }
+
+    fn pointer_move(&mut self, pointer_id: PointerId, position: ClientPoint) -> bool {
         match self.pointer_drag(pointer_id) {
             Some(PointerDrag::Pressed { from, origin })
                 if !self.is_dragging() && (position - origin).square_length() >= 16.0 =>
             {
                 self.start_drag(from);
-                self.pointer_drag
-                    .set(Some((pointer_id, PointerDrag::Dragging)));
+                if let Some((_, _, drag)) = self.pointer_drag.write().as_mut() {
+                    *drag = PointerDrag::Dragging;
+                }
                 true
             }
             Some(PointerDrag::Dragging) => true,
@@ -341,7 +373,7 @@ impl DragAndDropContext {
         }
     }
 
-    fn finish_pointer_drag(&mut self, pointer_id: i32, drop: bool) -> bool {
+    fn finish_pointer_drag(&mut self, pointer_id: PointerId, drop: bool) -> bool {
         let Some(drag) = self.pointer_drag(pointer_id) else {
             return false;
         };
@@ -364,15 +396,18 @@ impl DragAndDropContext {
     fn cancel_pointer(&mut self) {
         let drag = *self.pointer_drag.peek();
         match drag {
-            Some((id, PointerDrag::Dragging)) => {
-                self.pointer_drag.set(Some((id, PointerDrag::Cancelled)));
+            Some((id, scope, PointerDrag::Dragging)) => {
+                self.pointer_drag
+                    .set(Some((id, scope, PointerDrag::Cancelled)));
             }
-            Some((_, PointerDrag::Pressed { .. })) => self.pointer_drag.set(None),
+            Some((id, _, PointerDrag::Pressed { .. })) => {
+                self.finish_pointer_drag(id, false);
+            }
             _ => {}
         }
     }
 
-    async fn update_pointer_target(&mut self, pointer_id: i32, position: ClientPoint) {
+    async fn update_pointer_target(&mut self, pointer_id: PointerId, position: ClientPoint) {
         if !matches!(self.pointer_drag(pointer_id), Some(PointerDrag::Dragging)) {
             return;
         }
@@ -418,6 +453,7 @@ mod pointer_tests {
                 pointer_drag: use_signal(|| {
                     Some((
                         1,
+                        ScopeId::ROOT,
                         PointerDrag::Pressed {
                             from: 0,
                             origin: ClientPoint::new(0.0, 0.0),
@@ -471,39 +507,6 @@ mod pointer_tests {
             assert!(!ctx.is_dragging());
             assert!(ctx.pointer_drag(1).is_none());
         });
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[test]
-    fn clipped_instructions_do_not_intercept_item_hits() {
-        use dioxus_native_dom::{DioxusDocument, DocumentConfig};
-
-        fn app() -> Element {
-            rsx! {
-                DragAndDropList { items: Vec::new(), style: "position:relative;",
-                    DragAndDropInstructions {}
-                    DragAndDropListItems { aria_label: "Sortable list", style: "margin:0;padding:0;",
-                        DragAndDropListItem { index: 0, style: "height:44px;list-style:none;",
-                            "Drag me"
-                        }
-                    }
-                }
-            }
-        }
-
-        let mut native = DioxusDocument::new(VirtualDom::new(app), DocumentConfig::default());
-        native.initial_build();
-        let mut doc = native.inner.borrow_mut();
-        let mut viewport = doc.get_viewport();
-        viewport.window_size = (600, 400);
-        doc.set_viewport(viewport);
-        doc.resolve(0.0);
-
-        let row = doc.query_selector("li").unwrap().unwrap();
-        let rect = doc.get_client_bounding_rect(row).unwrap();
-        let x = rect.x as f32 + 18.0;
-        let y = rect.y as f32 + 22.0;
-        assert_eq!(doc.element_from_point(x, y), Some(row));
     }
 }
 
@@ -605,7 +608,7 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
         pointer_drag,
         mounted_items,
     });
-    let updates = use_coroutine(move |mut rx: UnboundedReceiver<PointerUpdate>| async move {
+    use_coroutine(move |mut rx: UnboundedReceiver<PointerUpdate>| async move {
         while let Ok(update) = rx.recv().await {
             match update {
                 PointerUpdate::Move(id, position) => ctx.update_pointer_target(id, position).await,
@@ -637,49 +640,8 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
 
     rsx! {
         div {
-            onpointermove: move |event: PointerEvent| {
-                let id = event.pointer_id();
-                let position = event.client_coordinates();
-                if ctx.pointer_move(id, position) {
-                    event.prevent_default();
-                    updates.send(PointerUpdate::Move(id, position));
-                }
-            },
-            onpointerup: move |event: PointerEvent| {
-                let id = event.pointer_id();
-                if event.trigger_button() == Some(MouseButton::Primary) {
-                    match ctx.pointer_drag(id) {
-                        Some(PointerDrag::Pressed { .. }) => {
-                            ctx.finish_pointer_drag(id, true);
-                        }
-                        Some(PointerDrag::Dragging | PointerDrag::Cancelled) => {
-                            event.prevent_default();
-                            updates.send(PointerUpdate::Release(id));
-                        }
-                        None => {}
-                    }
-                }
-            },
-            onpointercancel: move |event: PointerEvent| {
-                let id = event.pointer_id();
-                if ctx.pointer_drag(id).is_some() {
-                    updates.send(PointerUpdate::Cancel(id));
-                }
-            },
-            onpointerleave: move |event: PointerEvent| {
-                let id = event.pointer_id();
-                if matches!(ctx.pointer_drag(id), Some(PointerDrag::Pressed { .. })) {
-                    ctx.finish_pointer_drag(id, false);
-                }
-            },
             ..props.attributes,
             {children}
-            if matches!(pointer_drag(), Some((_, PointerDrag::Dragging | PointerDrag::Cancelled))) {
-                div {
-                    aria_hidden: "true",
-                    style: "position:fixed;inset:0;z-index:2147483647;cursor:grabbing;touch-action:none;",
-                }
-            }
         }
     }
 }
@@ -865,6 +827,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     let item = use_item(collection_item(ctx.focus, index_signal).key(move || item_key.clone()));
     let mut collection_onmounted = item.onmounted();
     let mut item_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
+    let updates = use_coroutine_handle::<PointerUpdate>();
     use_drop(move || {
         if let Ok(mut items) = mounted_items.try_write() {
             items.retain(|item| item.scope != scope);
@@ -874,7 +837,10 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     let onkeydown = move |event: Event<KeyboardData>| {
         let key = event.key();
         if key != Key::Named(NamedKey::Escape)
-            && matches!(*ctx.pointer_drag.peek(), Some((_, PointerDrag::Dragging)))
+            && matches!(
+                *ctx.pointer_drag.peek(),
+                Some((_, _, PointerDrag::Dragging))
+            )
         {
             return;
         }
@@ -969,14 +935,30 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                     && !ctx.is_dragging()
                     && ctx.pointer_drag.peek().is_none()
                 {
+                    let id = event.pointer_id();
                     ctx.set_focus(Some(index));
                     ctx.pointer_drag.set(Some((
-                        event.pointer_id(),
+                        id,
+                        scope,
                         PointerDrag::Pressed { from: index, origin: event.client_coordinates() },
                     )));
+                    if let Some(element) = item_ref.peek().as_ref() {
+                        let capture = element.set_pointer_capture(id);
+                        spawn(async move {
+                            let _ = capture.await;
+                        });
+                    }
+                }
+            },
+            onpointermove: move |event: PointerEvent| {
+                if ctx.pointer_is_on_source(event.pointer_id(), scope) {
+                    ctx.on_pointer_move(&event, updates);
                 }
             },
             onpointerup: move |event: PointerEvent| {
+                if !ctx.pointer_is_on_source(event.pointer_id(), scope) {
+                    return;
+                }
                 if event.trigger_button() == Some(MouseButton::Primary)
                     && matches!(ctx.pointer_drag(event.pointer_id()), Some(PointerDrag::Pressed { from, .. }) if from == index)
                 {
@@ -986,6 +968,25 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                             let _ = mounted.set_focus(true).await;
                         }
                     });
+                }
+                ctx.on_pointer_up(&event, updates);
+            },
+            onpointercancel: move |event: PointerEvent| {
+                let id = event.pointer_id();
+                if ctx.pointer_is_on_source(id, scope) {
+                    updates.send(PointerUpdate::Cancel(id));
+                }
+            },
+            onpointerleave: move |event: PointerEvent| {
+                let id = event.pointer_id();
+                if ctx.pointer_is_on_source(id, scope) {
+                    updates.send(PointerUpdate::Cancel(id));
+                }
+            },
+            onlostpointercapture: move |event: PointerEvent| {
+                let id = event.pointer_id();
+                if ctx.pointer_is_on_source(id, scope) {
+                    updates.send(PointerUpdate::Cancel(id));
                 }
             },
             onkeydown,

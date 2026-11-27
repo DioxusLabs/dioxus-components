@@ -1,8 +1,8 @@
 //! Defines the [`DragAndDropList`] component and its sub-components.
 use crate::collection::{collection_item, use_collection_provider, use_item, CollectionState};
-use dioxus::core::{current_scope_id, ScopeId};
 use dioxus::html::{geometry::ClientPoint, input_data::MouseButton};
 use dioxus::prelude::*;
+use dioxus_vdom::{current_scope_id, ScopeId};
 use std::rc::Rc;
 
 #[derive(Clone, Copy, PartialEq, Debug)]

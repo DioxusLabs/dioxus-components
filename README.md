@@ -45,6 +45,27 @@ dx components add button
 
 This will create a `components` folder in your project (if it doesn't already exist) and add the `Button` component files to it. If this is your first time adding a component, it will also prompt you to add a link to `/assets/dx-components.css` at the root of your app to provide the theme for your app.
 
+### Using with Dioxus 0.7
+
+The `main` branch targets Dioxus 0.8. Components compatible with Dioxus 0.7 live on the `v0.7` branch.
+
+- **`dx 0.7.11+`**: defaults to the `v0.7` branch automatically.
+- **`dx 0.7.0`–`0.7.10`**: pin the registry to `origin/v0.7` in `Dioxus.toml` (the `origin/` prefix is required on `0.7.0`–`0.7.10` and also works on `0.7.11+`):
+
+```toml
+[components.registry]
+git = "https://github.com/dioxuslabs/components"
+rev = "origin/v0.7"
+```
+
+Or pass the flags per command:
+
+```sh
+dx components add button --git https://github.com/dioxuslabs/components --rev origin/v0.7
+```
+
+If an older `dx` previously cached `main`, run `dx components clean` to clear the local cache.
+
 ## Contributing
 
 ### Project structure

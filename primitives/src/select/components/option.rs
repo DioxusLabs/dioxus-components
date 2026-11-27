@@ -1,5 +1,7 @@
 //! SelectOption and SelectItemIndicator component implementations.
 
+use super::super::context::SelectContext;
+use crate::select::context::SelectGroupContext;
 use crate::{
     collection::{collection_item, use_item},
     listbox::{ListboxContext, ListboxItemIndicator},
@@ -9,8 +11,6 @@ use crate::{
     },
 };
 use dioxus::prelude::*;
-
-use super::super::context::SelectContext;
 
 /// The props for the [`SelectOption`] component
 #[derive(Props, Clone, PartialEq)]
@@ -105,8 +105,10 @@ pub fn SelectOption<T: PartialEq + Clone + 'static>(props: SelectOptionProps<T>)
     let index = props.index;
 
     let mut ctx: SelectContext = use_context();
+    let groupCtx: Option<SelectGroupContext> = try_use_context();
     let option = use_selectable_option(
         ctx.selectable,
+        groupCtx.map(|g| g.selectable),
         SelectableOptionConfig {
             id: props.id,
             index,

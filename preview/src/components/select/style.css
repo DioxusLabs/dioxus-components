@@ -124,3 +124,9 @@
   color: var(--secondary-color-5);
   font-size: 0.75rem;
 }
+
+.dx-select-group[data-disabled="true"] .dx-select-group-label {
+  color: var(--secondary-color-5);
+  opacity: 0.5;
+  pointer-events: none;
+}

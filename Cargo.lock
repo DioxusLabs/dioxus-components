@@ -1955,7 +1955,7 @@ dependencies = [
 [[package]]
 name = "dioxus-icons"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/dioxus-icons?rev=708378fb8bcdac97e4ad1fad2ff9a04303f50d1d#708378fb8bcdac97e4ad1fad2ff9a04303f50d1d"
+source = "git+https://github.com/DioxusLabs/dioxus-icons?rev=cd6381f6a25c43ed027cd1eb5510ee09bff6b152#cd6381f6a25c43ed027cd1eb5510ee09bff6b152"
 dependencies = [
  "dioxus-core",
  "dioxus-signals",

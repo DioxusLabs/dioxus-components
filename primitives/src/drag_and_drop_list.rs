@@ -352,7 +352,8 @@ pub struct DragAndDropLiveRegionProps {
 #[component]
 pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
     let drag = use_signal(|| DragState::Idle);
-    let list_items = use_signal(|| {
+    let mut list_items = use_signal(Vec::<SortableListItem>::new);
+    list_items.set(
         props
             .items
             .iter()
@@ -360,7 +361,7 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
             .enumerate()
             .map(|(index, item)| SortableListItem::new(item, index))
             .collect()
-    });
+    );
     let announcement = use_signal(String::new);
     let focus = use_collection_provider(ReadSignal::new(Signal::new(true)));
 

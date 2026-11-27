@@ -24,6 +24,7 @@
 
 .dx-alert-dialog-backdrop[data-state="open"] {
   animation: dx-alert-animate-in 150ms ease-out forwards;
+  opacity: 1;
 }
 
 @keyframes dx-alert-animate-in {

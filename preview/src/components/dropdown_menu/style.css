@@ -66,6 +66,8 @@
 
 .dx-dropdown-menu-content[data-state="open"] {
   animation: dx-dropdown-menu-content-animate-in 150ms ease-out forwards;
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
 @keyframes dx-dropdown-menu-content-animate-in {

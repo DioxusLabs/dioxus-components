@@ -15,6 +15,7 @@
 
 .dx-sheet-root[data-state="open"] {
   animation: dx-sheet-root-in 200ms ease-out forwards;
+  opacity: 1;
 }
 
 @keyframes dx-sheet-root-in {
@@ -92,18 +93,22 @@
 
 .dx-sheet-root[data-state="open"] .dx-sheet[data-side="right"] {
   animation: dx-slide-in-right 200ms ease-out forwards;
+  transform: translateX(0);
 }
 
 .dx-sheet-root[data-state="open"] .dx-sheet[data-side="left"] {
   animation: dx-slide-in-left 200ms ease-out forwards;
+  transform: translateX(0);
 }
 
 .dx-sheet-root[data-state="open"] .dx-sheet[data-side="top"] {
   animation: dx-slide-in-top 200ms ease-out forwards;
+  transform: translateY(0);
 }
 
 .dx-sheet-root[data-state="open"] .dx-sheet[data-side="bottom"] {
   animation: dx-slide-in-bottom 200ms ease-out forwards;
+  transform: translateY(0);
 }
 
 .dx-sheet-root[data-state="closed"] .dx-sheet[data-side="right"] {

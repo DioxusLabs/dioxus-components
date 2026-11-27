@@ -85,7 +85,9 @@
 
 .dx-menubar-content[data-state="open"] {
   animation: dx-menubar-content-animate-in 150ms ease-out forwards;
+  opacity: 1;
   pointer-events: auto;
+  transform: scale(1) translateY(0);
 }
 
 @keyframes dx-menubar-content-animate-in {

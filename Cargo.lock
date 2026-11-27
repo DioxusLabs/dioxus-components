@@ -1607,8 +1607,9 @@ dependencies = [
 
 [[package]]
 name = "dioxus-code"
-version = "0.2.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/dioxus-code?rev=b20d3d4575c36f4b3c4fe9432b002b20da6beb9b#b20d3d4575c36f4b3c4fe9432b002b20da6beb9b"
+version = "0.2.0-alpha.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd655caeabda989fc96008ee0be3a0a018e6a04e48b82ea079eb6032e09d28b9"
 dependencies = [
  "arborium",
  "arborium-theme",
@@ -1619,8 +1620,9 @@ dependencies = [
 
 [[package]]
 name = "dioxus-code-macro"
-version = "0.2.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/dioxus-code?rev=b20d3d4575c36f4b3c4fe9432b002b20da6beb9b#b20d3d4575c36f4b3c4fe9432b002b20da6beb9b"
+version = "0.2.0-alpha.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59ed73c8e7617f09287e6bba4b27ee59a25e0f7924c67545e0e3916e4fbed9e7"
 dependencies = [
  "arborium",
  "arborium-theme",
@@ -1954,8 +1956,9 @@ dependencies = [
 
 [[package]]
 name = "dioxus-icons"
-version = "0.2.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/dioxus-icons?rev=cd6381f6a25c43ed027cd1eb5510ee09bff6b152#cd6381f6a25c43ed027cd1eb5510ee09bff6b152"
+version = "0.2.0-alpha.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4fc5a614f993ae70ab5d3f0475ed9a9a559f05c703c7cb396d1f8a2b5ee6ac0"
 dependencies = [
  "dioxus-core",
  "dioxus-signals",

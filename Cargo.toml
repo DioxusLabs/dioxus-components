@@ -9,8 +9,8 @@ dioxus-i18n = "=0.7.0-alpha.1"
 dioxus-icons = "=0.2.0-alpha.3"
 dioxus-primitives = { path = "primitives" }
 dioxus-rsx = "=0.8.0-alpha.4"
-dioxus-sdk-time = "=0.8.0-alpha.3"
 dioxus-ssr = "=0.8.0-alpha.4"
+dioxus-timers = "=0.8.0-alpha.4"
 dioxus-vdom = "=0.8.0-alpha.4"
 lazy-js-bundle = "=0.8.0-alpha.4"
 tracing = { version = "0.1", features = ["std"] }
@@ -33,5 +33,4 @@ codegen-units = 1
 # Companion crates' alpha.4 bumps are not published yet; drop once they are.
 [patch.crates-io]
 dioxus-code = { git = "https://github.com/DioxusLabs/dioxus-code", rev = "b20d3d4575c36f4b3c4fe9432b002b20da6beb9b" }
-dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", rev = "1df2a824db17d4ebcb88f78824b3cb23416e7870" }
-dioxus-sdk-time = { git = "https://github.com/DioxusLabs/sdk", rev = "fbb2049f1934541f0077c5c30a974dc5fe2c35d0" }
+dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", rev = "2a1fdc3b16d9d547d96aaac67f72c78cf37579d9" }

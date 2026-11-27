@@ -1955,10 +1955,12 @@ dependencies = [
 [[package]]
 name = "dioxus-icons"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/dioxus-icons?rev=1df2a824db17d4ebcb88f78824b3cb23416e7870#1df2a824db17d4ebcb88f78824b3cb23416e7870"
+source = "git+https://github.com/DioxusLabs/dioxus-icons?rev=2a1fdc3b16d9d547d96aaac67f72c78cf37579d9#2a1fdc3b16d9d547d96aaac67f72c78cf37579d9"
 dependencies = [
  "dioxus",
  "dioxus-signals",
+ "dioxus-vdom",
+ "dioxus-vdom-template",
  "lazy-js-bundle",
 ]
 
@@ -2076,8 +2078,8 @@ version = "0.0.1"
 dependencies = [
  "dioxus",
  "dioxus-attributes",
- "dioxus-sdk-time",
  "dioxus-ssr",
+ "dioxus-timers",
  "dioxus-vdom",
  "lazy-js-bundle",
  "num-integer",
@@ -2135,17 +2137,6 @@ dependencies = [
  "quote",
  "rustversion",
  "syn 2.0.117",
-]
-
-[[package]]
-name = "dioxus-sdk-time"
-version = "0.8.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/sdk?rev=fbb2049f1934541f0077c5c30a974dc5fe2c35d0#fbb2049f1934541f0077c5c30a974dc5fe2c35d0"
-dependencies = [
- "dioxus",
- "futures",
- "gloo-timers 0.3.0",
- "tokio",
 ]
 
 [[package]]
@@ -2257,6 +2248,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "dioxus-timers"
+version = "0.8.0-alpha.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9de3f3c6b3d591ce152d44b2eb531488edceaf4a437b604e8d2defcd4651bd5"
+dependencies = [
+ "dioxus-hooks",
+ "dioxus-signals",
+ "dioxus-vdom",
+ "futures",
+ "gloo-timers",
+ "tokio",
+]
+
+[[package]]
 name = "dioxus-vdom"
 version = "0.8.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2324,7 +2329,7 @@ dependencies = [
  "futures-channel",
  "futures-util",
  "generational-box",
- "gloo-timers 0.4.0",
+ "gloo-timers",
  "js-sys",
  "lazy-js-bundle",
  "rustc-hash 2.1.2",
@@ -3227,18 +3232,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
-]
-
-[[package]]
-name = "gloo-timers"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbb143cf96099802033e0d4f4963b19fd2e0b728bcf076cd9cf7f6634f092994"
-dependencies = [
- "futures-channel",
- "futures-core",
- "js-sys",
- "wasm-bindgen",
 ]
 
 [[package]]

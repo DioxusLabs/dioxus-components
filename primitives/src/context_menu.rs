@@ -7,7 +7,7 @@ use crate::{
     use_unique_id,
 };
 use dioxus::prelude::*;
-use dioxus_sdk_time::sleep;
+use dioxus_timers::sleep;
 use dioxus_vdom::Task;
 use std::time::Duration;
 

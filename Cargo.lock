@@ -2138,7 +2138,7 @@ dependencies = [
 [[package]]
 name = "dioxus-sdk-time"
 version = "0.8.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/sdk?rev=dbece3e3a67bcd67dfec3ae32b27ee37ba38a736#dbece3e3a67bcd67dfec3ae32b27ee37ba38a736"
+source = "git+https://github.com/DioxusLabs/sdk?rev=fbb2049f1934541f0077c5c30a974dc5fe2c35d0#fbb2049f1934541f0077c5c30a974dc5fe2c35d0"
 dependencies = [
  "dioxus",
  "futures",
@@ -7571,7 +7571,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",

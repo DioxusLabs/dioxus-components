@@ -33,4 +33,4 @@ codegen-units = 1
 [patch.crates-io]
 dioxus-code = { git = "https://github.com/DioxusLabs/dioxus-code", rev = "b20d3d4575c36f4b3c4fe9432b002b20da6beb9b" }
 dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", rev = "1df2a824db17d4ebcb88f78824b3cb23416e7870" }
-dioxus-sdk-time = { git = "https://github.com/DioxusLabs/sdk", rev = "dbece3e3a67bcd67dfec3ae32b27ee37ba38a736" }
+dioxus-sdk-time = { git = "https://github.com/DioxusLabs/sdk", rev = "fbb2049f1934541f0077c5c30a974dc5fe2c35d0" }

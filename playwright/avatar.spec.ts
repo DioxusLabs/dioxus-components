@@ -6,4 +6,6 @@ test("test", async ({ page }) => {
   await expect(image).toHaveAttribute("src", "https://avatars.githubusercontent.com/u/66571940?s=96&v=4");
 
   await expect(page.getByLabel("Error avatar").getByText("JK")).toBeVisible();
+  await expect(page.getByLabel("Error avatar")).toHaveAttribute("data-state", "error");
+  await expect(page.getByLabel("Large avatar").filter({ has: page.locator("img") })).toHaveAttribute("data-state", "loaded");
 });

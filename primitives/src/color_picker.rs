@@ -267,17 +267,13 @@ pub fn ColorArea(props: ColorAreaProps) -> Element {
                 movement.refresh_rect().await;
             },
             onpointerdown: move |e| {
-                let Some(capture) = movement.start_pointer(&e) else {
+                if !movement.start_pointer(&e) {
                     return;
-                };
+                }
 
                 // Handle pointer interaction
                 spawn(async move {
                     let mut movement = movement;
-                    if !capture.await {
-                        return;
-                    }
-
                     // Update the bounding rect of the slider in case it moved
                     if let Some(r) = movement.refresh_rect().await {
                         let size = r.size;

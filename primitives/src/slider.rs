@@ -389,17 +389,13 @@ fn SliderImpl(props: SliderImplProps) -> Element {
                     return;
                 }
 
-                let Some(capture) = movement.start_pointer(&evt) else {
+                if !movement.start_pointer(&evt) {
                     return;
-                };
+                }
 
                 // Handle pointer interaction
                 spawn(async move {
                     let mut movement = movement;
-                    if !capture.await {
-                        return;
-                    }
-
                     // Update the bounding rect of the slider in case it moved
                     if let Some(r) = movement.refresh_rect().await {
                         let size = if props.horizontal {

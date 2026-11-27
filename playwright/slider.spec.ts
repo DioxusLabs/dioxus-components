@@ -73,6 +73,28 @@ test('test', async ({ page }) => {
   await expect(thumb).toHaveAttribute('aria-valuenow', '60');
 });
 
+test('tracks element events when pointer capture is rejected', async ({ page }) => {
+  await page.goto('http://127.0.0.1:8080/component/?name=slider&', { timeout: 20 * 60 * 1000 });
+  await page.waitForLoadState('networkidle');
+  const slider = sliderGroup(page, 'Demo Slider');
+  const thumb = page.getByRole('slider', { name: 'Demo Slider' });
+  const track = sliderTrack(slider);
+  await track.scrollIntoViewIfNeeded();
+  await slider.evaluate((element) => {
+    element.setPointerCapture = () => { throw new DOMException('Capture rejected', 'NotFoundError'); };
+  });
+
+  const start = await sliderTrackPoint(track, 0.5);
+  const end = await sliderTrackPoint(track, 0.8);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await expect(thumb).toHaveAttribute('data-dragging', 'true');
+  await page.mouse.move(end.x, end.y);
+  await expect(thumb).toHaveAttribute('aria-valuenow', '80');
+  await page.mouse.up();
+  await expect(thumb).toHaveAttribute('data-dragging', 'false');
+});
+
 test('drag survives pointercancel (iPad system gesture)', async ({ page }) => {
   // iPad can fire `pointercancel` (without a following `pointerup`) when an OS
   // gesture interrupts a drag. Regression: the slider didn't listen for

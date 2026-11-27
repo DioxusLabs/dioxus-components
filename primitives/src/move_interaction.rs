@@ -4,11 +4,7 @@ use dioxus::html::geometry::ClientPoint;
 use dioxus::html::geometry::Pixels;
 use dioxus::html::input_data::MouseButton;
 use dioxus::prelude::*;
-use std::future::Future;
 use std::rc::Rc;
-
-#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-mod native;
 
 /// Keyboard modifier state attached to a move event.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -70,8 +66,6 @@ pub(crate) struct MoveInteraction {
     captured_position: Signal<Option<ClientPoint>>,
     last_pointer_position: CopyValue<Option<ClientPoint>>,
     dragging: Signal<bool>,
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    native_pointer: Option<Signal<Option<native::NativePointer>>>,
 }
 
 pub(crate) fn use_move_interaction(dragging: Signal<bool>) -> MoveInteraction {
@@ -81,19 +75,14 @@ pub(crate) fn use_move_interaction(dragging: Signal<bool>) -> MoveInteraction {
     let captured_position = use_signal(|| None);
     let last_pointer_position = use_hook(|| CopyValue::new(None::<ClientPoint>));
 
-    let movement = MoveInteraction {
+    MoveInteraction {
         rect,
         element,
         active_pointer_id,
         captured_position,
         last_pointer_position,
         dragging,
-        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-        native_pointer: None,
-    };
-    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    let movement = native::with_window_pointer(movement);
-    movement
+    }
 }
 
 impl MoveInteraction {
@@ -119,52 +108,29 @@ impl MoveInteraction {
         }
     }
 
-    pub(crate) fn start_pointer(
-        &mut self,
-        event: &Event<PointerData>,
-    ) -> Option<impl Future<Output = bool> + 'static> {
+    pub(crate) fn start_pointer(&mut self, event: &Event<PointerData>) -> bool {
         event.prevent_default();
         event.stop_propagation();
 
         if self.active_pointer_id.read().is_some()
             || event.trigger_button() != Some(MouseButton::Primary)
         {
-            return None;
+            return false;
         }
 
-        let element = self.element.peek().clone()?;
+        let Some(element) = self.element.peek().clone() else {
+            return false;
+        };
         let pointer_id = event.data().pointer_id();
         self.active_pointer_id.set(Some(pointer_id));
         let position = event.client_coordinates();
         self.last_pointer_position.set(Some(position));
         self.captured_position.set(Some(position));
         let capture = element.set_pointer_capture(pointer_id);
-        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-        let native_start = self
-            .native_pointer
-            .map(|_| native::NativePointer::new(event));
-
-        let mut movement = *self;
-        Some(async move {
-            let result = capture.await;
-            if *movement.active_pointer_id.peek() != Some(pointer_id) {
-                return false;
-            }
-            match result {
-                Ok(()) => true,
-                #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-                Err(dioxus::html::MountedError::NotSupported) if native_start.is_some() => {
-                    if let Some(mut pointer) = movement.native_pointer {
-                        pointer.set(native_start);
-                    }
-                    true
-                }
-                Err(_) => {
-                    movement.end_pointer();
-                    false
-                }
-            }
-        })
+        spawn(async move {
+            let _ = capture.await;
+        });
+        true
     }
 
     pub(crate) fn begin_drag(&mut self, event: &Event<PointerData>) {
@@ -174,13 +140,13 @@ impl MoveInteraction {
     }
 
     pub(crate) fn move_capture(&mut self, event: &Event<PointerData>) {
-        if !self.uses_window_events() && self.is_active(event) {
+        if self.is_active(event) {
             self.captured_position.set(Some(event.client_coordinates()));
         }
     }
 
     pub(crate) fn finish_capture(&mut self, event: &Event<PointerData>) {
-        if !self.uses_window_events() && self.is_active(event) {
+        if self.is_active(event) {
             self.end_pointer();
         }
     }
@@ -189,15 +155,12 @@ impl MoveInteraction {
         if !self.is_active(event) {
             return;
         }
-        let uses_window_events = self.uses_window_events();
         self.end_pointer();
-        if !uses_window_events {
-            if let Some(element) = self.element.peek().as_ref() {
-                let release = element.release_pointer_capture(event.pointer_id());
-                spawn(async move {
-                    let _ = release.await;
-                });
-            }
+        if let Some(element) = self.element.peek().as_ref() {
+            let release = element.release_pointer_capture(event.pointer_id());
+            spawn(async move {
+                let _ = release.await;
+            });
         }
     }
 
@@ -205,22 +168,12 @@ impl MoveInteraction {
         *self.active_pointer_id.peek() == Some(event.pointer_id())
     }
 
-    fn uses_window_events(&self) -> bool {
-        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-        {
-            self.native_pointer
-                .is_some_and(|pointer| pointer.peek().is_some())
-        }
-        #[cfg(not(all(feature = "native", not(target_arch = "wasm32"))))]
-        false
-    }
-
     pub(crate) fn pointer_move(&mut self) -> Option<MoveEvent> {
         if !(self.dragging)() {
             return None;
         }
 
-        let pointer_position = self.pointer_position()?;
+        let pointer_position = self.captured_position.cloned()?;
 
         let delta = if let Some(last_position) =
             self.last_pointer_position.replace(Some(pointer_position))
@@ -237,21 +190,7 @@ impl MoveInteraction {
         })
     }
 
-    fn pointer_position(&self) -> Option<ClientPoint> {
-        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-        if let Some(pointer) = self.native_pointer {
-            if let Some(pointer) = *pointer.read() {
-                return Some(pointer.position);
-            }
-        }
-        self.captured_position.cloned()
-    }
-
     fn end_pointer(&mut self) {
-        #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-        if let Some(mut pointer) = self.native_pointer {
-            pointer.set(None);
-        }
         self.captured_position.set(None);
         self.active_pointer_id.take();
         self.last_pointer_position.set(None);

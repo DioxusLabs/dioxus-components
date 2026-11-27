@@ -1,6 +1,9 @@
 //! Defines the [`DragAndDropList`] component and its sub-components.
 use crate::collection::{collection_item, use_collection_provider, use_item, CollectionState};
+use dioxus::html::{geometry::ClientPoint, input_data::MouseButton};
 use dioxus::prelude::*;
+use dioxus_vdom::{current_scope_id, ScopeId};
+use std::rc::Rc;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum DropPosition {
@@ -106,6 +109,26 @@ enum DragState {
     },
 }
 
+#[derive(Clone, Copy)]
+enum PointerDrag {
+    Pressed { from: usize, origin: ClientPoint },
+    Dragging,
+    Cancelled,
+}
+
+enum PointerUpdate {
+    Move(i32, ClientPoint),
+    Release(i32),
+    Cancel(i32),
+}
+
+#[derive(Clone)]
+struct MountedItem {
+    scope: ScopeId,
+    index: usize,
+    element: Rc<MountedData>,
+}
+
 /// Context provided by [`DragAndDropList`] to its descendants.
 /// Use `use_context::<DragAndDropContext>()` to access list-level operations.
 #[derive(Clone, Copy)]
@@ -114,6 +137,8 @@ pub struct DragAndDropContext {
     list_items: Signal<Vec<SortableListItem>>,
     focus: CollectionState,
     announcement: Signal<String>,
+    pointer_drag: Signal<Option<(i32, PointerDrag)>>,
+    mounted_items: Signal<Vec<MountedItem>>,
 }
 
 impl DragAndDropContext {
@@ -293,6 +318,195 @@ impl DragAndDropContext {
     }
 }
 
+impl DragAndDropContext {
+    fn pointer_drag(&self, pointer_id: i32) -> Option<PointerDrag> {
+        self.pointer_drag
+            .peek()
+            .filter(|(id, _)| *id == pointer_id)
+            .map(|(_, drag)| drag)
+    }
+
+    fn pointer_move(&mut self, pointer_id: i32, position: ClientPoint) -> bool {
+        match self.pointer_drag(pointer_id) {
+            Some(PointerDrag::Pressed { from, origin })
+                if !self.is_dragging() && (position - origin).square_length() >= 16.0 =>
+            {
+                self.start_drag(from);
+                self.pointer_drag
+                    .set(Some((pointer_id, PointerDrag::Dragging)));
+                true
+            }
+            Some(PointerDrag::Dragging) => true,
+            _ => false,
+        }
+    }
+
+    fn finish_pointer_drag(&mut self, pointer_id: i32, drop: bool) -> bool {
+        let Some(drag) = self.pointer_drag(pointer_id) else {
+            return false;
+        };
+        self.pointer_drag.set(None);
+        match drag {
+            PointerDrag::Pressed { .. } => false,
+            PointerDrag::Dragging => {
+                if drop {
+                    self.drop();
+                    self.end_drag();
+                } else {
+                    self.cancel_drag();
+                }
+                true
+            }
+            PointerDrag::Cancelled => true,
+        }
+    }
+
+    fn cancel_pointer(&mut self) {
+        let drag = *self.pointer_drag.peek();
+        match drag {
+            Some((id, PointerDrag::Dragging)) => {
+                self.pointer_drag.set(Some((id, PointerDrag::Cancelled)));
+            }
+            Some((_, PointerDrag::Pressed { .. })) => self.pointer_drag.set(None),
+            _ => {}
+        }
+    }
+
+    async fn update_pointer_target(&mut self, pointer_id: i32, position: ClientPoint) {
+        if !matches!(self.pointer_drag(pointer_id), Some(PointerDrag::Dragging)) {
+            return;
+        }
+
+        let items = self.mounted_items.peek().clone();
+        for item in items {
+            let Ok(rect) = item.element.get_client_rect().await else {
+                continue;
+            };
+            if !matches!(self.pointer_drag(pointer_id), Some(PointerDrag::Dragging)) {
+                return;
+            }
+            if rect.contains(position.cast_unit()) {
+                self.drag_over(
+                    item.index,
+                    if position.y < rect.center().y {
+                        DropPosition::Before
+                    } else {
+                        DropPosition::After
+                    },
+                );
+                return;
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod pointer_tests {
+    use super::*;
+
+    fn with_drag(test: fn(&mut DragAndDropContext)) {
+        fn app(test: fn(&mut DragAndDropContext)) -> Element {
+            let mut ctx = DragAndDropContext {
+                drag: use_signal(|| DragState::Idle),
+                list_items: use_signal(|| {
+                    (0..3)
+                        .map(|index| SortableListItem::new(rsx! {}, index))
+                        .collect()
+                }),
+                focus: use_collection_provider(ReadSignal::new(Signal::new(true))),
+                announcement: use_signal(String::new),
+                pointer_drag: use_signal(|| {
+                    Some((
+                        1,
+                        PointerDrag::Pressed {
+                            from: 0,
+                            origin: ClientPoint::new(0.0, 0.0),
+                        },
+                    ))
+                }),
+                mounted_items: use_signal(Vec::new),
+            };
+            test(&mut ctx);
+            rsx! {}
+        }
+        VirtualDom::new_with_props(app, test).rebuild_in_place();
+    }
+
+    #[test]
+    fn only_the_pressed_pointer_can_reorder_after_moving() {
+        with_drag(|ctx| {
+            assert!(!ctx.pointer_move(1, ClientPoint::new(0.0, 1.0)));
+            assert!(!ctx.pointer_move(2, ClientPoint::new(0.0, 10.0)));
+            assert!(ctx.pointer_move(1, ClientPoint::new(0.0, 10.0)));
+            ctx.drag_over(2, DropPosition::After);
+            assert!(!ctx.finish_pointer_drag(2, true));
+            assert!(ctx.finish_pointer_drag(1, true));
+            assert_eq!((ctx.list_items)()[2].key, "0");
+            assert!(!ctx.is_dragging());
+        });
+    }
+
+    #[test]
+    fn cancelling_pointer_drag_preserves_order_and_clears_the_drag() {
+        with_drag(|ctx| {
+            assert!(ctx.pointer_move(1, ClientPoint::new(0.0, 10.0)));
+            ctx.drag_over(2, DropPosition::After);
+            assert!(ctx.finish_pointer_drag(1, false));
+            assert_eq!((ctx.list_items)()[0].key, "0");
+            assert!(!ctx.is_dragging());
+            assert!(!ctx.finish_pointer_drag(1, true));
+        });
+    }
+
+    #[test]
+    fn escape_keeps_the_cancelled_drag_from_committing_on_release() {
+        with_drag(|ctx| {
+            assert!(ctx.pointer_move(1, ClientPoint::new(0.0, 10.0)));
+            ctx.drag_over(2, DropPosition::After);
+            ctx.cancel_pointer();
+            ctx.cancel_drag();
+            assert!(!ctx.pointer_move(1, ClientPoint::new(0.0, 20.0)));
+            assert!(ctx.finish_pointer_drag(1, true));
+            assert_eq!((ctx.list_items)()[0].key, "0");
+            assert!(!ctx.is_dragging());
+            assert!(ctx.pointer_drag(1).is_none());
+        });
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn clipped_instructions_do_not_intercept_item_hits() {
+        use dioxus_native_dom::{DioxusDocument, DocumentConfig};
+
+        fn app() -> Element {
+            rsx! {
+                DragAndDropList { items: Vec::new(), style: "position:relative;",
+                    DragAndDropInstructions {}
+                    DragAndDropListItems { aria_label: "Sortable list", style: "margin:0;padding:0;",
+                        DragAndDropListItem { index: 0, style: "height:44px;list-style:none;",
+                            "Drag me"
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut native = DioxusDocument::new(VirtualDom::new(app), DocumentConfig::default());
+        native.initial_build();
+        let mut doc = native.inner.borrow_mut();
+        let mut viewport = doc.get_viewport();
+        viewport.window_size = (600, 400);
+        doc.set_viewport(viewport);
+        doc.resolve(0.0);
+
+        let row = doc.query_selector("li").unwrap().unwrap();
+        let rect = doc.get_client_bounding_rect(row).unwrap();
+        let x = rect.x as f32 + 18.0;
+        let y = rect.y as f32 + 22.0;
+        assert_eq!(doc.element_from_point(x, y), Some(row));
+    }
+}
+
 /// The props for the [`DragAndDropList`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct DragAndDropListProps {
@@ -380,12 +594,29 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
     });
     let announcement = use_signal(String::new);
     let focus = use_collection_provider(ReadSignal::new(Signal::new(true)));
+    let pointer_drag = use_signal(|| None);
+    let mounted_items = use_signal(Vec::new);
 
-    use_context_provider(move || DragAndDropContext {
+    let mut ctx = use_context_provider(move || DragAndDropContext {
         drag,
         list_items,
         focus,
         announcement,
+        pointer_drag,
+        mounted_items,
+    });
+    let updates = use_coroutine(move |mut rx: UnboundedReceiver<PointerUpdate>| async move {
+        while let Ok(update) = rx.recv().await {
+            match update {
+                PointerUpdate::Move(id, position) => ctx.update_pointer_target(id, position).await,
+                PointerUpdate::Release(id) => {
+                    ctx.finish_pointer_drag(id, true);
+                }
+                PointerUpdate::Cancel(id) => {
+                    ctx.finish_pointer_drag(id, false);
+                }
+            }
+        }
     });
 
     let label = props
@@ -406,8 +637,49 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
 
     rsx! {
         div {
+            onpointermove: move |event: PointerEvent| {
+                let id = event.pointer_id();
+                let position = event.client_coordinates();
+                if ctx.pointer_move(id, position) {
+                    event.prevent_default();
+                    updates.send(PointerUpdate::Move(id, position));
+                }
+            },
+            onpointerup: move |event: PointerEvent| {
+                let id = event.pointer_id();
+                if event.trigger_button() == Some(MouseButton::Primary) {
+                    match ctx.pointer_drag(id) {
+                        Some(PointerDrag::Pressed { .. }) => {
+                            ctx.finish_pointer_drag(id, true);
+                        }
+                        Some(PointerDrag::Dragging | PointerDrag::Cancelled) => {
+                            event.prevent_default();
+                            updates.send(PointerUpdate::Release(id));
+                        }
+                        None => {}
+                    }
+                }
+            },
+            onpointercancel: move |event: PointerEvent| {
+                let id = event.pointer_id();
+                if ctx.pointer_drag(id).is_some() {
+                    updates.send(PointerUpdate::Cancel(id));
+                }
+            },
+            onpointerleave: move |event: PointerEvent| {
+                let id = event.pointer_id();
+                if matches!(ctx.pointer_drag(id), Some(PointerDrag::Pressed { .. })) {
+                    ctx.finish_pointer_drag(id, false);
+                }
+            },
             ..props.attributes,
             {children}
+            if matches!(pointer_drag(), Some((_, PointerDrag::Dragging | PointerDrag::Cancelled))) {
+                div {
+                    aria_hidden: "true",
+                    style: "position:fixed;inset:0;z-index:2147483647;cursor:grabbing;touch-action:none;",
+                }
+            }
         }
     }
 }
@@ -434,7 +706,6 @@ pub fn use_drag_and_drop_list_items() -> Vec<DragAndDropListRenderItem> {
 /// The inner list element for sortable items.
 #[component]
 pub fn DragAndDropListItems(props: DragAndDropListItemsProps) -> Element {
-    let mut ctx: DragAndDropContext = use_context();
     let children = props.children.unwrap_or_else(|| {
         rsx! {
             for item in use_drag_and_drop_list_items() {
@@ -463,17 +734,6 @@ pub fn DragAndDropListItems(props: DragAndDropListItemsProps) -> Element {
             aria_label: "{props.aria_label}",
             aria_roledescription: "sortable list",
             aria_describedby: "dnd-instructions",
-            ondragover: move |event: Event<DragData>| {
-                // Drops can happen in the visual gaps between items. The
-                // nearest item still owns target calculation, but the list
-                // must accept the final drop for those gap targets.
-                event.prevent_default();
-                event.data_transfer().set_drop_effect("move");
-            },
-            ondrop: move |event: Event<DragData>| {
-                event.prevent_default();
-                ctx.drop();
-            },
             ..props.attributes,
             {children}
         }
@@ -486,7 +746,7 @@ pub fn DragAndDropInstructions(props: DragAndDropInstructionsProps) -> Element {
     rsx! {
         div {
             id: "dnd-instructions",
-            style: "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);",
+            style: "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);pointer-events:none;",
             ..props.attributes,
             "Press Enter to start reordering. Use Arrow keys to change position. Press Enter to confirm or Escape to cancel."
         }
@@ -504,7 +764,7 @@ pub fn DragAndDropLiveRegion(props: DragAndDropLiveRegionProps) -> Element {
             role: "status",
             aria_live: "assertive",
             aria_atomic: "true",
-            style: "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);",
+            style: "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);pointer-events:none;",
             ..props.attributes,
             "{announcement}"
         }
@@ -582,6 +842,8 @@ pub struct DragAndDropListRenderItem {
 #[component]
 pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     let mut ctx: DragAndDropContext = use_context();
+    let scope = current_scope_id();
+    let mut mounted_items = ctx.mounted_items;
 
     let index = props.index;
     let mut item_ctx = use_context_provider(move || DragAndDropItemContext {
@@ -589,16 +851,33 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     });
     if *item_ctx.index.peek() != index {
         item_ctx.index.set(index);
+        if let Some(item) = mounted_items
+            .write()
+            .iter_mut()
+            .find(|item| item.scope == scope)
+        {
+            item.index = index;
+        }
     }
     let index_signal = item_ctx.index;
 
     let item_key = props.item_key.clone();
     let item = use_item(collection_item(ctx.focus, index_signal).key(move || item_key.clone()));
     let mut collection_onmounted = item.onmounted();
-    let mut item_ref: Signal<Option<std::rc::Rc<MountedData>>> = use_signal(|| None);
+    let mut item_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
+    use_drop(move || {
+        if let Ok(mut items) = mounted_items.try_write() {
+            items.retain(|item| item.scope != scope);
+        }
+    });
 
     let onkeydown = move |event: Event<KeyboardData>| {
         let key = event.key();
+        if key != Key::Named(NamedKey::Escape)
+            && matches!(*ctx.pointer_drag.peek(), Some((_, PointerDrag::Dragging)))
+        {
+            return;
+        }
 
         match key {
             Key::Named(NamedKey::ArrowUp) => {
@@ -629,6 +908,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
             }
             Key::Named(NamedKey::Escape) => {
                 event.prevent_default();
+                ctx.cancel_pointer();
                 if ctx.is_dragging() {
                     let pos = ctx.drag_from().unwrap_or(index) + 1;
                     ctx.cancel_drag();
@@ -662,7 +942,7 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     rsx! {
         li {
             aria_roledescription: "sortable item",
-            draggable: "true",
+            touch_action: "none",
             tabindex: item.tabindex,
             aria_grabbed: if ctx.drag_from().is_some_and(|from| from == index) { "true" } else { "false" },
             "data-is-grabbing": if ctx.drag_from().is_some_and(|from| from == index) { "true" },
@@ -673,7 +953,9 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
             "data-drop-at-origin": if ctx.drag_from().is_some_and(|from| from == index) && ctx.drop_to() == Some(index) { "true" },
             "data-focus-visible": if ctx.is_focused(index) { "true" },
             onmounted: move |event| {
-                item_ref.set(Some(event.data()));
+                let element = event.data();
+                mounted_items.write().push(MountedItem { scope, index, element: element.clone() });
+                item_ref.set(Some(element));
                 collection_onmounted(event);
             },
             onfocus: move |_| {
@@ -681,76 +963,31 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                     ctx.set_focus(Some(index));
                 }
             },
-            ondragstart: move |event: Event<DragData>| {
-                ctx.start_drag(index);
-                event.data_transfer().set_effect_allowed("move");
-                event.data_transfer().set_drop_effect("move");
-                // Note: this is only for Firefox (without it, DnD won't work)
-                let _ = event.data_transfer().set_data("text/html", "");
-                let mut document_drop_ctx = ctx;
-                let mut document_drop = document::eval(
-                    r#"
-                    function cleanup() {
-                        document.removeEventListener("dragover", onDragOver, true);
-                        document.removeEventListener("drop", onDrop, true);
-                        document.removeEventListener("dragend", onDragEnd, true);
-                    }
-
-                    function onDragOver(event) {
-                        event.preventDefault();
-                        if (event.dataTransfer) {
-                            event.dataTransfer.dropEffect = "move";
-                        }
-                    }
-
-                    function onDrop(event) {
-                        event.preventDefault();
-                        dioxus.send("drop");
-                        cleanup();
-                    }
-
-                    function onDragEnd() {
-                        dioxus.send("end");
-                        cleanup();
-                    }
-
-                    document.addEventListener("dragover", onDragOver, true);
-                    document.addEventListener("drop", onDrop, true);
-                    document.addEventListener("dragend", onDragEnd, true);
-
-                    await dioxus.recv();
-                    cleanup();
-                    "#,
-                );
-                spawn(async move {
-                    if let Ok(action) = document_drop.recv::<String>().await {
-                        if action == "drop" {
-                            document_drop_ctx.drop();
-                        }
-                    }
-                    let _ = document_drop.send(true);
-                });
-            },
-            ondragend: move |_| ctx.end_drag(),
-            ondragover: move |event: Event<DragData>| {
-                event.prevent_default();
-                event.data_transfer().set_drop_effect("move");
-                async move {
-                    if let Some(md) = item_ref() {
-                        let cursor_y = event.client_coordinates().y;
-                        if let Ok(rect) = md.get_client_rect().await {
-                            let mid_y = rect.origin.y + rect.size.height / 2.0;
-                            let position = if cursor_y < mid_y {
-                                DropPosition::Before
-                            } else {
-                                DropPosition::After
-                            };
-                            ctx.drag_over(index, position);
-                        }
-                    }
+            onpointerdown: move |event: PointerEvent| {
+                if event.is_primary()
+                    && event.trigger_button() == Some(MouseButton::Primary)
+                    && !ctx.is_dragging()
+                    && ctx.pointer_drag.peek().is_none()
+                {
+                    ctx.set_focus(Some(index));
+                    ctx.pointer_drag.set(Some((
+                        event.pointer_id(),
+                        PointerDrag::Pressed { from: index, origin: event.client_coordinates() },
+                    )));
                 }
             },
-            //ondragleave: move |_| ctx.drop_to.set(None),
+            onpointerup: move |event: PointerEvent| {
+                if event.trigger_button() == Some(MouseButton::Primary)
+                    && matches!(ctx.pointer_drag(event.pointer_id()), Some(PointerDrag::Pressed { from, .. }) if from == index)
+                {
+                    let mounted = item_ref.peek().clone();
+                    spawn(async move {
+                        if let Some(mounted) = mounted {
+                            let _ = mounted.set_focus(true).await;
+                        }
+                    });
+                }
+            },
             onkeydown,
             ..props.attributes,
             {props.children}

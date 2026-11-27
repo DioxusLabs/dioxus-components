@@ -1,14 +1,22 @@
 //! Defines the [`VirtualList`] component for rendering large lists with virtualization.
 
 use std::collections::HashMap;
+use std::rc::Rc;
+use std::time::Duration;
 
+use dioxus::html::geometry::PixelsVector2D;
+use dioxus::html::EventsExtension;
 use dioxus::prelude::*;
-use serde::Deserialize;
+use dioxus_timers::sleep;
+use dioxus_vdom::Task;
 
 use crate::r#virtual::{
-    compute_measurements, get_total_size, get_virtual_items, resize_item, set_scroll_offset,
-    set_viewport_size, VirtualizerState, VirtualizerStateStoreExt,
+    cache_item_sizes, clamp_scroll_offset_from_layout, compute_measurements, get_total_size,
+    get_virtual_items, scroll_anchor, set_scroll_offset, set_viewport_size, types::VirtualItem,
+    VirtualizerState, VirtualizerStateStoreExt,
 };
+
+const SCROLL_IDLE: Duration = Duration::from_millis(600);
 
 /// The props for the [`VirtualList`] component.
 #[derive(Props, Clone, PartialEq)]
@@ -86,13 +94,15 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
     // Create the Store — only holds mutable shared state
     let state: Store<VirtualizerState> = use_store(|| VirtualizerState {
         scroll_offset: 0,
-        viewport_size: 0,
+        viewport_size: if cfg!(target_arch = "wasm32") {
+            Some(0)
+        } else {
+            None
+        },
         is_scrolling: false,
         item_size_cache: HashMap::new(),
-        scroll_adjustments: 0,
         stable_total_size: None,
         stable_measurement_count: None,
-        deferred_adjustments: 0,
     });
 
     // Measurements as a memo — recomputes when count or item_size_cache change.
@@ -100,7 +110,7 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
     // memo invalidates; peeking a dirty memo returns stale data (Memo::peek does
     // not check the dirty flag), which can yield out-of-bounds indices when
     // `count` shrinks between renders.
-    let measurements: Memo<Vec<crate::r#virtual::types::VirtualItem>> = use_memo(move || {
+    let measurements: Memo<Vec<VirtualItem>> = use_memo(move || {
         let count = count();
         let isc = state.item_size_cache();
         let item_size_cache = isc.read();
@@ -112,125 +122,85 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
         )
     });
 
-    // Subscribe to scroll events via JS bridge
+    let mut container = use_signal(|| None::<Rc<MountedData>>);
+    let container_height = use_signal(|| None::<u32>);
+    let window_height = use_signal(|| None::<u32>);
+    let mut idle_task = use_signal(|| None::<Task>);
+
     use_effect(move || {
-        let script = r#"
-            const container = document.getElementById(await dioxus.recv());
-            if (!container) return;
-
-            let scrollEndTimer = null;
-            let lastOffset = null;
-            let lastViewport = null;
-            let lastIsScrolling = null;
-
-            function publish(isScrolling) {
-                const scroll = Math.round(container.scrollTop);
-                const viewport = Math.min(container.clientHeight, window.innerHeight) || 600;
-                // Deduplicate only if the full scroll state is unchanged.
-                if (
-                    scroll === lastOffset &&
-                    viewport === lastViewport &&
-                    isScrolling === lastIsScrolling
-                ) {
-                    return;
-                }
-                lastOffset = scroll;
-                lastViewport = viewport;
-                lastIsScrolling = isScrolling;
-                dioxus.send({
-                    offset: scroll,
-                    viewport: viewport,
-                    isScrolling: isScrolling
-                });
-            }
-
-            function onScroll() {
-                // Clear any pending scroll-end detection
-                if (scrollEndTimer !== null) {
-                    clearTimeout(scrollEndTimer);
-                }
-
-                // Send scroll event immediately (no RAF batching)
-                // This ensures Rust receives the event before the next render
-                publish(true);
-
-                // Debounce scroll-end detection. Firefox in CI can take long
-                // enough between scroll events and measurement reads that a
-                // shorter timeout unfreezes the scroll canvas mid-scroll.
-                scrollEndTimer = setTimeout(() => {
-                    scrollEndTimer = null;
-                    publish(false);
-                }, 600);
-            }
-
-            // Initial publish
-            publish(false);
-
-            container.addEventListener("scroll", onScroll, { passive: true });
-            window.addEventListener("resize", () => publish(false), { passive: true });
-
-            await dioxus.recv();
-            if (scrollEndTimer !== null) clearTimeout(scrollEndTimer);
-            container.removeEventListener("scroll", onScroll);
-        "#;
-        let mut eval = document::eval(script);
-        let _ = eval.send(container_id.peek().clone());
-
-        spawn(async move {
-            while let Ok(scroll_msg) = eval.recv::<ScrollMsg>().await {
-                let scrolling = scroll_msg.is_scrolling;
-
-                let correction = {
-                    let m = measurements.peek();
-                    set_scroll_offset(&state, &m, scroll_msg.offset, scrolling)
-                };
-                set_viewport_size(&state, scroll_msg.viewport);
-
-                if let Some(delta) = correction {
-                    let new_scroll = (scroll_msg.offset as i32 + delta).max(0) as u32;
-                    sync_container_scroll(container_id.peek().clone(), new_scroll).await;
-                    state.scroll_offset().set(new_scroll);
-                }
-            }
-        });
-    });
-
-    let onresize = move |idx| {
-        move |event: Event<ResizeData>| {
-            let rect = event.data().get_content_box_size().unwrap_or_default();
-            let measured = rect.height.max(1.0).round() as u32;
-
-            let m = measurements.peek();
-            let adjustment = resize_item(&state, &m, idx, measured);
-            drop(m);
-
-            if let Some(delta) = adjustment {
-                let current = *state.scroll_offset().peek();
-                let new_scroll = (current as i32 + delta).max(0) as u32;
-                spawn(async move {
-                    sync_container_scroll(container_id.peek().clone(), new_scroll).await;
-                });
-            }
+        if let (Some(container), Some(window)) = (container_height(), window_height()) {
+            set_viewport_size(&state, container.min(window));
         }
-    };
+    });
 
     let m = measurements.read();
     let virtual_items = get_virtual_items(&state, &m, buffer());
     let total_height = get_total_size(&state, &m);
 
     let top_offset = virtual_items.first().map(|item| item.start()).unwrap_or(0);
-    let canvas_height = total_height.max(*state.viewport_size().peek());
+    let canvas_height = total_height.max(state.viewport_size().peek().unwrap_or_default());
     let set_size = count.to_string();
+    // Native layout can clamp an element's scroll offset without emitting a scroll event.
+    let canvas_resize = if cfg!(target_arch = "wasm32") {
+        Vec::new()
+    } else {
+        Vec::<Attribute>::new().onresize_with_explicit_closure(move |_| async move {
+            let previous = *state.scroll_offset().peek();
+            if previous == 0 {
+                return;
+            }
+            let mounted = container.peek().clone();
+            if let Some(mounted) = mounted {
+                if let Ok(offset) = mounted.get_scroll_offset().await {
+                    clamp_scroll_offset_from_layout(&state, previous, offset.y.round() as u32);
+                }
+            }
+        })
+    };
 
     rsx! {
         div {
             id: container_id,
             role: "list",
             tabindex: "0",
+            onmounted: move |event| {
+                container.set(Some(event.data()));
+                async move {
+                    if let Ok(offset) = event.data().get_scroll_offset().await {
+                        if !*state.is_scrolling().peek() {
+                            state.scroll_offset().set(offset.y.round() as u32);
+                        }
+                    }
+                }
+            },
+            onresize: move |event| {
+                if let Ok(size) = event.data().get_content_box_size() {
+                    set_height(container_height, size.height);
+                }
+            },
+            onscroll: move |event| {
+                let offset = event.data().scroll_top().round() as u32;
+                if offset == *state.scroll_offset().peek() {
+                    return;
+                }
+                set_height(container_height, f64::from(event.data().client_height()));
+                set_scroll_offset(&state, &measurements.peek(), offset, true);
+                let previous_task = idle_task.take();
+                if let Some(previous_task) = previous_task {
+                    previous_task.cancel();
+                }
+                idle_task.set(Some(spawn(async move {
+                    sleep(SCROLL_IDLE).await;
+                    idle_task.set(None);
+                    let current = *state.scroll_offset().peek();
+                    set_scroll_offset(&state, &measurements.peek(), current, false);
+                })));
+            },
             ..attributes,
 
             div {
-                style: "position: relative; height:{canvas_height}px; width: 100%;",
+                style: "position: relative; height:{canvas_height}px; width: 100%; overflow-anchor:none;",
+                ..canvas_resize,
                 div {
                     style: "position: absolute; inset: 0 auto auto 0; width: 100%; transform: translateY({top_offset}px); will-change: transform;",
                     {virtual_items.iter().map(move |item| {
@@ -243,37 +213,89 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
                                 "data-virtual-index": "{idx}",
                                 "aria-setsize": "{set_size}",
                                 "aria-posinset": "{idx + 1}",
-                                onresize: onresize(idx),
+                                onresize: move |event| async move {
+                                    let Ok(size) = event.data().get_content_box_size() else {
+                                        return;
+                                    };
+                                    let mounted = container.peek().clone();
+                                    if let Some(mounted) = mounted {
+                                        let size = size.height.max(1.0).round() as u32;
+                                        measure_rows(state, measurements, &mounted, [(idx, size)]).await;
+                                    }
+                                },
                                 {render_item(idx)}
                             }
                         }
                     })}
                 }
             }
+            div {
+                aria_hidden: "true",
+                style: "position:absolute; top:0; left:0; width:0; height:0; overflow:hidden;",
+                div {
+                    style: "height:100vh;",
+                    onresize: move |event| {
+                        if let Ok(size) = event.data().get_content_box_size() {
+                            set_height(window_height, size.height);
+                        }
+                    },
+                }
+            }
         }
     }
 }
 
-/// Parsed scroll message from JS bridge.
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ScrollMsg {
-    offset: u32,
-    viewport: u32,
-    is_scrolling: bool,
+fn set_height(mut height: Signal<Option<u32>>, value: f64) {
+    let value = Some(value.round() as u32);
+    if *height.peek() != value {
+        height.set(value);
+    }
 }
 
-async fn sync_container_scroll(container_id: String, scroll_top: u32) {
-    let eval = document::eval(
-        r#"
-        const id = await dioxus.recv();
-        const targetScroll = await dioxus.recv();
-        const container = document.getElementById(id);
-        if (container) {
-            container.scrollTop = targetScroll;
+async fn measure_rows(
+    state: Store<VirtualizerState>,
+    measurements: Memo<Vec<VirtualItem>>,
+    container: &MountedData,
+    sizes: impl IntoIterator<Item = (usize, u32)>,
+) {
+    let current_y = *state.scroll_offset().peek();
+    let anchor = {
+        let before = measurements.read();
+        let anchor = scroll_anchor(&before, current_y);
+        if !cache_item_sizes(&state, &before, sizes) {
+            return;
         }
-        "#,
-    );
-    let _ = eval.send(container_id);
-    let _ = eval.send(scroll_top);
+        anchor
+    };
+    let Some((index, old_start)) = anchor else {
+        return;
+    };
+    let Some(new_start) = measurements.read().get(index).map(VirtualItem::start) else {
+        return;
+    };
+    if old_start == new_start {
+        return;
+    }
+    if let Ok(offset) = container.get_scroll_offset().await {
+        if offset.y.round() as u32 != current_y || *state.scroll_offset().peek() != current_y {
+            return;
+        }
+        let target_y = offset.y + f64::from(new_start) - f64::from(old_start);
+        if container
+            .scroll(
+                PixelsVector2D::new(offset.x, target_y.max(0.0)),
+                ScrollBehavior::Instant,
+            )
+            .await
+            .is_ok()
+        {
+            // Blitz does not dispatch a scroll event for programmatic scrolls. Read the
+            // position back because the renderer may clamp the requested offset.
+            if let Ok(actual) = container.get_scroll_offset().await {
+                if *state.scroll_offset().peek() == current_y {
+                    state.scroll_offset().set(actual.y.round() as u32);
+                }
+            }
+        }
+    }
 }

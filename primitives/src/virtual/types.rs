@@ -37,8 +37,4 @@ impl VirtualItem {
     pub(crate) fn end(&self) -> u32 {
         self.start + self.size
     }
-
-    pub(crate) fn size(&self) -> u32 {
-        self.size
-    }
 }

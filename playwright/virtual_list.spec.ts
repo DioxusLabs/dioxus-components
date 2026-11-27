@@ -1,5 +1,22 @@
 import { test, expect } from "@playwright/test";
 
+test("VirtualList demo styles do not limit the email list height", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("http://127.0.0.1:8080/component/?name=virtual_list&");
+  await expect(page.locator(".dx-virtual-list-container").first()).toBeVisible({ timeout: 30000 });
+  const css = await page.locator("style").allTextContents().then((styles) =>
+    styles.filter((style) => style.includes("max-height: 36rem")).join("\n")
+  );
+  expect(css).toBeTruthy();
+
+  await page.goto("http://127.0.0.1:8080/dashboard/email-client/");
+  const list = page.locator(".ec-list-scroll");
+  await expect(list).toBeVisible();
+  // Retain the demo stylesheet to exercise the same cascade as Native.
+  await page.addStyleTag({ content: css });
+  await expect.poll(() => list.evaluate((el) => el.clientHeight)).toBeGreaterThan(750);
+});
+
 // Helper to run scrollHeight stability test with configurable tolerance
 async function testScrollHeightStability(
   page: import("@playwright/test").Page,
@@ -198,4 +215,42 @@ test("virtual list virtualizes rows and updates on scroll", async ({ page }) => 
     });
     expect(hasScrolledContent).toBe(true);
   }).toPass({ timeout: 15000 });
+});
+
+test("variable-height rows fill the list after its viewport grows", async ({ page }) => {
+  await page.goto("http://127.0.0.1:8080/component/block/?name=virtual_list&variant=random_heights");
+
+  const container = page.getByRole("list");
+  const rows = container.getByRole("listitem");
+  await expect(rows.first()).toBeVisible();
+  const initialRows = await rows.count();
+
+  await container.evaluate((el) => {
+    el.style.maxHeight = "160px";
+  });
+  await expect.poll(() => rows.count()).toBeLessThan(initialRows);
+  const smallViewportRows = await rows.count();
+
+  await container.evaluate((el) => {
+    el.style.maxHeight = "560px";
+  });
+  await expect.poll(() => rows.count()).toBeGreaterThan(smallViewportRows);
+
+  await container.evaluate((el) => {
+    el.scrollTop = 6000;
+  });
+  await expect(async () => {
+    const visible = await container.evaluate((el) => {
+      const viewport = el.getBoundingClientRect();
+      return Array.from(el.querySelectorAll("[data-virtual-index]")).flatMap((row) => {
+        const rect = row.getBoundingClientRect();
+        return rect.bottom > viewport.top && rect.top < viewport.bottom
+          ? [{ index: Number(row.getAttribute("data-virtual-index")), height: rect.height }]
+          : [];
+      });
+    });
+    expect(visible.length).toBeGreaterThan(1);
+    expect(visible[0].index).toBeGreaterThan(20);
+    expect(new Set(visible.map((row) => Math.round(row.height))).size).toBeGreaterThan(1);
+  }).toPass();
 });

@@ -6,7 +6,7 @@ pub fn Demo() -> Element {
     rsx! {
         div { class: "dx-virtual-list-demo",
             p { class: "dx-virtual-list-subtitle", "Scroll this page to verify virtualized rendering with dynamic row heights." }
-            style { r#".dx-virtual-list-container {{
+            style { r#".dx-virtual-list-demo .dx-virtual-list-container {{
   position: relative;
   max-height: 36rem;
   contain: layout paint;

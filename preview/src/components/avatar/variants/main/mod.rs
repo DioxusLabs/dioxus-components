@@ -73,7 +73,7 @@ pub fn Demo() -> Element {
                 p { class: Styles::dx_avatar_label, "Large Size" }
                 ImageAvatar {
                     size: AvatarImageSize::Large,
-                    src: asset!("/assets/dioxus-logo.png", ImageAssetOptions::new().with_avif()).to_string(),
+                    src: asset!("/assets/dioxus-logo.png").to_string(),
                     alt: "Large avatar",
                     on_state_change: move |state| {
                         avatar_state.set(format!("Avatar 4: {state:?}"));

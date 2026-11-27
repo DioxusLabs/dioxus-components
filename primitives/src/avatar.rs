@@ -287,8 +287,7 @@ pub fn AvatarImage(props: AvatarImageProps) -> Element {
     let watcher_src = props.src.clone();
     let watcher_ctx = ctx.clone();
     let watcher_current_src = current_src;
-    // Reconcile cached or very fast image loads that can complete before Dioxus
-    // delivers the synthetic load/error event.
+    // On JavaScript-backed renderers, reconcile cached images that complete before event delivery.
     use_effect(use_reactive!(|watcher_src| {
         if watcher_src.is_empty() {
             return;
@@ -314,8 +313,16 @@ pub fn AvatarImage(props: AvatarImageProps) -> Element {
             }
             "#,
         );
-        let _ = eval.send(image_id_value);
-        let _ = eval.send(watcher_src.clone());
+        if let Err(err) = eval
+            .send(image_id_value)
+            .and_then(|_| eval.send(watcher_src.clone()))
+        {
+            // Renderers without JavaScript (Dioxus Native) may never deliver image load events.
+            if matches!(err, document::EvalError::Unsupported) {
+                mark_avatar_loaded(watcher_ctx.clone());
+            }
+            return;
+        }
 
         let event_ctx = watcher_ctx.clone();
         let mut event_current_src = watcher_current_src;

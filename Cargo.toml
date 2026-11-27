@@ -3,15 +3,15 @@ resolver = "3"
 members = ["primitives", "preview", "test-harness", "dioxus-attributes"]
 
 [workspace.dependencies]
-dioxus = "=0.8.0-alpha.3"
+dioxus = "=0.8.0-alpha.4"
 dioxus-code = { version = "=0.2.0-alpha.3", default-features = false }
 dioxus-i18n = "=0.7.0-alpha.1"
 dioxus-icons = "=0.2.0-alpha.3"
 dioxus-primitives = { path = "primitives" }
-dioxus-rsx = "=0.8.0-alpha.3"
+dioxus-rsx = "=0.8.0-alpha.4"
 dioxus-sdk-time = "=0.8.0-alpha.3"
-dioxus-ssr = "=0.8.0-alpha.3"
-lazy-js-bundle = "=0.8.0-alpha.3"
+dioxus-ssr = "=0.8.0-alpha.4"
+lazy-js-bundle = "=0.8.0-alpha.4"
 tracing = { version = "0.1", features = ["std"] }
 
 [profile.release]
@@ -28,3 +28,9 @@ debug = 0
 [profile.dev.build-override]
 opt-level = 3
 codegen-units = 1
+
+# Companion crates' alpha.4 bumps are not published yet; drop once they are.
+[patch.crates-io]
+dioxus-code = { git = "https://github.com/DioxusLabs/dioxus-code", rev = "b20d3d4575c36f4b3c4fe9432b002b20da6beb9b" }
+dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", rev = "1df2a824db17d4ebcb88f78824b3cb23416e7870" }
+dioxus-sdk-time = { git = "https://github.com/DioxusLabs/sdk", rev = "dbece3e3a67bcd67dfec3ae32b27ee37ba38a736" }

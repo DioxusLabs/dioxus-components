@@ -1,7 +1,7 @@
 //! Context types and implementations for the select component.
 
+use dioxus::core::Task;
 use dioxus::prelude::*;
-use dioxus_core::Task;
 use dioxus_sdk_time::sleep;
 
 use std::time::Duration;

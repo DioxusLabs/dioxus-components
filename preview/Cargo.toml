@@ -10,12 +10,18 @@ dioxus-code = { workspace = true, features = ["macro", "lang-css"] }
 dioxus-icons.workspace = true
 dioxus-primitives.workspace = true
 dioxus-i18n.workspace = true
+dioxus-timers.workspace = true
+fastrand = { version = "2", features = ["js"] }
 palette = "0.7.6"
 unic-langid = { version = "0.9", features = ["macros"] }
 strum = { version = "0.27.2", features = ["derive"] }
 tracing = { workspace = true }
 time = { version = "0.3.44", features = ["std", "macros"] }
+web-time = "1"
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+arboard = { version = "3", default-features = false, optional = true }
+dirs = { version = "7", optional = true }
 
 [build-dependencies]
 dioxus = { workspace = true }
@@ -32,4 +38,4 @@ web = ["dioxus/web", "dioxus-primitives/web"]
 desktop = ["dioxus/desktop"]
 fullstack = ["dioxus/fullstack"]
 server = ["dioxus/server", "dioxus/fullstack"]
-native = ["dioxus/native"]
+native = ["dioxus/native", "dep:arboard", "dep:dirs"]

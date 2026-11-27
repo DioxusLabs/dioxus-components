@@ -5,6 +5,9 @@ const COOKIE_NAME: &str = "dx_theme";
 const CHANNEL_NAME: &str = "dx-theme";
 
 pub fn theme_seed() {
+    if crate::is_native() {
+        return;
+    }
     _ = document::eval(&format!(
         r#"
         (function () {{
@@ -48,6 +51,12 @@ pub fn theme_seed() {
 }
 
 pub fn set_theme(dark_mode: bool) {
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    if let Some(theme) = try_consume_context::<crate::native::NativeTheme>() {
+        theme.set(dark_mode);
+        return;
+    }
+
     let theme = if dark_mode { "dark" } else { "light" };
 
     _ = document::eval(&format!(

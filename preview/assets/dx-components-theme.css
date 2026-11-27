@@ -2,22 +2,26 @@
  * need to import this file once in your project root.
  */
 
-html[data-theme="dark"] {
+html[data-theme="dark"],
+.dx-native-preview[data-theme="dark"] {
   --dark: initial;
   --light: ;
 }
 
-html[data-theme="light"] {
+html[data-theme="light"],
+.dx-native-preview[data-theme="light"] {
   --dark: ;
   --light: initial;
 }
 
-html[data-theme="dark"] [class~="dxc-system"] {
+html[data-theme="dark"] [class~="dxc-system"],
+.dx-native-preview[data-theme="dark"] [class~="dxc-system"] {
   --dxc-light-on: ;
   --dxc-dark-on: initial;
 }
 
-html[data-theme="light"] [class~="dxc-system"] {
+html[data-theme="light"] [class~="dxc-system"],
+.dx-native-preview[data-theme="light"] [class~="dxc-system"] {
   --dxc-light-on: initial;
   --dxc-dark-on: ;
 }
@@ -36,7 +40,8 @@ html[data-theme="light"] [class~="dxc-system"] {
   }
 }
 
-:root {
+:root,
+.dx-native-preview {
   /* Primary colors */
   --primary-color: var(--dark, #000) var(--light, #fff);
   --primary-color-1: var(--dark, #0e0e0e) var(--light, #fbfbfb);

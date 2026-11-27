@@ -1,22 +1,17 @@
 use super::super::component::*;
 use dioxus::prelude::*;
+use std::time::Duration;
 
 #[component]
 pub fn Demo() -> Element {
     let mut progress = use_signal(|| 0);
 
-    use_effect(move || {
-        let mut timer = document::eval(
-            "setInterval(() => {
-                dioxus.send(Math.floor(Math.random() * 30));
-            }, 1000);",
-        );
-        spawn(async move {
-            while let Ok(new_progress) = timer.recv::<usize>().await {
-                let mut progress = progress.write();
-                *progress = (*progress + new_progress) % 101;
-            }
-        });
+    use_future(move || async move {
+        loop {
+            dioxus_timers::sleep(Duration::from_secs(1)).await;
+            let mut progress = progress.write();
+            *progress = (*progress + fastrand::usize(0..30)) % 101;
+        }
     });
 
     rsx! {

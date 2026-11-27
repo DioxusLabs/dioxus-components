@@ -10,6 +10,7 @@ on:
       - preview/**/*.css
       - preview/**/*.rs
       - preview/**/Cargo.toml
+      - preview-web/**
       - primitives/**/*.rs
       - primitives/**/Cargo.toml
       - .github/**
@@ -25,6 +26,7 @@ on:
       - preview/**/*.css
       - preview/**/*.rs
       - preview/**/Cargo.toml
+      - preview-web/**
       - primitives/**/*.rs
       - primitives/**/Cargo.toml
       - .github/**

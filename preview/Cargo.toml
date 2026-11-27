@@ -28,8 +28,4 @@ serde_json = "1"
 dioxus-ssr.workspace = true
 
 [features]
-web = ["dioxus/web", "dioxus-primitives/web"]
-desktop = ["dioxus/desktop"]
-fullstack = ["dioxus/fullstack"]
-server = ["dioxus/server", "dioxus/fullstack"]
-native = ["dioxus/native"]
+web = ["dioxus-primitives/web"]

@@ -1,12 +1,20 @@
 [workspace]
 resolver = "3"
-members = ["primitives", "preview", "test-harness", "dioxus-attributes"]
+members = [
+    "primitives",
+    "preview",
+    "preview-web",
+    "preview-native",
+    "test-harness",
+    "dioxus-attributes",
+]
 
 [workspace.dependencies]
 dioxus = "=0.8.0-alpha.3"
 dioxus-code = { version = "=0.2.0-alpha.3", default-features = false }
 dioxus-i18n = "=0.7.0-alpha.1"
 dioxus-icons = "=0.2.0-alpha.3"
+dioxus-native = { git = "https://github.com/DioxusLabs/blitz", rev = "0e8e7af75fb1b4ee362b03592ce2d979438a3cdd", features = ["prelude"] }
 dioxus-primitives = { path = "primitives" }
 dioxus-rsx = "=0.8.0-alpha.3"
 dioxus-sdk-time = "=0.8.0-alpha.3"
@@ -15,10 +23,7 @@ lazy-js-bundle = "=0.8.0-alpha.3"
 tracing = { version = "0.1", features = ["std"] }
 
 [profile.release]
-opt-level = "z"
 debug = false
-lto = true
-codegen-units = 1
 strip = true
 incremental = false
 

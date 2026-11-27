@@ -33,4 +33,4 @@ codegen-units = 1
 # Companion crates' alpha.4 bumps are not published yet; drop once they are.
 [patch.crates-io]
 dioxus-code = { git = "https://github.com/DioxusLabs/dioxus-code", rev = "b20d3d4575c36f4b3c4fe9432b002b20da6beb9b" }
-dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", rev = "2a1fdc3b16d9d547d96aaac67f72c78cf37579d9" }
+dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", rev = "708378fb8bcdac97e4ad1fad2ff9a04303f50d1d" }

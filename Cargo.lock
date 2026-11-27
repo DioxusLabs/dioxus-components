@@ -1955,9 +1955,9 @@ dependencies = [
 [[package]]
 name = "dioxus-icons"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/DioxusLabs/dioxus-icons?rev=2a1fdc3b16d9d547d96aaac67f72c78cf37579d9#2a1fdc3b16d9d547d96aaac67f72c78cf37579d9"
+source = "git+https://github.com/DioxusLabs/dioxus-icons?rev=708378fb8bcdac97e4ad1fad2ff9a04303f50d1d#708378fb8bcdac97e4ad1fad2ff9a04303f50d1d"
 dependencies = [
- "dioxus",
+ "dioxus-core",
  "dioxus-signals",
  "dioxus-vdom",
  "dioxus-vdom-template",

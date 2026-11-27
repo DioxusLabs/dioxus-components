@@ -1,5 +1,5 @@
-use crate::dioxus_core::provide_root_context;
 use dioxus::prelude::*;
+use dioxus_vdom::provide_root_context;
 use std::collections::HashMap;
 
 use crate::use_effect_cleanup;

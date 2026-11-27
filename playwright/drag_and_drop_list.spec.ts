@@ -359,25 +359,31 @@ test.describe("Drag and drop lifecycle", () => {
     const items = getItems(list);
     const source = items.nth(2);
     const originalOrder = await items.allTextContents();
-    const { start } = await dragPoints(list);
     await source.evaluate((item) => {
+      let attempts = 0;
       Object.defineProperty(item, "setPointerCapture", {
-        value: () => { throw new DOMException("Capture unavailable", "NotSupportedError"); },
+        value: () => {
+          item.dataset.testCaptureAttempts = String(++attempts);
+          throw new DOMException("Capture unavailable", "NotSupportedError");
+        },
       });
     });
 
-    await page.mouse.move(start.x, start.y);
-    await page.mouse.down();
-    await page.mouse.move(start.x + 8, start.y);
-    await expect(source).toHaveAttribute("aria-grabbed", "true");
+    async function activateUncapturedDrag(attempt: number) {
+      await source.hover({ position: { x: 20, y: 20 } });
+      await page.mouse.down();
+      await expect(source).toHaveAttribute("data-test-capture-attempts", String(attempt));
+      const row = (await source.boundingBox())!;
+      await page.mouse.move(row.x + row.width / 2, row.y + row.height / 2);
+      await expect(source).toHaveAttribute("aria-grabbed", "true");
+    }
+
+    await activateUncapturedDrag(1);
     await page.mouse.up();
     await expect(source).toHaveAttribute("aria-grabbed", "false");
     await expect(items).toHaveText(originalOrder);
 
-    await page.mouse.move(start.x, start.y);
-    await page.mouse.down();
-    await page.mouse.move(start.x + 8, start.y);
-    await expect(source).toHaveAttribute("aria-grabbed", "true");
+    await activateUncapturedDrag(2);
     await page.mouse.move(1, 1);
     await page.mouse.up();
     await expect(source).toHaveAttribute("aria-grabbed", "false");

@@ -353,6 +353,36 @@ test.describe("Drag and drop lifecycle", () => {
     await page.mouse.up();
     await expect(items).toHaveText(originalOrder);
   });
+
+  test("a failed capture still allows dragging on the pressed item", async ({ page }) => {
+    const list = await loadMainList(page);
+    const items = getItems(list);
+    const source = items.nth(2);
+    const originalOrder = await items.allTextContents();
+    const { start } = await dragPoints(list);
+    await source.evaluate((item) => {
+      Object.defineProperty(item, "setPointerCapture", {
+        value: () => { throw new DOMException("Capture unavailable", "NotSupportedError"); },
+      });
+    });
+
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.mouse.move(start.x + 8, start.y);
+    await expect(source).toHaveAttribute("aria-grabbed", "true");
+    await page.mouse.up();
+    await expect(source).toHaveAttribute("aria-grabbed", "false");
+    await expect(items).toHaveText(originalOrder);
+
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.mouse.move(start.x + 8, start.y);
+    await expect(source).toHaveAttribute("aria-grabbed", "true");
+    await page.mouse.move(1, 1);
+    await page.mouse.up();
+    await expect(source).toHaveAttribute("aria-grabbed", "false");
+    await expect(items).toHaveText(originalOrder);
+  });
 });
 
 test.describe("Touch drag", () => {

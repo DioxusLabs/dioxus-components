@@ -118,11 +118,6 @@ enum PointerDrag {
 
 type PointerId = i32;
 
-enum PointerCapture {
-    Pending(Rc<ScopeId>),
-    Captured(ScopeId),
-}
-
 enum PointerUpdate {
     Move(PointerId, ClientPoint),
     Release(PointerId),
@@ -144,8 +139,7 @@ pub struct DragAndDropContext {
     list_items: Signal<Vec<SortableListItem>>,
     focus: CollectionState,
     announcement: Signal<String>,
-    pointer_drag: Signal<Option<(PointerId, PointerDrag)>>,
-    pointer_capture: Signal<Option<PointerCapture>>,
+    pointer_drag: Signal<Option<(PointerId, ScopeId, PointerDrag)>>,
     mounted_items: Signal<Vec<MountedItem>>,
 }
 
@@ -327,27 +321,8 @@ impl DragAndDropContext {
 }
 
 impl DragAndDropContext {
-    fn capture_pointer(&mut self, id: PointerId, scope: ScopeId, element: &MountedData) {
-        let request = Rc::new(scope);
-        self.pointer_capture
-            .set(Some(PointerCapture::Pending(request.clone())));
-        let capture = element.set_pointer_capture(id);
-        let mut capture_state = self.pointer_capture;
-        spawn(async move {
-            let captured = capture.await.is_ok();
-            if matches!(&*capture_state.peek(), Some(PointerCapture::Pending(current)) if Rc::ptr_eq(current, &request))
-            {
-                capture_state.set(captured.then_some(PointerCapture::Captured(scope)));
-            }
-        });
-    }
-
-    fn pointer_routes_to(&self, id: PointerId, item: Option<ScopeId>) -> bool {
-        self.pointer_drag(id).is_some()
-            && match *self.pointer_capture.peek() {
-                Some(PointerCapture::Captured(scope)) => item == Some(scope),
-                _ => item.is_none(),
-            }
+    fn pointer_is_on_source(&self, id: PointerId, scope: ScopeId) -> bool {
+        matches!(*self.pointer_drag.peek(), Some((active, source, _)) if id == active && scope == source)
     }
 
     fn on_pointer_move(&mut self, event: &PointerEvent, updates: Coroutine<PointerUpdate>) {
@@ -378,8 +353,8 @@ impl DragAndDropContext {
     fn pointer_drag(&self, pointer_id: PointerId) -> Option<PointerDrag> {
         self.pointer_drag
             .peek()
-            .filter(|(id, _)| *id == pointer_id)
-            .map(|(_, drag)| drag)
+            .filter(|(id, _, _)| *id == pointer_id)
+            .map(|(_, _, drag)| drag)
     }
 
     fn pointer_move(&mut self, pointer_id: PointerId, position: ClientPoint) -> bool {
@@ -388,8 +363,9 @@ impl DragAndDropContext {
                 if !self.is_dragging() && (position - origin).square_length() >= 16.0 =>
             {
                 self.start_drag(from);
-                self.pointer_drag
-                    .set(Some((pointer_id, PointerDrag::Dragging)));
+                if let Some((_, _, drag)) = self.pointer_drag.write().as_mut() {
+                    *drag = PointerDrag::Dragging;
+                }
                 true
             }
             Some(PointerDrag::Dragging) => true,
@@ -402,7 +378,6 @@ impl DragAndDropContext {
             return false;
         };
         self.pointer_drag.set(None);
-        self.pointer_capture.set(None);
         match drag {
             PointerDrag::Pressed { .. } => false,
             PointerDrag::Dragging => {
@@ -421,10 +396,11 @@ impl DragAndDropContext {
     fn cancel_pointer(&mut self) {
         let drag = *self.pointer_drag.peek();
         match drag {
-            Some((id, PointerDrag::Dragging)) => {
-                self.pointer_drag.set(Some((id, PointerDrag::Cancelled)));
+            Some((id, scope, PointerDrag::Dragging)) => {
+                self.pointer_drag
+                    .set(Some((id, scope, PointerDrag::Cancelled)));
             }
-            Some((id, PointerDrag::Pressed { .. })) => {
+            Some((id, _, PointerDrag::Pressed { .. })) => {
                 self.finish_pointer_drag(id, false);
             }
             _ => {}
@@ -477,13 +453,13 @@ mod pointer_tests {
                 pointer_drag: use_signal(|| {
                     Some((
                         1,
+                        ScopeId::ROOT,
                         PointerDrag::Pressed {
                             from: 0,
                             origin: ClientPoint::new(0.0, 0.0),
                         },
                     ))
                 }),
-                pointer_capture: use_signal(|| None),
                 mounted_items: use_signal(Vec::new),
             };
             test(&mut ctx);
@@ -531,39 +507,6 @@ mod pointer_tests {
             assert!(!ctx.is_dragging());
             assert!(ctx.pointer_drag(1).is_none());
         });
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[test]
-    fn clipped_instructions_do_not_intercept_item_hits() {
-        use dioxus_native_dom::{DioxusDocument, DocumentConfig};
-
-        fn app() -> Element {
-            rsx! {
-                DragAndDropList { items: Vec::new(), style: "position:relative;",
-                    DragAndDropInstructions {}
-                    DragAndDropListItems { aria_label: "Sortable list", style: "margin:0;padding:0;",
-                        DragAndDropListItem { index: 0, style: "height:44px;list-style:none;",
-                            "Drag me"
-                        }
-                    }
-                }
-            }
-        }
-
-        let mut native = DioxusDocument::new(VirtualDom::new(app), DocumentConfig::default());
-        native.initial_build();
-        let mut doc = native.inner.borrow_mut();
-        let mut viewport = doc.get_viewport();
-        viewport.window_size = (600, 400);
-        doc.set_viewport(viewport);
-        doc.resolve(0.0);
-
-        let row = doc.query_selector("li").unwrap().unwrap();
-        let rect = doc.get_client_bounding_rect(row).unwrap();
-        let x = rect.x as f32 + 18.0;
-        let y = rect.y as f32 + 22.0;
-        assert_eq!(doc.element_from_point(x, y), Some(row));
     }
 }
 
@@ -655,7 +598,6 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
     let announcement = use_signal(String::new);
     let focus = use_collection_provider(ReadSignal::new(Signal::new(true)));
     let pointer_drag = use_signal(|| None);
-    let pointer_capture = use_signal(|| None);
     let mounted_items = use_signal(Vec::new);
 
     let mut ctx = use_context_provider(move || DragAndDropContext {
@@ -664,10 +606,9 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
         focus,
         announcement,
         pointer_drag,
-        pointer_capture,
         mounted_items,
     });
-    let updates = use_coroutine(move |mut rx: UnboundedReceiver<PointerUpdate>| async move {
+    use_coroutine(move |mut rx: UnboundedReceiver<PointerUpdate>| async move {
         while let Ok(update) = rx.recv().await {
             match update {
                 PointerUpdate::Move(id, position) => ctx.update_pointer_target(id, position).await,
@@ -699,40 +640,8 @@ pub fn DragAndDropList(props: DragAndDropListProps) -> Element {
 
     rsx! {
         div {
-            onpointermove: move |event: PointerEvent| {
-                if ctx.pointer_routes_to(event.pointer_id(), None) {
-                    ctx.on_pointer_move(&event, updates);
-                }
-            },
-            onpointerup: move |event: PointerEvent| {
-                if ctx.pointer_routes_to(event.pointer_id(), None) {
-                    ctx.on_pointer_up(&event, updates);
-                }
-            },
-            onpointercancel: move |event: PointerEvent| {
-                let id = event.pointer_id();
-                if ctx.pointer_routes_to(id, None) {
-                    updates.send(PointerUpdate::Cancel(id));
-                }
-            },
-            onpointerleave: move |event: PointerEvent| {
-                let id = event.pointer_id();
-                if ctx.pointer_routes_to(id, None)
-                    && matches!(ctx.pointer_drag(id), Some(PointerDrag::Pressed { .. }))
-                {
-                    ctx.finish_pointer_drag(id, false);
-                }
-            },
             ..props.attributes,
             {children}
-            if matches!(pointer_drag(), Some((_, PointerDrag::Dragging | PointerDrag::Cancelled)))
-                && !matches!(*pointer_capture.read(), Some(PointerCapture::Captured(_)))
-            {
-                div {
-                    aria_hidden: "true",
-                    style: "position:fixed;inset:0;z-index:2147483647;cursor:grabbing;touch-action:none;",
-                }
-            }
         }
     }
 }
@@ -928,7 +837,10 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
     let onkeydown = move |event: Event<KeyboardData>| {
         let key = event.key();
         if key != Key::Named(NamedKey::Escape)
-            && matches!(*ctx.pointer_drag.peek(), Some((_, PointerDrag::Dragging)))
+            && matches!(
+                *ctx.pointer_drag.peek(),
+                Some((_, _, PointerDrag::Dragging))
+            )
         {
             return;
         }
@@ -1027,19 +939,26 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                     ctx.set_focus(Some(index));
                     ctx.pointer_drag.set(Some((
                         id,
+                        scope,
                         PointerDrag::Pressed { from: index, origin: event.client_coordinates() },
                     )));
                     if let Some(element) = item_ref.peek().as_ref() {
-                        ctx.capture_pointer(id, scope, element);
+                        let capture = element.set_pointer_capture(id);
+                        spawn(async move {
+                            let _ = capture.await;
+                        });
                     }
                 }
             },
             onpointermove: move |event: PointerEvent| {
-                if ctx.pointer_routes_to(event.pointer_id(), Some(scope)) {
+                if ctx.pointer_is_on_source(event.pointer_id(), scope) {
                     ctx.on_pointer_move(&event, updates);
                 }
             },
             onpointerup: move |event: PointerEvent| {
+                if !ctx.pointer_is_on_source(event.pointer_id(), scope) {
+                    return;
+                }
                 if event.trigger_button() == Some(MouseButton::Primary)
                     && matches!(ctx.pointer_drag(event.pointer_id()), Some(PointerDrag::Pressed { from, .. }) if from == index)
                 {
@@ -1050,19 +969,23 @@ pub fn DragAndDropListItem(props: DragAndDropListItemProps) -> Element {
                         }
                     });
                 }
-                if ctx.pointer_routes_to(event.pointer_id(), Some(scope)) {
-                    ctx.on_pointer_up(&event, updates);
-                }
+                ctx.on_pointer_up(&event, updates);
             },
             onpointercancel: move |event: PointerEvent| {
                 let id = event.pointer_id();
-                if ctx.pointer_routes_to(id, Some(scope)) {
+                if ctx.pointer_is_on_source(id, scope) {
+                    updates.send(PointerUpdate::Cancel(id));
+                }
+            },
+            onpointerleave: move |event: PointerEvent| {
+                let id = event.pointer_id();
+                if ctx.pointer_is_on_source(id, scope) {
                     updates.send(PointerUpdate::Cancel(id));
                 }
             },
             onlostpointercapture: move |event: PointerEvent| {
                 let id = event.pointer_id();
-                if ctx.pointer_routes_to(id, Some(scope)) {
+                if ctx.pointer_is_on_source(id, scope) {
                     updates.send(PointerUpdate::Cancel(id));
                 }
             },

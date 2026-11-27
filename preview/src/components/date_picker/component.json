@@ -6,7 +6,8 @@
   "cargoDependencies": [
     {
       "name": "dioxus-primitives",
-      "git": "https://github.com/DioxusLabs/components"
+      "git": "https://github.com/DioxusLabs/components",
+      "rev": "refs/heads/v0.7"
     },
     {
       "name": "dioxus-icons",

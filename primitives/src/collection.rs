@@ -316,15 +316,44 @@ impl CollectionState {
         }
     }
 
-    fn control_mount_focus(&self, index: usize, controlled_ref: Signal<Option<Rc<MountedData>>>) {
+    /// Move DOM focus to this item's element when the collection's focus moves
+    /// to it, or when its element is replaced while it is focused. `moved` is
+    /// the element this item last moved DOM focus to for its current focus.
+    /// The effect calling this re-runs on any item's registration, and moving
+    /// focus again on such a re-run pulled focus back from wherever it had gone
+    /// in the meantime (a dialog that had just taken it) before this item's
+    /// blur reached the collection. The focus is also dropped if the
+    /// collection's focus has moved on by the time it would be applied.
+    fn control_mount_focus(
+        &self,
+        index: usize,
+        controlled_ref: Signal<Option<Rc<MountedData>>>,
+        mut moved: Signal<Option<Rc<MountedData>>>,
+    ) {
         let controlled_ref = controlled_ref();
-        if self.is_focused(index) && self.is_available(index) {
-            if let Some(md) = controlled_ref {
-                spawn(async move {
-                    let _ = md.set_focus(true).await;
-                });
+        if !(self.is_focused(index) && self.is_available(index)) {
+            if moved.peek().is_some() {
+                moved.set(None);
             }
+            return;
         }
+        let Some(md) = controlled_ref else {
+            return;
+        };
+        if moved
+            .peek()
+            .as_ref()
+            .is_some_and(|previous| Rc::ptr_eq(previous, &md))
+        {
+            return;
+        }
+        moved.set(Some(md.clone()));
+        let focused = self.focused;
+        spawn(async move {
+            if *focused.peek() == Some(index) {
+                let _ = md.set_focus(true).await;
+            }
+        });
     }
 
     fn available_indices(&self) -> Vec<usize> {
@@ -568,13 +597,20 @@ pub(crate) fn use_item(builder: CollectionItemBuilder) -> CollectionItem {
     // Keep DOM focus in sync when this item becomes focused. The handler that
     // populates `controlled_ref` may be attached in a different component.
     let controlled_ref: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
+    let mut moved: Signal<Option<Rc<MountedData>>> = use_signal(|| None);
     use_effect({
         let index = index.clone();
         move || {
             if disabled() || hidden() {
+                // Not focusable now, so focus has not moved here for the
+                // focus to come: an item enabled again and focused in the
+                // same flush must still take it.
+                if moved.peek().is_some() {
+                    moved.set(None);
+                }
                 return;
             }
-            collection.control_mount_focus(index(), controlled_ref);
+            collection.control_mount_focus(index(), controlled_ref, moved);
         }
     });
 

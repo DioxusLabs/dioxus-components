@@ -455,6 +455,16 @@ pub fn DropdownMenuItem<T: Clone + PartialEq + 'static>(
             },
 
             onkeydown: move |event: Event<KeyboardData>| {
+                // A navigation key is on this item, so it has the page's
+                // focus: the menu's own handler (it bubbles there next) moves
+                // on from it, even if the collection had not recorded it yet.
+                if matches!(
+                    event.key(),
+                    Key::ArrowDown | Key::ArrowUp | Key::Home | Key::End
+                ) && !focused()
+                {
+                    ctx.focus.set_focus(Some((props.index)()));
+                }
                 if event.key() == Key::Enter || event.key() == Key::Character(" ".to_string()) {
                     if !disabled() {
                         props.on_select.call((props.value)());

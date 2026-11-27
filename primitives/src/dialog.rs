@@ -228,7 +228,7 @@ pub fn DialogContent(props: DialogContentProps) -> Element {
     let gen_id = use_unique_id();
     let id = use_id_or(gen_id, props.id);
 
-    use_outside_dismiss(id, move || set_open.call(false));
+    use_outside_dismiss(id, move || !is_modal(), move || set_open.call(false));
     use_effect(move || {
         let is_modal = is_modal();
         if !is_modal {

@@ -211,24 +211,31 @@ fn use_global_keydown_listener(key: &'static str, on_escape: impl FnMut() + Clon
 
 /// Light-dismiss when pointerdown/focusin lands outside the element with the given `id`.
 /// `id` should be the id of the popover/dialog root that contains every "inside" element.
+///
+/// When `dismiss_on_focusin` returns false only pointerdown dismisses. Modal surfaces trap
+/// focus, so a focusin outside them is programmatic (for example a late re-focus from a
+/// roving-focus collection) rather than the user leaving.
 fn use_outside_dismiss(
     id: impl Readable<Target = String> + Copy + 'static,
+    dismiss_on_focusin: impl Fn() -> bool + Clone + 'static,
     on_dismiss: impl FnMut() + Clone + 'static,
 ) {
     use_effect_with_cleanup(move || {
         let mut eval = document::eval(
             "const id = await dioxus.recv();
+            const on_focusin = await dioxus.recv();
             const f = e => {
                 const root = document.getElementById(id);
                 if (root && !root.contains(e.target)) dioxus.send(true);
             };
             document.addEventListener('pointerdown', f, true);
-            document.addEventListener('focusin', f, true);
+            if (on_focusin) document.addEventListener('focusin', f, true);
             await dioxus.recv();
             document.removeEventListener('pointerdown', f, true);
             document.removeEventListener('focusin', f, true);",
         );
         let _ = eval.send(id.cloned());
+        let _ = eval.send(dismiss_on_focusin());
         let mut on_dismiss = on_dismiss.clone();
         spawn(async move {
             while let Ok(true) = eval.recv().await {

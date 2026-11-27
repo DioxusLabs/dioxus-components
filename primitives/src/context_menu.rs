@@ -454,10 +454,14 @@ pub fn ContextMenuContent(props: ContextMenuContentProps) -> Element {
 
     let render = use_animated_open(id, open);
 
-    use_outside_dismiss(ctx.root_id, move || {
-        ctx.focus.clear_focus();
-        ctx.set_open.call(false);
-    });
+    use_outside_dismiss(
+        ctx.root_id,
+        || true,
+        move || {
+            ctx.focus.clear_focus();
+            ctx.set_open.call(false);
+        },
+    );
 
     // A `position: fixed` menu pinned to a click point drifts away from the
     // click target as soon as the page scrolls. Native context menus block

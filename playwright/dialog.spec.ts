@@ -33,3 +33,18 @@ test('test', async ({ page }) => {
   await page.mouse.click(2, 2);
   await expect(dialog).toHaveCount(0);
 });
+
+test('focus moving outside a modal dialog does not dismiss it', async ({ page }) => {
+  await page.goto('http://127.0.0.1:8080/component/?name=dialog&', { timeout: 20 * 60 * 1000 });
+  const trigger = page.getByRole('button', { name: 'Show Dialog' });
+  await trigger.click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  // A programmatic focus outside (e.g. a late roving-focus re-focus) is not a light-dismiss.
+  await trigger.evaluate((el: HTMLElement) => el.focus());
+  await page.waitForTimeout(500);
+  await expect(dialog).toBeVisible();
+  // Pointer interaction outside still dismisses.
+  await page.mouse.click(2, 2);
+  await expect(dialog).toHaveCount(0);
+});

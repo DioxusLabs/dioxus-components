@@ -22,6 +22,7 @@ pub struct DialogCtx {
     is_modal: ReadSignal<bool>,
     dialog_labelledby: Signal<String>,
     dialog_describedby: Signal<String>,
+    root_id: Memo<String>,
 }
 
 impl DialogCtx {
@@ -127,6 +128,7 @@ pub fn DialogRoot(props: DialogRootProps) -> Element {
         is_modal: props.is_modal,
         dialog_labelledby,
         dialog_describedby,
+        root_id: id,
     });
 
     let render = use_animated_open(id, open);
@@ -228,7 +230,7 @@ pub fn DialogContent(props: DialogContentProps) -> Element {
     let gen_id = use_unique_id();
     let id = use_id_or(gen_id, props.id);
 
-    use_outside_dismiss(id, move || set_open.call(false));
+    use_outside_dismiss(ctx.root_id, id, move || set_open.call(false));
     use_effect(move || {
         let is_modal = is_modal();
         if !is_modal {

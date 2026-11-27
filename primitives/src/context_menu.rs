@@ -454,7 +454,7 @@ pub fn ContextMenuContent(props: ContextMenuContentProps) -> Element {
 
     let render = use_animated_open(id, open);
 
-    use_outside_dismiss(ctx.root_id, move || {
+    use_outside_dismiss(ctx.root_id, ctx.root_id, move || {
         ctx.focus.clear_focus();
         ctx.set_open.call(false);
     });

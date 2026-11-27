@@ -211,24 +211,48 @@ fn use_global_keydown_listener(key: &'static str, on_escape: impl FnMut() + Clon
 
 /// Light-dismiss when pointerdown/focusin lands outside the element with the given `id`.
 /// `id` should be the id of the popover/dialog root that contains every "inside" element.
-fn use_outside_dismiss(
-    id: impl Readable<Target = String> + Copy + 'static,
+/// `layer_id` is the element covering this overlay (e.g. the dialog backdrop); events inside
+/// overlays opened after this one are not treated as outside, even if they are DOM siblings.
+fn use_outside_dismiss<R: Readable<Target = String> + Copy + 'static>(
+    layer_id: R,
+    id: R,
+    on_dismiss: impl FnMut() + Clone + 'static,
+) {
+    use_overlay_layer_inner(layer_id, Some(id), on_dismiss);
+}
+
+/// Register an overlay that never light-dismisses (e.g. an alert dialog), so that lower
+/// overlays do not treat events inside it as outside.
+fn use_overlay_layer(layer_id: impl Readable<Target = String> + Copy + 'static) {
+    use_overlay_layer_inner(layer_id, None, || {});
+}
+
+fn use_overlay_layer_inner<R: Readable<Target = String> + Copy + 'static>(
+    layer_id: R,
+    id: Option<R>,
     on_dismiss: impl FnMut() + Clone + 'static,
 ) {
     use_effect_with_cleanup(move || {
         let mut eval = document::eval(
-            "const id = await dioxus.recv();
+            "const [layerId, id] = await dioxus.recv();
+            const layers = (window.__dxOverlayLayers ??= []);
+            layers.push(layerId);
+            const inside = (elementId, target) => document.getElementById(elementId)?.contains(target);
             const f = e => {
-                const root = document.getElementById(id);
-                if (root && !root.contains(e.target)) dioxus.send(true);
+                if (!document.getElementById(id) || inside(id, e.target)) return;
+                const above = layers.slice(layers.lastIndexOf(layerId) + 1);
+                if (!above.some(layer => inside(layer, e.target))) dioxus.send(true);
             };
-            document.addEventListener('pointerdown', f, true);
-            document.addEventListener('focusin', f, true);
+            if (id !== null) {
+                document.addEventListener('pointerdown', f, true);
+                document.addEventListener('focusin', f, true);
+            }
             await dioxus.recv();
+            layers.splice(layers.lastIndexOf(layerId), 1);
             document.removeEventListener('pointerdown', f, true);
             document.removeEventListener('focusin', f, true);",
         );
-        let _ = eval.send(id.cloned());
+        let _ = eval.send((layer_id.cloned(), id.map(|id| id.cloned())));
         let mut on_dismiss = on_dismiss.clone();
         spawn(async move {
             while let Ok(true) = eval.recv().await {

@@ -1,7 +1,7 @@
 //! Defines the [`AlertDialogRoot`] component and its sub-components.
 
 use crate::use_global_escape_listener;
-use crate::{use_animated_open, use_id_or, use_unique_id, FOCUS_TRAP_JS};
+use crate::{use_animated_open, use_id_or, use_overlay_layer, use_unique_id, FOCUS_TRAP_JS};
 use dioxus::document;
 use dioxus::prelude::*;
 
@@ -11,6 +11,7 @@ struct AlertDialogCtx {
     set_open: Callback<bool>,
     labelledby: String,
     describedby: String,
+    root_id: Memo<String>,
 }
 
 /// The props for the [`AlertDialogRoot`] component.
@@ -87,15 +88,15 @@ pub fn AlertDialogRoot(props: AlertDialogRootProps) -> Element {
         props.on_open_change.call(v);
     });
     let open = use_memo(move || (props.open)().unwrap_or_else(&*open_signal));
+    let id = use_unique_id();
+    let id = use_id_or(id, props.id);
     use_context_provider(|| AlertDialogCtx {
         open,
         set_open,
         labelledby,
         describedby,
+        root_id: id,
     });
-
-    let id = use_unique_id();
-    let id = use_id_or(id, props.id);
     let render_element = use_animated_open(id, open);
 
     rsx! {
@@ -182,6 +183,7 @@ pub fn AlertDialogContent(props: AlertDialogContentProps) -> Element {
     // just add this to the dialog itself because it might not be focused if the user
     // is highlighting text or interacting with another element.
     use_global_escape_listener(move || set_open.call(false));
+    use_overlay_layer(ctx.root_id);
 
     let gen_id = use_unique_id();
     let id = use_id_or(gen_id, props.id);

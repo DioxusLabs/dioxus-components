@@ -281,7 +281,7 @@ pub fn PopoverContentRendered(
     // is highlighting text or interacting with another element.
     use_global_escape_listener(move || set_open.call(false));
 
-    use_outside_dismiss(ctx.root_id, move || set_open.call(false));
+    use_outside_dismiss(ctx.root_id, ctx.root_id, move || set_open.call(false));
 
     rsx! {
         div {

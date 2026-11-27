@@ -1,5 +1,22 @@
 import { test, expect } from "@playwright/test";
 
+test("VirtualList demo styles do not limit the email list height", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("http://127.0.0.1:8080/component/?name=virtual_list&");
+  await expect(page.locator(".dx-virtual-list-container").first()).toBeVisible({ timeout: 30000 });
+  const css = await page.locator("style").allTextContents().then((styles) =>
+    styles.filter((style) => style.includes("max-height: 36rem")).join("\n")
+  );
+  expect(css).toBeTruthy();
+
+  await page.goto("http://127.0.0.1:8080/dashboard/email-client/");
+  const list = page.locator(".ec-list-scroll");
+  await expect(list).toBeVisible();
+  // Retain the demo stylesheet to exercise the same cascade as Native.
+  await page.addStyleTag({ content: css });
+  await expect.poll(() => list.evaluate((el) => el.clientHeight)).toBeGreaterThan(750);
+});
+
 // Helper to run scrollHeight stability test with configurable tolerance
 async function testScrollHeightStability(
   page: import("@playwright/test").Page,

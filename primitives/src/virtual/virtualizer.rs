@@ -106,6 +106,16 @@ pub fn set_scroll_offset(
     state.is_scrolling().set(is_scrolling);
 }
 
+pub fn clamp_scroll_offset_from_layout(
+    state: &Store<VirtualizerState>,
+    previous: u32,
+    actual: u32,
+) {
+    if actual < previous && *state.scroll_offset().peek() == previous {
+        state.scroll_offset().set(actual);
+    }
+}
+
 /// Set the viewport size. Reactive write.
 pub fn set_viewport_size(state: &Store<VirtualizerState>, size: u32) {
     let size = Some(size);
@@ -345,6 +355,24 @@ mod tests {
             let indexes: Vec<_> = virtual_items.iter().map(VirtualItem::index).collect();
 
             assert_eq!(indexes, vec![0, 1, 2, 3]);
+        });
+    }
+
+    #[test]
+    fn test_layout_clamp_keeps_growing_list_aligned_with_scroll_position() {
+        with_runtime(|| {
+            let state = create_test_state();
+            let full = make_measurements(&state);
+            state.viewport_size().set(Some(600));
+            set_scroll_offset(&state, &full, 2_000, false);
+
+            // The smaller canvas fits in the viewport, so the renderer clamps to zero.
+            clamp_scroll_offset_from_layout(&state, 2_000, 0);
+            assert_eq!(get_virtual_items(&state, &full, 0)[0].index(), 0);
+
+            set_scroll_offset(&state, &full, 1_000, true);
+            clamp_scroll_offset_from_layout(&state, 2_000, 0);
+            assert_eq!(*state.scroll_offset().peek(), 1_000);
         });
     }
 

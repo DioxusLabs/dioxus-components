@@ -6,13 +6,14 @@ use std::time::Duration;
 
 use dioxus::core::Task;
 use dioxus::html::geometry::PixelsVector2D;
+use dioxus::html::EventsExtension;
 use dioxus::prelude::*;
 use dioxus_sdk_time::sleep;
 
 use crate::r#virtual::{
-    cache_item_sizes, compute_measurements, get_total_size, get_virtual_items, scroll_anchor,
-    set_scroll_offset, set_viewport_size, types::VirtualItem, VirtualizerState,
-    VirtualizerStateStoreExt,
+    cache_item_sizes, clamp_scroll_offset_from_layout, compute_measurements, get_total_size,
+    get_virtual_items, scroll_anchor, set_scroll_offset, set_viewport_size, types::VirtualItem,
+    VirtualizerState, VirtualizerStateStoreExt,
 };
 
 const SCROLL_IDLE: Duration = Duration::from_millis(600);
@@ -139,6 +140,23 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
     let top_offset = virtual_items.first().map(|item| item.start()).unwrap_or(0);
     let canvas_height = total_height.max(state.viewport_size().peek().unwrap_or_default());
     let set_size = count.to_string();
+    // Native layout can clamp an element's scroll offset without emitting a scroll event.
+    let canvas_resize = if cfg!(target_arch = "wasm32") {
+        Vec::new()
+    } else {
+        Vec::<Attribute>::new().onresize_with_explicit_closure(move |_| async move {
+            let previous = *state.scroll_offset().peek();
+            if previous == 0 {
+                return;
+            }
+            let mounted = container.peek().clone();
+            if let Some(mounted) = mounted {
+                if let Ok(offset) = mounted.get_scroll_offset().await {
+                    clamp_scroll_offset_from_layout(&state, previous, offset.y.round() as u32);
+                }
+            }
+        })
+    };
 
     rsx! {
         div {
@@ -182,6 +200,7 @@ pub fn VirtualList(props: VirtualListProps) -> Element {
 
             div {
                 style: "position: relative; height:{canvas_height}px; width: 100%; overflow-anchor:none;",
+                ..canvas_resize,
                 div {
                     style: "position: absolute; inset: 0 auto auto 0; width: 100%; transform: translateY({top_offset}px); will-change: transform;",
                     {virtual_items.iter().map(move |item| {

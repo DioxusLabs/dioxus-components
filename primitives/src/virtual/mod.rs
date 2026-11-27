@@ -11,6 +11,7 @@ mod utils;
 mod virtualizer;
 
 pub(crate) use virtualizer::{
-    cache_item_sizes, compute_measurements, get_total_size, get_virtual_items, scroll_anchor,
-    set_scroll_offset, set_viewport_size, VirtualizerState, VirtualizerStateStoreExt,
+    cache_item_sizes, clamp_scroll_offset_from_layout, compute_measurements, get_total_size,
+    get_virtual_items, scroll_anchor, set_scroll_offset, set_viewport_size, VirtualizerState,
+    VirtualizerStateStoreExt,
 };

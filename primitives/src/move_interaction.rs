@@ -164,7 +164,7 @@ impl MoveInteraction {
         }
     }
 
-    fn is_active(&self, event: &Event<PointerData>) -> bool {
+    pub(crate) fn is_active(&self, event: &Event<PointerData>) -> bool {
         *self.active_pointer_id.peek() == Some(event.pointer_id())
     }
 

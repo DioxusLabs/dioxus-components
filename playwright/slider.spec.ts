@@ -73,6 +73,30 @@ test('test', async ({ page }) => {
   await expect(thumb).toHaveAttribute('aria-valuenow', '60');
 });
 
+test('accepts arrow keys after clicking and dragging the thumb', async ({ page }) => {
+  await page.goto('http://127.0.0.1:8080/component/?name=slider&', { timeout: 20 * 60 * 1000 });
+  await page.waitForLoadState('networkidle');
+  const thumb = page.getByRole('slider', { name: 'Demo Slider' });
+  const slider = sliderGroup(page, 'Demo Slider');
+  const track = sliderTrack(slider);
+  await track.scrollIntoViewIfNeeded();
+
+  await thumb.click();
+  await expect(thumb).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(thumb).toHaveAttribute('aria-valuenow', '51');
+
+  const { y } = await startCapturedDrag(page, slider, 0.51);
+  const { x } = await sliderTrackPoint(track, 0.8);
+  await expect(thumb).toHaveAttribute('data-dragging', 'true');
+  await page.mouse.move(x, y);
+  await expect(thumb).toHaveAttribute('aria-valuenow', '80');
+  await page.mouse.up();
+  await expect(thumb).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await expect(thumb).toHaveAttribute('aria-valuenow', '79');
+});
+
 test('tracks element events when pointer capture is rejected', async ({ page }) => {
   await page.goto('http://127.0.0.1:8080/component/?name=slider&', { timeout: 20 * 60 * 1000 });
   await page.waitForLoadState('networkidle');

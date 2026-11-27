@@ -4,11 +4,11 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::time::Duration;
 
-use dioxus::core::Task;
 use dioxus::html::geometry::PixelsVector2D;
 use dioxus::html::EventsExtension;
 use dioxus::prelude::*;
-use dioxus_sdk_time::sleep;
+use dioxus_timers::sleep;
+use dioxus_vdom::Task;
 
 use crate::r#virtual::{
     cache_item_sizes, clamp_scroll_offset_from_layout, compute_measurements, get_total_size,

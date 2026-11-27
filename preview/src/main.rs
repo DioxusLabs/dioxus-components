@@ -40,10 +40,11 @@ use web_time::Instant;
 mod components;
 mod dashboard;
 #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+#[cfg_attr(feature = "server", allow(dead_code))]
 mod native;
 mod theme;
 
-#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+#[cfg(all(feature = "native", not(feature = "server"), not(target_arch = "wasm32")))]
 use native::NativeApp;
 
 fn is_native() -> bool {
